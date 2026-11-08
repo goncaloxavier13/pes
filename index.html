@@ -58,6 +58,8 @@ p{margin:0}
 .tabhead h1{font-family:var(--display);font-size:32px;font-weight:700;letter-spacing:-.6px}
 .navhead{position:relative;z-index:2;flex:none;padding:calc(var(--st) + 8px) calc(14px + var(--sr)) 10px calc(14px + var(--sl));display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;background:var(--bg);border-bottom:.5px solid var(--border)}
 .navhead h2{font-size:17px;font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navtitle{min-width:0;border-radius:10px;padding:2px 4px}
+.navtitle:hover h2{opacity:.8}
 .navhead .sub{display:block;font-size:12px;font-weight:400;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .roundbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--card);color:var(--accent);flex:none}
 .roundbtn.fill{background:var(--accent);color:var(--on-accent)}
@@ -799,8 +801,9 @@ function groupScreen(gid){
     <div class="section"><button class="btn danger block" data-act="leaveGroup" data-arg="${gid}">${ic("exit")}Sair do grupo</button></div>
   </div>`;
 }
-function navhead(title,sub="",right=""){
-  return `<header class="navhead"><button class="roundbtn" data-act="back" aria-label="Voltar">${ic("back")}</button><h2>${esc(title)}${sub?`<span class="sub">${esc(sub)}</span>`:""}</h2><div style="justify-self:end">${right}</div></header>`;
+function navhead(title,sub="",right="",titleAct=""){
+  const inner=`${esc(title)}${sub?`<span class="sub">${esc(sub)}</span>`:""}`;
+  return `<header class="navhead"><button class="roundbtn" data-act="back" aria-label="Voltar">${ic("back")}</button>${titleAct?`<button class="navtitle" ${titleAct}><h2>${inner}</h2></button>`:`<h2>${inner}</h2>`}<div style="justify-self:end">${right}</div></header>`;
 }
 
 /* ───────────────────────── screens: dashboard ───────────────────────── */
@@ -922,7 +925,7 @@ let chatSub=null, chatMsgs=[], chatId=null, chatLoaded=false;
 function chatShell(cid){
   const c=S.chats[cid]; if(!c) return navhead("Conversa")+`<div class="center muted">Esta conversa já não existe.</div>`;
   const sub=c.type==="direct"?"Conversa privada":`${(c.members||[]).length} participantes`;
-  return navhead(chatTitle({id:cid,...c}),sub)+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
+  return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes","",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
     <form class="composer" id="composer"><textarea id="msgInput" rows="1" placeholder="Mensagem" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`;
 }
 function mountChat(cid,scr){
@@ -1131,6 +1134,12 @@ const A = {
   newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>awardSheet(), newChat:()=>newChatSheet(),
   rank:()=>rankSheet(), vote:id=>votePicker(id), evolution:id=>evolutionSheet(id),
   openChat:id=>go("chat",id),
+  chatInfo:cid=>{ const c=S.chats[cid]; if(!c) return; const me=ME(); const g=S.groups[c.groupId];
+    openSheet({title:chatTitle({id:cid,...c}),left:"Fechar",live:true,body:()=>{ const cc=S.chats[cid]||c;
+      const mem=[...(cc.members||[])].sort((a,b)=>(b===me)-(a===me)||nm(a).localeCompare(nm(b)));
+      return `<p class="muted small" style="text-align:center;margin:-4px 0 14px">${cc.type==="direct"?"Conversa privada":"Conversa de grupo"} · ${esc(g?.name||"")}${cc.createdBy?` · criada por ${esc(cc.createdBy===me?"ti":nm(cc.createdBy))}`:""}</p>
+        <div class="label">${mem.length} participantes</div>
+        <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>`; }}); },
   toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
   allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME();
     openSheet({title:"Ranking médio",left:"Fechar",live:true,body:()=>`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
