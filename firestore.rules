@@ -57,6 +57,13 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['att'])
             && request.resource.data.att.diff(resource.data.att).affectedKeys().hasOnly([myKey()]));
       allow delete: if isOwner() || (hasKey() && resource.data.createdBy == myKey());
+      match /photos/{pid} {
+        function ev() { return get(/databases/$(db)/documents/events/$(id)).data; }
+        allow read: if isOwner() || isMember(ev().groupId);
+        allow create: if isOwner() || (hasKey() && request.resource.data.by == myKey()
+          && request.resource.data.data.size() < 1000000 && isMember(ev().groupId));
+        allow delete: if isOwner() || (hasKey() && (resource.data.by == myKey() || ev().createdBy == myKey()));
+      }
     }
     match /votes/{key} { allow read: if signed(); allow write: if isOwner() || (hasKey() && key == myKey()); }
     match /rankings/{key} { allow read: if signed(); allow write: if isOwner() || (hasKey() && key == myKey()); }

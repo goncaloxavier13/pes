@@ -1,0 +1,20 @@
+name: Notificações
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+concurrency: { group: notificacoes, cancel-in-progress: false }
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install --no-audit --no-fund firebase-admin@12 web-push@3
+      - run: node scripts/notify.mjs
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_PUBLIC_KEY: BKVV4FGmIviV08QQxwpstFJB01wVpB9bs2zICxXeGPo2b4TTn3hY9CUaE2v1PFeERjsp4rUwJAoRUDtgK23nNI8

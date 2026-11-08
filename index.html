@@ -6,6 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
 <meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
 <title>Pês</title>
 <style>
 /* Pês — Apple-style minimal: neutral greys, one blue accent, system type. Mobile column centred on wide screens. */
@@ -149,6 +153,17 @@ p{margin:0}
 .ev h3{font-size:16px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
 .ev .meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);margin-top:6px;align-items:center}
 .ev .desc{font-size:14px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.place{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:13px;font-weight:500;color:var(--accent);text-decoration:none;max-width:100%}
+.place svg{width:14px;height:14px;flex:none}.place span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.soon{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--orange);color:#fff;font-size:14px}
+.soon svg{width:18px;height:18px;flex:none;margin-top:1px}.soon a{display:block;color:#fff;opacity:.9;font-size:13px;margin-top:2px}
+.photos{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.photos button{aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--card2);position:relative}
+.photos img{width:100%;height:100%;object-fit:cover;display:block}
+.viewer{position:absolute;inset:0;background:#000;display:flex;flex-direction:column}
+.viewer img{flex:1;min-height:0;object-fit:contain;width:100%}
+.viewer .bar2{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--st) + 10px) 16px 10px;color:#fff;font-size:14px}
+.viewer .bar2 button{color:#fff;font-size:16px}
 .presence{border-top:.5px solid var(--border);padding:10px 16px 12px;display:flex;flex-direction:column;gap:8px}
 .presence .q{font-size:12px;font-weight:500;color:var(--muted)}
 .seg2{display:flex;gap:10px}
@@ -268,6 +283,57 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .toast{animation:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+
+.switch{width:44px;height:26px;border-radius:13px;background:var(--card2);position:relative;flex:none;transition:background .2s}
+.switch i{position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch.on{background:var(--green)}.switch.on i{transform:translateX(18px)}
+.row:disabled .switch{opacity:.5}
+.galabanner{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:16px;color:#fff;background:linear-gradient(135deg,#1b1640,#3a1d5c 55%,#7a4a00);box-shadow:var(--shadow)}
+.galabanner .ge{font-size:28px}.galabanner b{display:block;font-size:16px}.galabanner small{display:block;font-size:12px;opacity:.85;margin-top:2px}
+.galabanner svg{width:18px;height:18px;opacity:.8}
+.gala{position:absolute;inset:0;display:flex;flex-direction:column;color:#fff;background:radial-gradient(120% 80% at 50% 0%,#2b1f5c 0%,#120d2b 45%,#05040d 100%);
+  --muted:#A9A6C9;--border:#2E2A55;--card:#120d2b;--card2:#221c45;--text:#fff;--accent:#FFD60A;--accent-soft:rgba(255,214,10,.15);color-scheme:dark;overflow:hidden}
+.gala .confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.gtopbar{display:flex;align-items:center;gap:12px;padding:calc(var(--st) + 12px) 16px 6px}
+.gprog{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.15);overflow:hidden}.gprog i{display:block;height:100%;background:#FFD60A;transition:width .3s}
+.gclose{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center}.gclose svg{width:18px;height:18px}
+.gstage{flex:1;overflow-y:auto;display:flex;cursor:pointer}
+.gstep{margin:auto;width:100%;max-width:460px;padding:20px 24px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;animation:gin .5s ease}
+@keyframes gin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.gkicker{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#FFD60A}
+.gtitle{font-family:var(--display);font-size:40px;line-height:1.05;font-weight:800;letter-spacing:-.8px}
+.gaward{font-family:var(--display);font-size:30px;font-weight:800;line-height:1.1}
+.gname{font-family:var(--display);font-size:28px;font-weight:800}
+.glead{font-size:16px;color:#D9D6F2;max-width:34ch;line-height:1.45}
+.ghint,.gnext,.gnominees{font-size:13px;color:var(--muted)}
+.gdrum{font-size:20px;font-weight:700;color:#FFD60A;margin-top:8px;animation:pulse 1.2s ease-in-out infinite}
+.gemoji{font-size:64px;line-height:1}.gemoji.pulse{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.gbig{font-family:var(--display);font-size:34px;font-weight:800;color:#FFD60A}
+.gmembers .stack .av{box-shadow:0 0 0 2px #120d2b}
+.gnums{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;margin-top:6px}
+.gnums div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+.gnums b{font-family:var(--display);font-size:34px;font-weight:800;color:#FFD60A}.gnums span{font-size:13px;color:#D9D6F2}
+.gwinner{display:flex;flex-direction:column;align-items:center;gap:8px;margin:6px 0}
+.gwinner .av{box-shadow:0 0 0 4px #FFD60A,0 0 40px rgba(255,214,10,.45)}
+.gwinner b{font-family:var(--display);font-size:28px;font-weight:800}.gwinner.big b{font-size:32px}
+.gwinner span{font-size:14px;color:#D9D6F2}
+.gchips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}.gchips span{padding:6px 12px;border-radius:20px;background:rgba(255,255,255,.1);font-size:14px}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;width:100%;margin-top:10px}
+.pcol{flex:1;max-width:120px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pname{font-size:14px;font-weight:600}.pval{font-size:11px;color:var(--muted);min-height:13px}
+.pblock{width:100%;border-radius:10px 10px 0 0;display:grid;place-items:start center;padding-top:8px;background:linear-gradient(#3a3270,#221c45)}
+.pblock b{font-family:var(--display);font-size:24px;font-weight:800}
+.r0 .pblock{background:linear-gradient(#FFD60A,#b88a00)}.r0 .pblock b{color:#2b1f00}
+.r1 .pblock{background:linear-gradient(#d9d9e3,#8d8da0)}.r1 .pblock b{color:#222}
+.r2 .pblock{background:linear-gradient(#e0a060,#8a5320)}.r2 .pblock b{color:#2b1400}
+.gchart{width:100%;background:rgba(255,255,255,.05);border-radius:16px;padding:12px;margin-top:6px}.gchart .legend span{color:#D9D6F2}
+.glist{width:100%;display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.glist div{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;background:rgba(255,255,255,.06);font-size:14px;text-align:left}
+.glist div span:nth-child(3){flex:1}.glist div>span:first-child{width:20px;color:var(--muted)}
+.gnav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px calc(var(--sb) + 14px);gap:12px}
+.gnav button{font-size:15px;color:#D9D6F2;padding:10px 6px}.gnav .gbtn{background:#FFD60A;color:#1a1300;font-weight:700;padding:12px 20px;border-radius:24px}
+.gcount{font-size:12px;color:var(--muted)}
 /* Claim / loading */
 .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
 .spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--card2);border-top-color:var(--accent);animation:spin .8s linear infinite}
@@ -355,6 +421,7 @@ const P = {
   info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
   more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
   exit:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  pin:'<path d="M12 22s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="10" r="2.5"/>',
   bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
   trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
 };
@@ -449,7 +516,8 @@ function generateDemo(nowMs){
       g.members.filter(k=>k!==creator).forEach(k=>{ if(rnd()<.8) att[k]= off>0?(rnd()<.4?"yes":"pending") : (rnd()<(lazy[k]?lazy[k]:.8)?"yes":"no"); });
       if (off<0 && i>=n-3 && g.members.includes(me) && creator!==me) att[me]="pending";
       if (upcoming && creator!==me && g.members.includes(me)) att[me]="pending";
-      docs[`events/e-${g.id}-${i}`]={groupId:g.id,title:t,desc:i===0?"Primeiro encontro do grupo":(i===n-1&&upcoming?"Confirmem até ao fim do mês":""),date:lisbonYMD(d),createdBy:creator,createdAt:Math.min(nowMs,d.getTime()-2*DAY),att,demo:true};
+      const PLACES=["Tasca do Chico, Lisboa","Pavilhão do Restelo","Casa do Zeca","Praia de Carcavelos","Time Out Market, Lisboa","Coliseu dos Recreios"];
+      docs[`events/e-${g.id}-${i}`]={time:i%3===2?"":["20:30","13:00","21:00","19:30"][i%4],place:i%2?pick(PLACES):"",groupId:g.id,title:t,desc:i===0?"Primeiro encontro do grupo":(i===n-1&&upcoming?"Confirmem até ao fim do mês":""),date:lisbonYMD(d),createdBy:creator,createdAt:Math.min(nowMs,d.getTime()-2*DAY),att,demo:true};
     });
   });
   // votes & rankings
@@ -558,6 +626,11 @@ const groupAwards = gid => Object.entries(S.awards).filter(([,a])=>a.groupId===g
 const statusOf = (e,k) => e.createdBy===k ? "yes" : (e.att||{})[k];
 const presentKeys = e => Object.keys(e.att||{}).filter(k=>statusOf(e,k)==="yes");
 const isFuture = e => (e.date||"") > lisbonYMD();
+const mapsUrl = q => "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
+function tomorrowYMD(){ const d=ymdToUTC(lisbonYMD()); d.setUTCDate(d.getUTCDate()+1); return utcToYmd(d); }
+/* Events today or tomorrow that I'm going to (or haven't answered) */
+function upcomingSoon(gid){ const me=ME(); const t=lisbonYMD(), tm=tomorrowYMD();
+  return groupEvents(gid).filter(e=>(e.date===t||e.date===tm)&&(e.att||{})[me]!==undefined&&statusOf(e,me)!=="no").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)); }
 
 function eventStats(gid,k){
   const evs=groupEvents(gid); const created=evs.filter(e=>e.createdBy===k).length;
@@ -621,7 +694,7 @@ const D = p => S.db.doc(p);
 const app = document.getElementById("app");
 let layers=[];
 function pushLayer(html, onClose){ const el=document.createElement("div"); el.className="layer"; el.innerHTML=html; app.appendChild(el); const L={el,onClose}; layers.push(L); return L; }
-function popLayer(L){ L=L||layers[layers.length-1]; if(!L) return; layers=layers.filter(x=>x!==L); L.el.remove(); }
+function popLayer(L){ L=L||layers[layers.length-1]; if(!L) return; layers=layers.filter(x=>x!==L); L.el.remove(); try{ L.onClose&&L.onClose(); }catch{} }
 function toast(msg){ app.querySelectorAll(".toast").forEach(x=>x.remove()); const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; app.appendChild(t); setTimeout(()=>t.remove(),2200); }
 function dialog(title,msg,buttons){ return new Promise(res=>{
   const L=pushLayer(`<div class="overlay"></div><div class="dialog" role="alertdialog" aria-modal="true"><div class="dt"><h3></h3>${msg?"<p></p>":""}</div><div class="db">${buttons.map((b,i)=>`<button data-i="${i}" class="${b.danger?"danger":""}"></button>`).join("")}</div></div>`);
@@ -662,7 +735,7 @@ function drawCharts(root){
     const {min,max,invert}=spec;
     const x=i=>PL+(n===1?cw/2:i*cw/(n-1));
     const y=v=>{ const r=Math.max(0,Math.min(1,(v-min)/((max-min)||1))); return invert?PT+r*ch:PT+ch-r*ch; };
-    const css=getComputedStyle(document.documentElement); const muted=css.getPropertyValue("--muted").trim(); const border=css.getPropertyValue("--border").trim();
+    const css=getComputedStyle(box); const muted=css.getPropertyValue("--muted").trim(); const border=css.getPropertyValue("--border").trim();
     let g="";
     const ticks=spec.ticks||[min,(min+max)/2,max];
     ticks.forEach(t=>{ g+=`<line x1="${PL}" x2="${W-PR}" y1="${y(t)}" y2="${y(t)}" stroke="${border}" stroke-dasharray="3 4"/><text x="${PL-6}" y="${y(t)+4}" text-anchor="end" font-size="10" fill="${muted}">${esc(spec.fmt(t))}</text>`; });
@@ -856,7 +929,9 @@ function eventsScreen(){
   const head=`<div class="tabhead"><div class="titles"><h1>Eventos</h1>${groupPill()}</div>${g?`<button class="roundbtn fill" data-act="newEvent" aria-label="Novo evento">${ic("plus")}</button>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="events">${head}${noGroup()}</div>`;
   const pend=pendingFor(me).filter(e=>e.groupId===g.id); const evs=groupEvents(g.id);
+  const soon=upcomingSoon(g.id);
   return `<div class="scroll pad-tabs" data-key="events">${head}${previewBanner()}
+    ${soon.length?`<div class="section" style="margin-top:12px;display:flex;flex-direction:column;gap:8px">${soon.map(e=>`<div class="soon">${ic("bell")}<div style="flex:1;min-width:0"><b>${e.date===lisbonYMD()?"Hoje":"Amanhã"}${e.time?` às ${esc(e.time)}`:""}: ${esc(e.title)}</b>${e.place?`<a href="${esc(mapsUrl(e.place))}" target="_blank" rel="noopener">${esc(e.place)}</a>`:""}</div></div>`).join("")}</div>`:""}
     ${pend.length?`<div class="section" style="margin-top:12px"><div class="notice"><div style="display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:600;font-size:14px">${ic("bell",'style="width:18px;height:18px"')}${pend.length} ${pend.length===1?"pedido por responder":"pedidos por responder"}</div>
       ${pend.slice(0,3).map(e=>`<div class="n"><div><div style="font-weight:600;font-size:15px;overflow-wrap:anywhere">${esc(e.title)}</div><div class="small muted">${esc(nm(e.createdBy))} adicionou-te · ${esc(fmtDate(e.date))}</div></div>
         <div class="seg2"><button data-act="presence" data-arg="${e.id}|yes">${ic("check")}${isFuture(e)?"Vou":"Estive lá"}</button><button data-act="presence" data-arg="${e.id}|no">${ic("x")}${isFuture(e)?"Não vou":"Não estive"}</button></div></div>`).join("")}
@@ -873,8 +948,9 @@ function eventCard(e,me){
     <div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:flex-start"><h3 style="flex:1">${esc(e.title)}</h3>
       ${creator?`<button class="iconbtn" data-act="eventMenu" data-arg="${e.id}" aria-label="Opções do evento" style="margin:-6px -8px 0 0">${ic("more")}</button>`:""}</div>
       ${e.desc?`<p class="desc">${esc(e.desc)}</p>`:""}
-      <div class="meta">${pres.length>=4?`<span class="chip">${ic("users")}Evento de grupo</span>`:""}${future?`<span class="chip grey">Em breve</span>`:""}<span>${esc(fmtDate(e.date))}</span><span>por ${esc(creator?"ti":first(nm(e.createdBy)))}</span></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${pres.length?stack(pres,26,7):""}<span class="small muted num">${pres.length} de ${invited} ${future?"confirmados":"presentes"}</span></div>
+      ${e.place?`<a class="place" href="${esc(mapsUrl(e.place))}" target="_blank" rel="noopener">${ic("pin")}<span>${esc(e.place)}</span></a>`:""}
+      <div class="meta">${pres.length>=4?`<span class="chip">${ic("users")}Evento de grupo</span>`:""}${future?`<span class="chip grey">Em breve</span>`:""}<span>${esc(fmtDate(e.date))}${e.time?` · ${esc(e.time)}`:""}</span><span>por ${esc(creator?"ti":first(nm(e.createdBy)))}</span></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${pres.length?stack(pres,26,7):""}<span class="small muted num" style="flex:1">${pres.length} de ${invited} ${future?"confirmados":"presentes"}</span>${!future||e.photos?`<button class="minibtn" data-act="eventPhotos" data-arg="${e.id}">${ic("camera")}Fotos</button>`:""}</div>
     </div></div>
     ${part&&!creator?`<div class="presence"><span class="q">${mine==="pending"?(future?"Ainda não respondeste. Vais?":"Ainda não respondeste. Estiveste lá?"):(future?"A tua resposta":"Estiveste lá?")}</span>
       <div class="seg2"><button class="${mine==="yes"?"yes":""}" data-act="presence" data-arg="${e.id}|yes" aria-pressed="${mine==="yes"}">${ic("check")}${future?"Vou":"Estive lá"}</button>
@@ -886,12 +962,13 @@ function eventCard(e,me){
 /* ───────────────────────── screens: journey ───────────────────────── */
 function journeyScreen(){
   const g=curGroup(); const me=ME();
-  const head=g=>`<div class="tabhead"><div class="titles"><h1>Journey</h1>${groupPill()}</div>${g&&isAdmin(g)?`<button class="roundbtn" data-act="newAward" aria-label="Novo prémio">${ic("plus")}</button>`:""}</div>`;
+  const head=g=>`<div class="tabhead"><div class="titles"><h1>Journey</h1>${groupPill()}</div>${g?`<button class="roundbtn" data-act="gala" data-arg="${g.id}" aria-label="Abrir a Gala de fim de ano" style="color:var(--gold)">${ic("trophy")}</button>`:""}${g&&isAdmin(g)?`<button class="roundbtn" data-act="newAward" aria-label="Novo prémio">${ic("plus")}</button>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="journey">${head(null)}${noGroup()}</div>`;
   const aw=groupAwards(g.id); const nLocal=Object.keys(S.localVotes).filter(id=>aw.some(a=>a.id===id)).length;
   const voted=aw.filter(a=>myVote(a.id)).length;
   return `<div class="scroll pad-tabs" data-key="journey" style="${nLocal?"padding-bottom:calc(var(--tabh) + var(--sb) + 96px)":""}">${head(g)}${previewBanner()}
-    <div class="section" style="margin-top:10px"><p class="small muted" style="margin:0 4px 10px">Vota uma vez por semana em cada prémio. Os votos são secretos — só aparecem os totais. Podes mudar até domingo às 23:59.</p>
+    <div class="section" style="margin-top:10px"><button class="galabanner" data-act="gala" data-arg="${g.id}"><span class="ge">🏆</span><span style="flex:1;text-align:left"><b>Gala ${curWeek().slice(0,4)}</b><small>${lisbonYMD().slice(5,7)==="12"?"A gala de fim de ano está pronta. Juntem-se e revelem os vencedores!":"Pré-visualiza a revelação dos prémios do ano"}</small></span>${ic("right")}</button></div>
+    <div class="section" style="margin-top:14px"><p class="small muted" style="margin:0 4px 10px">Vota uma vez por semana em cada prémio. Os votos são secretos — só aparecem os totais. Podes mudar até domingo às 23:59.</p>
       ${aw.length?`<div class="dots">${aw.map(a=>`<span class="dot ${myVote(a.id)?"on":""}" title="${esc(a.label)}">${myVote(a.id)?ic("check"):""}</span>`).join("")}<span class="small muted" style="margin-left:4px">${voted}/${aw.length} votados · semana de ${esc(weekRange(curWeek()))}</span></div>`:""}</div>
     ${aw.length? aw.map(a=>{ const v=myVote(a.id); const local=S.localVotes[a.id]!=null;
       return `<div class="section"><div class="award" style="margin-bottom:10px"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3>
@@ -971,6 +1048,7 @@ function settingsScreen(){
       ${photo(me)?`<button class="row" data-act="removePhoto"><span class="grow" style="color:var(--red)">Remover foto</span></button>`:""}</div></div>
     <div class="section"><div class="label">Aparência</div><div class="card list">
       ${[["system","Igual ao dispositivo"],["light","Claro"],["dark","Escuro"]].map(([v,l])=>`<button class="row" data-act="theme" data-arg="${v}"><span class="grow">${l}</span>${th===v?`<span style="color:var(--accent)">${ic("check",'style="width:20px;height:20px"')}</span>`:""}</button>`).join("")}</div></div>
+    ${notifSection()}
     <div class="section"><div class="label">Conta</div><div class="card list"><button class="row" data-act="renameMe"><div class="grow"><div class="rowtitle">Nome</div><div class="rowsub">${esc(nm(myRealMember()||me))}</div></div>${ic("edit",'style="width:18px;height:18px;color:var(--muted)"')}</button></div>
       ${S.fb?`<div class="card list" style="margin-top:12px"><button class="row" data-act="logout"><div class="grow"><div class="rowtitle" style="color:var(--red)">Terminar sessão</div><div class="rowsub">${esc(S.email||"")}</div></div>${ic("exit",'style="width:18px;height:18px;color:var(--red)"')}</button></div>`
         :`<p class="info">Entras com a tua conta Claude, por isso esta app não tem passwords.</p>`}</div>
@@ -1016,14 +1094,16 @@ function joinGroupSheet(){
 }
 function eventSheet(eid){
   const g=curGroup(); const me=ME(); const ev=eid?S.events[eid]:null;
-  const st={title:ev?.title||"", date:ev?.date||lisbonYMD(), desc:ev?.desc||"", sel:new Set(ev?Object.keys(ev.att||{}).filter(k=>k!==me):[])};
+  const st={title:ev?.title||"", date:ev?.date||lisbonYMD(), time:ev?.time||"", place:ev?.place||"", desc:ev?.desc||"", sel:new Set(ev?Object.keys(ev.att||{}).filter(k=>k!==me):[])};
   const others=g.members.filter(k=>k!==me).sort((a,b)=>nm(a).localeCompare(nm(b)));
   const valid=()=>st.title.trim()&&/^\d{4}-\d{2}-\d{2}$/.test(st.date);
   const countTxt=()=>{ const n=st.sel.size+1; return n>=4?`<span style="color:var(--green)">${n} pessoas contigo · pode ser evento de grupo (4+ presenças)</span>`:`${n} ${n===1?"pessoa":"pessoas"} contigo · são precisas 4+ presenças para evento de grupo`; };
   const L=openSheet({title:eid?"Editar evento":"Novo evento",right:eid?"Guardar":"Criar",rightDisabled:!valid(),
     body:()=>`<div class="field"><label for="etitle">Nome</label><input id="etitle" class="input" maxlength="60" placeholder="Ex.: Jantar na tasca" value="${esc(st.title)}" autocomplete="off"></div>
-      <div class="field"><label for="edate">Data</label><input id="edate" class="input" type="date" value="${esc(st.date)}"></div>
-      <div class="field"><label for="edesc">Descrição (opcional)</label><textarea id="edesc" class="input" maxlength="300" placeholder="Local, hora, o que levar…">${esc(st.desc)}</textarea></div>
+      <div style="display:flex;gap:12px;margin-top:16px"><div class="field" style="flex:1.4;margin:0"><label for="edate">Data</label><input id="edate" class="input" type="date" value="${esc(st.date)}"></div>
+        <div class="field" style="flex:1;margin:0"><label for="etime">Hora (opcional)</label><input id="etime" class="input" type="time" value="${esc(st.time)}"></div></div>
+      <div class="field"><label for="eplace">Local (opcional)</label><input id="eplace" class="input" maxlength="80" placeholder="Ex.: Tasca do Chico, Lisboa" value="${esc(st.place)}" autocomplete="off"><p class="hint">Aparece com um link para o mapa.</p></div>
+      <div class="field"><label for="edesc">Descrição (opcional)</label><textarea id="edesc" class="input" maxlength="300" placeholder="O que levar, código de vestuário…">${esc(st.desc)}</textarea></div>
       <div class="field"><div class="flabel" style="display:flex;justify-content:space-between;align-items:center"><span>Participantes</span><button type="button" class="linkbtn small" data-allp style="text-transform:none;letter-spacing:0;font-size:14px">${st.sel.size===others.length?"Limpar":"Selecionar todos"}</button></div>
         <p class="hint" style="margin:0 4px 6px">Ficas incluído como criador. Os outros recebem um pedido para confirmar a presença.</p>
         <div class="card list" id="plist">${others.map(k=>`<button type="button" class="row" data-p="${k}" aria-pressed="${st.sel.has(k)}">${avatar(k,34)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${st.sel.has(k)?"on":""}">${st.sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>
@@ -1031,13 +1111,15 @@ function eventSheet(eid){
     onMount:L=>{ const b=L.body; const upd=()=>setRight(L,!!valid());
       b.querySelector("#etitle").oninput=e=>{ st.title=e.target.value; upd(); }; b.querySelector("#edate").oninput=e=>{ st.date=e.target.value; upd(); };
       b.querySelector("#edesc").oninput=e=>{ st.desc=e.target.value; };
+      b.querySelector("#etime").oninput=e=>{ st.time=e.target.value; }; b.querySelector("#eplace").oninput=e=>{ st.place=e.target.value; };
       const refresh=()=>{ b.querySelectorAll("[data-p]").forEach(r=>{ const on=st.sel.has(r.dataset.p); r.setAttribute("aria-pressed",on); const c=r.querySelector(".check"); c.className="check"+(on?" on":""); c.innerHTML=on?ic("check"):""; }); b.querySelector("#pcount").innerHTML=countTxt(); b.querySelector("[data-allp]").textContent=st.sel.size===others.length?"Limpar":"Selecionar todos"; };
       b.querySelectorAll("[data-p]").forEach(r=>r.onclick=()=>{ const k=r.dataset.p; st.sel.has(k)?st.sel.delete(k):st.sel.add(k); refresh(); });
       b.querySelector("[data-allp]").onclick=()=>{ if(st.sel.size===others.length) st.sel.clear(); else others.forEach(k=>st.sel.add(k)); refresh(); };
       if(!eid) b.querySelector("#etitle").focus(); },
     onRight:async L=>{ if(!valid()) return; setRight(L,false);
       const att={[me]:"yes"}; st.sel.forEach(k=>{ att[k]= ev?.att?.[k] && ev.att[k]!=="pending" ? ev.att[k] : "pending"; });
-      const body={groupId:ev?.groupId||g.id,title:st.title.trim(),desc:st.desc.trim(),date:st.date,createdBy:ev?.createdBy||me,createdAt:ev?.createdAt||Date.now(),att};
+      const body={groupId:ev?.groupId||g.id,title:st.title.trim(),desc:st.desc.trim(),date:st.date,time:st.time||"",place:st.place.trim(),createdBy:ev?.createdBy||me,createdAt:ev?.createdAt||Date.now(),att,
+        reminded: !!(ev && ev.reminded && ev.date===st.date)};
       const ok=await write(()=>D("events/"+(eid||"e-"+uidGen())).set(body), eid?"Evento atualizado":"Evento criado");
       if(ok) popLayer(L); else setRight(L,true); }});
 }
@@ -1134,6 +1216,9 @@ const A = {
   newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>awardSheet(), newChat:()=>newChatSheet(),
   rank:()=>rankSheet(), vote:id=>votePicker(id), evolution:id=>evolutionSheet(id),
   openChat:id=>go("chat",id),
+  eventPhotos:id=>eventPhotosSheet(id), gala:gid=>openGala(gid||curGroup()?.id),
+  pushOn:()=>enablePush(), pushOff:()=>disablePush(),
+  pushPref:async k=>{ const me=myRealMember(); const cur=S.reads[me]?.push?.prefs?.[k]!==false; await write(()=>D("reads/"+me).update({push:{prefs:{[k]:!cur}}})); },
   chatInfo:cid=>{ const c=S.chats[cid]; if(!c) return; const me=ME(); const g=S.groups[c.groupId];
     openSheet({title:chatTitle({id:cid,...c}),left:"Fechar",live:true,body:()=>{ const cc=S.chats[cid]||c;
       const mem=[...(cc.members||[])].sort((a,b)=>(b===me)-(a===me)||nm(a).localeCompare(nm(b)));
@@ -1241,7 +1326,177 @@ document.addEventListener("change",async e=>{
   } catch { alertD("Imagem inválida","Escolhe uma fotografia em JPG ou PNG."); }
   f.value="";
 });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&layers.length){ const L=layers[layers.length-1]; L.el.querySelector("[data-close],[data-x]")?.click(); } });
+document.addEventListener("keydown",e=>{ const T=layers[layers.length-1]; if(T&&T.key&&e.key!=="Escape"){ T.key(e); return; } if(e.key==="Escape"&&layers.length){ const L=layers[layers.length-1]; L.el.querySelector("[data-close],[data-x]")?.click(); } });
+
+/* ───────────────────────── event photos ───────────────────────── */
+async function toPhoto(file,max=1280){
+  const url=URL.createObjectURL(file);
+  try{ const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
+    const r=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight)); const c=document.createElement("canvas");
+    c.width=Math.round(img.naturalWidth*r); c.height=Math.round(img.naturalHeight*r); c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    let q=.75, out=c.toDataURL("image/jpeg",q); while(out.length>850000&&q>.35){ q-=.1; out=c.toDataURL("image/jpeg",q); } return out; }
+  finally{ URL.revokeObjectURL(url); }
+}
+function eventPhotosSheet(eid){
+  const e=S.events[eid]; if(!e) return; let photos=[], busy=false, unsub=null;
+  const L=openSheet({title:"Fotos",left:"Fechar",
+    body:()=>`<p class="muted small" style="text-align:center;margin:-4px 0 14px">${esc(e.title)} · ${esc(fmtDate(e.date))}</p>
+      <label class="btn block" style="margin-bottom:14px;cursor:pointer">${ic("camera")}${busy?"A enviar…":"Adicionar fotos"}<input type="file" accept="image/*" multiple hidden id="phIn" ${busy?"disabled":""}></label>
+      ${photos.length?`<div class="photos">${photos.map((p,i)=>`<button data-ph="${i}" aria-label="Ver foto de ${esc(nm(p.by))}"><img src="${esc(p.data)}" alt="" loading="lazy"></button>`).join("")}</div>
+        <p class="info">${photos.length} ${photos.length===1?"foto":"fotos"} · toca numa foto para a ver em grande</p>`
+      :`<div class="card"><div class="empty"><div class="ico">${ic("camera")}</div><h3>Ainda sem fotos</h3><p>Partilha as fotos deste evento com o grupo.</p></div></div>`}`});
+  const bind=()=>{ const inp=L.body.querySelector("#phIn");
+    if(inp) inp.onchange=async()=>{ const files=[...inp.files]; if(!files.length) return; busy=true; L.render(); bind(); let n=0;
+      for(const f of files){ try{ const data=await toPhoto(f); if(await write(()=>S.db.collection(`events/${eid}/photos`).add({by:ME(),at:Date.now(),data}))) n++; else break; }
+        catch{ await alertD("Imagem inválida","Escolhe uma fotografia em JPG ou PNG."); } }
+      busy=false; L.render(); bind(); if(n) toast(n===1?"Foto adicionada":`${n} fotos adicionadas`); };
+    L.body.querySelectorAll("[data-ph]").forEach(b=>b.onclick=()=>photoViewer(eid,photos,+b.dataset.ph)); };
+  const r0=L.render; L.render=()=>{ r0(); bind(); }; bind();
+  unsub=S.db.collection(`events/${eid}/photos`).orderBy("at","asc").onSnapshot(s=>{ photos=s.docs.map(d=>({id:d.id,...d.data()})); L.render(); }, ()=>{});
+  L.onClose=()=>unsub&&unsub();
+}
+function photoViewer(eid,photos,i){
+  const e=S.events[eid]; const me=ME();
+  const L=pushLayer(`<div class="viewer" role="dialog" aria-modal="true"><div class="bar2"><button data-x>Fechar</button><span class="cnt"></span><button data-del style="color:#ff6b6b">Apagar</button></div><img alt=""><div class="bar2" style="padding:10px 16px calc(var(--sb) + 14px)"><button data-prev aria-label="Anterior">‹ Anterior</button><button data-next aria-label="Seguinte">Seguinte ›</button></div></div>`);
+  const show=()=>{ const p=photos[i]; L.el.querySelector("img").src=p.data; L.el.querySelector(".cnt").textContent=`${nm(p.by)} · ${i+1}/${photos.length}`;
+    L.el.querySelector("[data-del]").style.visibility=(p.by===me||e?.createdBy===me||S.isOwner)?"visible":"hidden";
+    L.el.querySelector("[data-prev]").style.visibility=i>0?"visible":"hidden"; L.el.querySelector("[data-next]").style.visibility=i<photos.length-1?"visible":"hidden"; };
+  L.el.querySelector("[data-x]").onclick=()=>popLayer(L);
+  L.el.querySelector("[data-prev]").onclick=()=>{ if(i>0){ i--; show(); } };
+  L.el.querySelector("[data-next]").onclick=()=>{ if(i<photos.length-1){ i++; show(); } };
+  L.el.querySelector("[data-del]").onclick=async()=>{ if(await confirmD("Apagar esta foto?","Deixa de aparecer para todo o grupo.","Apagar",true)){ if(await write(()=>D(`events/${eid}/photos/${photos[i].id}`).delete(),"Foto apagada")) popLayer(L); } };
+  show();
+}
+
+/* ───────────────────────── Gala de fim de ano ───────────────────────── */
+function galaData(gid){
+  const g={id:gid,...S.groups[gid]}; const year=curWeek().slice(0,4); const members=g.members||[];
+  const evs=groupEvents(gid).filter(e=>(e.date||"").startsWith(year)&&!isFuture(e));
+  const pres=evs.map(e=>({e,p:presentKeys(e).filter(k=>members.includes(k))}));
+  const count=f=>{ const c={}; members.forEach(k=>c[k]=0); f(c); return Object.entries(c).map(([k,v])=>({k,v})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v||nm(a.k).localeCompare(nm(b.k))); };
+  const attendance=count(c=>pres.forEach(x=>x.p.forEach(k=>c[k]++)));
+  const organizers=count(c=>evs.forEach(e=>{ if(e.createdBy in c) c[e.createdBy]++; }));
+  const awards=groupAwards(gid);
+  const weeks=seasonWeeks();
+  const loyalty=count(c=>members.forEach(k=>weeks.forEach(w=>{ if(S.rankings[k]?.weeks?.[w]?.[gid]) c[k]++; const v=S.votes[k]?.weeks?.[w]||{}; if(awards.some(a=>v[a.id])) c[k]++; })));
+  const hist=rankingHistory(gid).filter(h=>h.w.startsWith(year));
+  const climb=[]; if(hist.length>=2){ members.forEach(k=>{ const firstW=hist.find(h=>h.av.some(a=>a.k===k)); const last=hist[hist.length-1].av.find(a=>a.k===k);
+    if(firstW&&last){ const f=firstW.av.find(a=>a.k===k).avg; if(f-last.avg>0.05) climb.push({k,v:f-last.avg,from:f,to:last.avg}); } }); climb.sort((a,b)=>b.v-a.v); }
+  let votes=0; members.forEach(k=>Object.entries(S.votes[k]?.weeks||{}).forEach(([w,v])=>{ if(w.startsWith(year)) awards.forEach(a=>{ if(v[a.id]) votes++; }); }));
+  let ranks=0; members.forEach(k=>Object.entries(S.rankings[k]?.weeks||{}).forEach(([w,v])=>{ if(w.startsWith(year)&&v[gid]) ranks++; }));
+  const best=[...pres].sort((a,b)=>b.p.length-a.p.length)[0];
+  const final=averages(gid);
+  return {g,year,evs,pres,attendance,organizers,loyalty,climb,awards,votes,ranks,best,final,
+    groupEvents:pres.filter(x=>x.p.length>=4).length, presences:pres.reduce((s,x)=>s+x.p.length,0), weeksActive:hist.length};
+}
+function galaSteps(d){
+  const st=[{t:"intro"},{t:"numbers"}];
+  if(d.best&&d.best.p.length) st.push({t:"bestEvent"});
+  if(d.attendance[0]) st.push({t:"auto",title:"Rei das presenças",emoji:"🎟️",list:d.attendance,unit:v=>`${v} ${v===1?"evento":"eventos"}`,line:"Esteve em mais eventos do que qualquer outro."});
+  if(d.organizers[0]) st.push({t:"auto",title:"Organizador do ano",emoji:"📣",list:d.organizers,unit:v=>`${v} ${v===1?"evento criado":"eventos criados"}`,line:"Sem esta pessoa, metade dos planos não tinha acontecido."});
+  if(d.loyalty[0]) st.push({t:"auto",title:"Mais fiel à Journey",emoji:"🗳️",list:d.loyalty,unit:v=>`${v} participações`,line:"Votou e fez o ranking semana após semana."});
+  if(d.climb[0]) st.push({t:"auto",title:"Subida do ano",emoji:"🚀",list:d.climb,unit:v=>`subiu ${v.toFixed(1)} lugares`,line:"Quem mais subiu no ranking de amizade desde o início do ano.",sub:x=>`de #${x.from.toFixed(1)} para #${x.to.toFixed(1)}`});
+  if(d.awards.length){ st.push({t:"awardsIntro"}); d.awards.forEach(a=>{ st.push({t:"suspense",a}); st.push({t:"reveal",a}); }); }
+  if(d.final.length) st.push({t:"final"});
+  st.push({t:"end"});
+  return st;
+}
+function openGala(gid){
+  if(!S.groups[gid]) return; const d=galaData(gid); const steps=galaSteps(d); let i=0;
+  const L=pushLayer(`<div class="gala" role="dialog" aria-modal="true" aria-label="Gala de fim de ano"><canvas class="confetti"></canvas>
+    <div class="gtopbar"><div class="gprog"><i></i></div><button class="gclose" data-gx aria-label="Fechar a gala">${ic("close")}</button></div>
+    <div class="gstage" data-gnext></div>
+    <div class="gnav"><button data-gprev>‹ Voltar</button><span class="gcount num"></span><button data-gnext class="gbtn">Seguinte ›</button></div></div>`);
+  const stage=L.el.querySelector(".gstage"); const canvas=L.el.querySelector(".confetti");
+  const show=()=>{ const s=steps[i]; chartSpecs=new Map(); stage.innerHTML=`<div class="gstep">${galaStep(s,d)}</div>`; drawCharts(stage);
+    L.el.querySelector(".gprog i").style.width=`${(i+1)/steps.length*100}%`; L.el.querySelector(".gcount").textContent=`${i+1} / ${steps.length}`;
+    L.el.querySelector("[data-gprev]").style.visibility=i?"visible":"hidden";
+    L.el.querySelector(".gbtn").textContent= s.t==="suspense"?"Revelar ✨": i===steps.length-1?"Ver outra vez":"Seguinte ›";
+    cancelAnimationFrame(canvas._raf); canvas.getContext("2d").clearRect(0,0,canvas.width,canvas.height);
+    if(s.t==="reveal"||s.t==="end"||(s.t==="auto")) confetti(canvas, s.t==="reveal"?160:70); };
+  const next=()=>{ i= i===steps.length-1 ? 0 : i+1; show(); };
+  L.el.addEventListener("click",ev=>{ if(ev.target.closest("[data-gx]")){ popLayer(L); return; }
+    if(ev.target.closest("[data-gprev]")){ if(i>0){ i--; show(); } return; }
+    if(ev.target.closest("a,button:not([data-gnext])")) return;
+    if(ev.target.closest("[data-gnext]")) next(); });
+  L.key=ev=>{ if(ev.key==="ArrowRight"||ev.key===" ") next(); if(ev.key==="ArrowLeft"&&i>0){ i--; show(); } };
+  show();
+}
+function podium(list,unit){ const t=list.slice(0,3); if(!t.length) return "";
+  const order=[t[1],t[0],t[2]].filter(Boolean); const h={0:120,1:88,2:64};
+  return `<div class="podium">${order.map(x=>{ const r=t.indexOf(x); return `<div class="pcol r${r}"><span class="pav">${avatar(x.k,r===0?64:48)}</span><span class="pname">${esc(first(nm(x.k)))}</span><span class="pval">${esc(unit(x.v))}</span><div class="pblock" style="height:${h[r]}px"><b>${r+1}</b></div></div>`; }).join("")}</div>`; }
+function galaStep(s,d){
+  const y=d.year, g=d.g;
+  if(s.t==="intro") return `<div class="gkicker">Gala Pês ${y}</div><h1 class="gtitle">${esc(g.name)}</h1><p class="glead">Um ano de jantares, votos, rankings e histórias inacreditáveis. Está na hora de saber quem levou os prémios.</p><div class="gmembers">${stack(g.members,40,12)}</div><p class="ghint">Toca no ecrã para avançar</p>`;
+  if(s.t==="numbers") return `<div class="gkicker">O ano em números</div><div class="gnums">
+      ${[[d.evs.length,"eventos"],[d.groupEvents,"eventos de grupo"],[d.presences,"presenças"],[d.votes,"votos nos prémios"],[d.ranks,"rankings de amizade"],[g.members.length,"membros"]].map(([v,l])=>`<div><b class="num">${v}</b><span>${l}</span></div>`).join("")}</div>`;
+  if(s.t==="bestEvent"){ const b=d.best; return `<div class="gkicker">Evento do ano</div><div class="gemoji">🥂</div><h2 class="gname">${esc(b.e.title)}</h2><p class="glead">${esc(fmtDate(b.e.date))}${b.e.place?` · ${esc(b.e.place)}`:""}</p><div class="gbig num">${b.p.length} presentes</div><div class="gmembers">${stack(b.p,36,12)}</div>`; }
+  if(s.t==="auto"){ const w=s.list[0]; return `<div class="gkicker">Prémio da casa</div><div class="gemoji">${s.emoji}</div><h2 class="gaward">${esc(s.title)}</h2><div class="gwinner">${avatar(w.k,96)}<b>${esc(nm(w.k))}</b><span>${esc(s.unit(w.v))}${s.sub?` · ${esc(s.sub(w))}`:""}</span></div><p class="glead">${esc(s.line)}</p>${s.list.length>1?`<p class="gnext">Seguem-se: ${s.list.slice(1,3).map(x=>`${esc(first(nm(x.k)))} (${esc(s.unit(x.v))})`).join(" · ")}</p>`:""}`; }
+  if(s.t==="awardsIntro") return `<div class="gkicker">E agora…</div><div class="gemoji">🏆</div><h1 class="gtitle">Os prémios ${y}</h1><p class="glead">${d.awards.length} ${d.awards.length===1?"prémio votado":"prémios votados"} pelo grupo, semana após semana. ${d.votes} votos no total.</p><div class="gchips">${d.awards.map(a=>`<span>${esc(a.emoji||"🏆")} ${esc(a.label)}</span>`).join("")}</div>`;
+  if(s.t==="suspense"){ const a=s.a; const {list}=standings(g.id,a.id); return `<div class="gkicker">Prémio</div><div class="gemoji pulse">${esc(a.emoji||"🏆")}</div><h2 class="gaward">${esc(a.label)}</h2>${a.desc?`<p class="glead">${esc(a.desc)}</p>`:""}
+      ${list.length?`<p class="gnominees">Os nomeados são…</p><div class="gmembers">${stack(list.slice(0,5).map(x=>x.k),44,5)}</div><p class="gdrum">E o prémio vai para…</p>`:`<p class="glead">Este prémio ainda não recebeu votos.</p>`}`; }
+  if(s.t==="reveal"){ const a=s.a; const {list,total}=standings(g.id,a.id); if(!list.length) return `<h2 class="gaward">${esc(a.label)}</h2><p class="glead">Sem votos este ano.</p>`;
+    const w=list[0]; const top=list.slice(0,3).map((e,i)=>({key:e.k,name:first(nm(e.k)),color:["#FFD60A","#C7C7D1","#D08C4B"][i]}));
+    const pts=seasonWeeks().map(wk=>({wk,s:standings(g.id,a.id,wk)})).filter(p=>p.s.total>0);
+    const chart=pts.length>=2?`<div class="gchart">${chartBox({points:pts.map(p=>({label:weekShort(p.wk),values:Object.fromEntries(top.map(t=>[t.key,p.s.list.find(x=>x.k===t.key)?.p??0]))})),series:top,min:0,max:(()=>{ const m=Math.max(...pts.flatMap(p=>top.map(t=>p.s.list.find(x=>x.k===t.key)?.p||0))); return Math.min(100,Math.max(20,Math.ceil(m/10)*10)); })(),ticks:null,fmt:v=>Math.round(v)+"%",h:150,aria:"Evolução ao longo do ano"})}${legend(top)}</div>`:"";
+    return `<div class="gkicker">${esc(a.emoji||"🏆")} ${esc(a.label)}</div><div class="gwinner big">${avatar(w.k,110)}<b>${esc(nm(w.k))}</b><span>${w.p}% dos votos · ${w.votes} de ${total}</span></div>${podium(list,v=>"")}${chart}`; }
+  if(s.t==="final") return `<div class="gkicker">O grande final</div><h2 class="gaward">Ranking de amizade ${y}</h2>${podium(d.final.map(x=>({k:x.k,v:x.avg})),v=>`média ${v.toFixed(1)}`)}
+      <div class="glist">${d.final.slice(3,12).map((x,i)=>`<div><span class="num">${i+4}</span>${avatar(x.k,26)}<span>${esc(nm(x.k))}</span><b class="num">${x.avg.toFixed(1)}</b></div>`).join("")}</div>`;
+  if(s.t==="end") return `<div class="gemoji">🎉</div><h1 class="gtitle">Obrigado, ${esc(g.name)}!</h1><p class="glead">Até à Gala ${+y+1}. Os votos recomeçam na primeira semana do ano.</p>`;
+  return "";
+}
+function confetti(cv,n){
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const r=cv.getBoundingClientRect(); const dpr=devicePixelRatio||1; cv.width=r.width*dpr; cv.height=r.height*dpr; const c=cv.getContext("2d"); c.scale(dpr,dpr);
+  const cols=["#FFD60A","#FF9F0A","#FF375F","#0A84FF","#30D158","#BF5AF2","#FFFFFF"];
+  const ps=Array.from({length:n},()=>({x:r.width/2+(Math.random()-.5)*80,y:r.height*.35,vx:(Math.random()-.5)*9,vy:-Math.random()*9-3,s:Math.random()*6+4,a:Math.random()*6.28,va:(Math.random()-.5)*.3,c:cols[Math.floor(Math.random()*cols.length)]}));
+  const t0=performance.now(); cancelAnimationFrame(cv._raf);
+  const tick=t=>{ c.clearRect(0,0,r.width,r.height); const el=t-t0;
+    ps.forEach(p=>{ p.vy+=.22; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.a+=p.va; c.save(); c.translate(p.x,p.y); c.rotate(p.a); c.globalAlpha=Math.max(0,1-el/2800); c.fillStyle=p.c; c.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); c.restore(); });
+    if(el<2800) cv._raf=requestAnimationFrame(tick); else c.clearRect(0,0,r.width,r.height); };
+  cv._raf=requestAnimationFrame(tick);
+}
+
+/* ───────────────────────── push notifications (standalone mode) ───────────────────────── */
+const VAPID_PUBLIC="BKVV4FGmIviV08QQxwpstFJB01wVpB9bs2zICxXeGPo2b4TTn3hY9CUaE2v1PFeERjsp4rUwJAoRUDtgK23nNI8";
+const PUSH_PREFS=[["events","Eventos novos","Quando alguém te adiciona a um evento"],["messages","Mensagens","Novas mensagens no GAP"],["reminders","Lembrete na véspera","No dia antes de um evento a que vais"],["votes","Votação de domingo","Se ainda não votaste nem fizeste o ranking"]];
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const pushSupported=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+const hashStr=s=>{ let h=5381; for(const ch of s) h=((h*33)^ch.charCodeAt(0))>>>0; return "s"+h.toString(36); };
+const b64u=s=>{ const p="=".repeat((4-s.length%4)%4); const b=atob((s+p).replace(/-/g,"+").replace(/_/g,"/")); return Uint8Array.from(b,c=>c.charCodeAt(0)); };
+function pushState(){ const me=myRealMember(); const p=(me&&S.reads[me]?.push)||{}; const h=lsGet("pushHash",null);
+  return {prefs:p.prefs||{}, on: !!(h&&p.subs&&p.subs[h]&&pushSupported()&&Notification.permission==="granted"), count:Object.keys(p.subs||{}).length}; }
+async function enablePush(){
+  const me=myRealMember(); if(!me||S.actingAs){ alertD("Volta a ser tu próprio","Ativa as notificações sem estares a ver a app como outra pessoa."); return; }
+  if(!pushSupported()){
+    if(isIOS&&!isStandalone()) return alertD("Primeiro adiciona a app ao ecrã principal","No Safari, toca em Partilhar › Adicionar ao ecrã principal. Depois abre a Pês a partir do ícone e ativa aqui as notificações.");
+    return alertD("Este browser não suporta notificações","Experimenta no Safari (iPhone) ou no Chrome.");
+  }
+  const perm=await Notification.requestPermission();
+  if(perm!=="granted") return alertD("Notificações bloqueadas","Para as ativar, permite as notificações da Pês nas definições do telemóvel e tenta outra vez.");
+  try{
+    const reg=await navigator.serviceWorker.register("sw.js"); await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription(); if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUBLIC)});
+    const j=sub.toJSON(); const h=hashStr(j.endpoint); const prefs=Object.fromEntries(PUSH_PREFS.map(([k])=>[k,S.reads[me]?.push?.prefs?.[k]??true]));
+    if(await write(()=>D("reads/"+me).update({push:{subs:{[h]:{endpoint:j.endpoint,keys:j.keys,at:Date.now(),ua:navigator.userAgent.slice(0,120)}},prefs}}),"Notificações ativadas")){ lsSet("pushHash",h); render(); }
+  } catch(e){ console.warn(e); alertD("Não foi possível ativar","Tenta outra vez. Se continuar, fecha e volta a abrir a app."); }
+}
+async function disablePush(){
+  const me=myRealMember(); const h=lsGet("pushHash",null);
+  try{ const reg=await navigator.serviceWorker.getRegistration(); const sub=await reg?.pushManager.getSubscription(); await sub?.unsubscribe(); }catch{}
+  if(h&&S.raw) await write(()=>S.raw.doc("reads/"+me).update({["push.subs."+h]:firebase.firestore.FieldValue.delete()}),"Notificações desligadas neste telemóvel");
+  lsSet("pushHash",null); render();
+}
+function notifSection(){
+  if(!S.fb) return `<div class="section"><div class="label">Notificações</div><div class="card pad"><p class="small muted">As notificações funcionam na versão publicada da app (goncaloxavier13.github.io/pes).</p></div></div>`;
+  const st=pushState();
+  return `<div class="section"><div class="label">Notificações</div><div class="card list">
+    <div class="row"><div class="grow"><div class="rowtitle">${st.on?"Ativas neste telemóvel":"Desligadas neste telemóvel"}</div><div class="rowsub">${st.on?"Chegam com até 10 minutos de atraso":isIOS&&!isStandalone()?"No iPhone, adiciona primeiro a app ao ecrã principal":"Recebe avisos mesmo com a app fechada"}</div></div>
+      <button class="minibtn" data-act="${st.on?"pushOff":"pushOn"}">${st.on?"Desligar":"Ativar"}</button></div>
+    ${PUSH_PREFS.map(([k,l,d])=>{ const on=st.prefs[k]!==false; return `<button class="row" data-act="pushPref" data-arg="${k}" role="switch" aria-checked="${on}" ${st.count?"":"disabled"}><div class="grow"><div class="rowtitle">${l}</div><div class="rowsub">${d}</div></div><span class="switch ${on?"on":""}"><i></i></span></button>`; }).join("")}
+  </div></div>`;
+}
 
 /* ───────────────────────── standalone mode: Firebase Auth + Firestore ───────────────────────── */
 const FBCFG = window.PES_FIREBASE || null;
@@ -1282,6 +1537,7 @@ async function fbBoot(){
   const v="10.12.2", base=`https://www.gstatic.com/firebasejs/${v}/`;
   try{ await loadScript(base+"firebase-app-compat.js"); await Promise.all([loadScript(base+"firebase-auth-compat.js"),loadScript(base+"firebase-firestore-compat.js")]); }
   catch{ app.querySelector(".screen").innerHTML=`<div class="center"><h2>Sem ligação</h2><p class="muted">Não foi possível carregar a app. Verifica a internet e recarrega a página.</p></div>`; return; }
+  try{ navigator.serviceWorker?.register("sw.js").catch(()=>{}); }catch{}
   firebase.initializeApp(FBCFG); const fdb=firebase.firestore(); S.raw=fdb; S.db=fbAdapter(fdb); S.fb=true;
   S.auth=firebase.auth(); S.auth.languageCode="pt";
   S.auth.onAuthStateChanged(async u=>{
