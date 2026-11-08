@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pês">
+<meta name="theme-color" content="#000000">
+<title>Pês</title>
+<style>
+/* Pês — Apple-style minimal: neutral greys, one blue accent, system type. Mobile column centred on wide screens. */
+:root{
+  --bg:#F2F2F7; --card:#FFFFFF; --card2:#F2F2F7; --text:#000000; --muted:#8A8A8E;
+  --border:#E3E3E8; --accent:#007AFF; --accent-soft:#E8F1FF; --on-accent:#FFFFFF;
+  --green:#28A745; --green-soft:#E6F6EA; --red:#E5352B; --red-soft:#FDECEB; --orange:#F08C00; --gold:#E3A000;
+  --overlay:rgba(0,0,0,.38); --shadow:0 10px 30px rgba(0,0,0,.12);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --r:16px; --r-sm:12px; --gut:20px;
+  --tabh:58px; --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+  --sl:env(safe-area-inset-left,0px); --sr:env(safe-area-inset-right,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]):not([data-pes="light"]){
+    --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E; --text:#FFFFFF; --muted:#98989F;
+    --border:#38383A; --accent:#0A84FF; --accent-soft:#0F2741; --on-accent:#FFFFFF;
+    --green:#32D74B; --green-soft:#0F2E17; --red:#FF453A; --red-soft:#3A1412; --orange:#FF9F0A; --gold:#FFD60A;
+    --overlay:rgba(0,0,0,.6); --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]:not([data-pes="light"]), :root[data-pes="dark"]{
+  --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E; --text:#FFFFFF; --muted:#98989F;
+  --border:#38383A; --accent:#0A84FF; --accent-soft:#0F2741; --on-accent:#FFFFFF;
+  --green:#32D74B; --green-soft:#0F2E17; --red:#FF453A; --red-soft:#3A1412; --orange:#FF9F0A; --gold:#FFD60A;
+  --overlay:rgba(0,0,0,.6); --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.35;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:disabled{cursor:default;opacity:.45}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+input,textarea,select{font:inherit;color:var(--text)}
+h1,h2,h3{margin:0;text-wrap:balance}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+#app{position:relative;height:100%;max-width:520px;margin:0 auto;background:var(--bg);overflow:hidden}
+@media (min-width:560px){#app{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.pad-tabs{padding-bottom:calc(var(--tabh) + var(--sb) + 28px)}
+.pad-bottom{padding-bottom:calc(var(--sb) + 28px)}
+
+/* Headers — one system for the whole app */
+.tabhead{padding:calc(var(--st) + 14px) calc(var(--gut) + var(--sr)) 10px calc(var(--gut) + var(--sl));display:flex;align-items:flex-end;gap:12px}
+.tabhead .titles{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.tabhead h1{font-family:var(--display);font-size:32px;font-weight:700;letter-spacing:-.6px}
+.navhead{position:relative;z-index:2;flex:none;padding:calc(var(--st) + 8px) calc(14px + var(--sr)) 10px calc(14px + var(--sl));display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;background:var(--bg);border-bottom:.5px solid var(--border)}
+.navhead h2{font-size:17px;font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navhead .sub{display:block;font-size:12px;font-weight:400;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.roundbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--card);color:var(--accent);flex:none}
+.roundbtn.fill{background:var(--accent);color:var(--on-accent)}
+.roundbtn svg{width:19px;height:19px}
+
+/* Sections & cards */
+.section{padding:0 calc(var(--gut) + var(--sr)) 0 calc(var(--gut) + var(--sl));margin-top:22px}
+.label{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:0 4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.label button{font-size:13px;font-weight:500;color:var(--accent);text-transform:none;letter-spacing:0}
+.card{background:var(--card);border-radius:var(--r);overflow:hidden}
+.card.pad{padding:16px}
+.list .row{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:56px;position:relative;width:100%;text-align:left}
+.list .row+.row::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--border)}
+.list .row .grow{flex:1;min-width:0}
+.rowtitle{font-size:16px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rowsub{font-size:13px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.empty{padding:28px 20px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.empty .ico{width:44px;height:44px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin-bottom:4px}
+.empty .ico svg{width:22px;height:22px}
+.empty h3{font-size:17px;font-weight:600}
+.empty p{font-size:14px;color:var(--muted);max-width:30ch}
+
+/* Buttons */
+.btn{height:48px;border-radius:14px;padding:0 18px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:16px;background:var(--accent);color:var(--on-accent);white-space:nowrap}
+.btn.secondary{background:var(--card);color:var(--accent)}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.btn.danger{background:var(--red-soft);color:var(--red)}
+.btn.block{width:100%}
+.btn svg{width:18px;height:18px;flex:none}
+.btnrow{display:flex;gap:12px}
+.btnrow .btn{flex:1;min-width:0;padding:0 10px;font-size:15px}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600;align-self:flex-start;max-width:100%}
+.pill span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill svg{width:12px;height:12px;flex:none}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.chip.green{background:var(--green-soft);color:var(--green)}
+.chip.red{background:var(--red-soft);color:var(--red)}
+.chip.grey{background:var(--card2);color:var(--muted)}
+.chip svg{width:11px;height:11px}
+.linkbtn{color:var(--accent);font-weight:500;font-size:15px}
+.minibtn{display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:20px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;white-space:nowrap}
+.minibtn svg{width:13px;height:13px}
+.iconbtn{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.iconbtn svg{width:18px;height:18px}
+
+/* Avatars */
+.av{border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;overflow:hidden;color:#fff;background:var(--muted);user-select:none}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.stack{display:flex;align-items:center}
+.stack .av{box-shadow:0 0 0 2px var(--card)}
+.stack .av+.av{margin-left:-9px}
+.stack .more{background:var(--accent-soft);color:var(--accent)}
+
+/* Tab bar */
+.tabbar{position:absolute;left:0;right:0;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(5,1fr);padding:6px var(--sr) calc(var(--sb) + 4px) var(--sl);background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--border)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--muted);height:48px;justify-content:center;position:relative}
+.tab svg{width:24px;height:24px}
+.tab.on{color:var(--accent)}
+.badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--card)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--card);border-radius:14px;padding:12px 10px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.stat .v{font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.4px}
+.stat .k{font-size:12px;font-weight:600;line-height:1.2}
+.stat .s{font-size:11px;color:var(--muted);line-height:1.2}
+.stat.cta{background:var(--accent);color:var(--on-accent);justify-content:space-between;text-align:left}
+.stat.cta .k{font-size:13px}
+.stat.cta .s{color:color-mix(in srgb,var(--on-accent) 80%,transparent)}
+.stat.cta svg{width:20px;height:20px}
+.stat.done{background:var(--card);color:var(--text)}
+.stat.done svg{color:var(--green)}
+.stat.done .s{color:var(--muted)}
+
+.bar{height:5px;border-radius:3px;background:var(--card2);overflow:hidden;flex:none}
+.bar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.rank{width:26px;text-align:center;font-weight:700;font-size:14px;color:var(--muted);flex:none}
+.rank.gold{color:var(--gold)}
+
+/* Events */
+.ev{display:flex;gap:14px;padding:14px 16px}
+.datebox{width:46px;flex:none;text-align:center;border-radius:12px;background:var(--card2);padding:6px 0}
+.datebox b{display:block;font-size:19px;font-weight:700;line-height:1.1}
+.datebox span{display:block;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--red)}
+.ev h3{font-size:16px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.ev .meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);margin-top:6px;align-items:center}
+.ev .desc{font-size:14px;color:var(--muted);margin-top:4px;overflow-wrap:anywhere}
+.presence{border-top:.5px solid var(--border);padding:10px 16px 12px;display:flex;flex-direction:column;gap:8px}
+.presence .q{font-size:12px;font-weight:500;color:var(--muted)}
+.seg2{display:flex;gap:10px}
+.seg2 button{flex:1;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--card2);font-size:14px;font-weight:500;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px}
+.seg2 button svg{width:15px;height:15px}
+.seg2 button.yes{border-color:var(--green);background:var(--green-soft);color:var(--green)}
+.seg2 button.no{border-color:var(--red);background:var(--red-soft);color:var(--red)}
+.notice{background:var(--accent-soft);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.notice .n{background:var(--card);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+
+/* Journey */
+.votechip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:var(--card);width:100%;text-align:left;font-size:15px;font-weight:500;color:var(--muted)}
+.votechip.set{border-color:var(--accent);color:var(--accent)}
+.votechip.local{background:var(--accent-soft)}
+.votechip .grow{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.votechip svg{width:16px;height:16px;flex:none}
+.dots{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dot{width:22px;height:22px;border-radius:50%;background:var(--card);display:grid;place-items:center;color:var(--on-accent)}
+.dot.on{background:var(--accent)}
+.dot svg{width:12px;height:12px}
+.floatbar{position:absolute;left:0;right:0;bottom:calc(var(--tabh) + var(--sb) + 10px);z-index:4;padding:0 calc(var(--gut) + var(--sr)) 0 calc(var(--gut) + var(--sl))}
+.floatbar .btn{box-shadow:var(--shadow)}
+.award{display:flex;align-items:center;gap:10px}
+.award .emo{font-size:24px;line-height:1;width:30px;text-align:center;flex:none}
+.award h3{font-size:17px;font-weight:700;flex:1;min-width:0;overflow-wrap:anywhere}
+.toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:9px 0;font-size:13px;font-weight:500;color:var(--muted)}
+.toggle svg{width:14px;height:14px}
+
+/* Home */
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:46px;height:46px;border-radius:13px;background:var(--card);display:grid;place-items:center;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.logo svg{width:32px;height:32px}
+.logo.big{width:84px;height:84px;border-radius:22px}
+.logo.big svg{width:58px;height:58px}
+.brand b{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:-.3px}
+.hello{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:22px;text-align:center}
+.hello p{font-size:14px;color:var(--muted)}
+.hello h2{font-family:var(--display);font-size:24px;font-weight:700}
+.gcard{display:block;width:100%;text-align:left;background:var(--card);border-radius:18px;padding:16px}
+.gcard+.gcard{margin-top:12px}
+.gtop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.gphoto{width:48px;height:48px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;overflow:hidden;flex:none}
+.gphoto img{width:100%;height:100%;object-fit:cover}
+.gphoto svg{width:24px;height:24px}
+
+/* Chat */
+.chatrow .dotu{width:10px;height:10px;border-radius:50%;background:var(--accent);flex:none}
+.msgs{padding:12px 14px 8px;display:flex;flex-direction:column;gap:2px}
+.day{align-self:center;font-size:12px;font-weight:600;color:var(--muted);background:var(--card);padding:4px 10px;border-radius:10px;margin:12px 0 8px}
+.m{display:flex;align-items:flex-end;gap:8px;max-width:100%}
+.m.me{justify-content:flex-end}
+.m .col{display:flex;flex-direction:column;max-width:76%;min-width:0}
+.m.me .col{align-items:flex-end}
+.m .who{font-size:12px;color:var(--muted);margin:6px 0 2px 12px}
+.bub{padding:8px 13px;border-radius:18px;background:var(--card);font-size:16px;line-height:1.35;white-space:pre-wrap;overflow-wrap:anywhere}
+.m.me .bub{background:var(--accent);color:var(--on-accent)}
+.m .t{font-size:11px;color:var(--muted);margin:3px 8px 6px}
+.m .avs{width:28px;flex:none}
+.composer{flex:none;display:flex;align-items:flex-end;gap:10px;padding:8px calc(14px + var(--sr)) calc(var(--sb) + 8px) calc(14px + var(--sl));background:var(--bg);border-top:.5px solid var(--border)}
+.composer textarea{flex:1;resize:none;border:1px solid var(--border);background:var(--card);border-radius:20px;padding:9px 14px;min-height:40px;max-height:120px;line-height:1.35;font-size:16px;outline:none}
+.composer .send{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.composer .send:disabled{background:var(--card2);color:var(--muted);opacity:1}
+.composer .send svg{width:18px;height:18px}
+
+/* Forms */
+.field{display:flex;flex-direction:column;gap:6px}
+.field+.field{margin-top:16px}
+.field label,.flabel{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-left:4px}
+.input{width:100%;height:48px;border-radius:12px;border:1px solid var(--border);background:var(--card);padding:0 14px;font-size:16px;outline:none}
+textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
+.input:focus{border-color:var(--accent)}
+.code{letter-spacing:6px;text-align:center;font-size:22px;font-weight:600;text-transform:uppercase}
+.hint{font-size:13px;color:var(--muted);margin:2px 4px 0}
+.check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;flex:none;color:var(--on-accent)}
+.check.on{background:var(--accent);border-color:var(--accent)}
+.check svg{width:13px;height:13px}
+.seg{display:flex;background:var(--card2);border-radius:10px;padding:2px}
+.seg button{flex:1;height:32px;border-radius:8px;font-size:14px;font-weight:500;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* Sheets, dialogs, toasts */
+.layer{position:absolute;inset:0;z-index:20}
+.overlay{position:absolute;inset:0;background:var(--overlay);animation:fade .2s ease}
+.sheet{position:absolute;left:0;right:0;bottom:0;top:calc(var(--st) + 14px);background:var(--bg);border-radius:14px 14px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:up .28s cubic-bezier(.2,.8,.2,1)}
+.sheet.short{top:auto;max-height:calc(100% - var(--st) - 14px)}
+.sheethead{flex:none;display:grid;grid-template-columns:minmax(72px,auto) 1fr minmax(72px,auto);align-items:center;gap:8px;padding:12px 16px;border-bottom:.5px solid var(--border);background:var(--bg)}
+.sheethead h2{font-size:17px;font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheethead .l{justify-self:start;color:var(--accent);font-size:16px;font-weight:400}
+.sheethead .r{justify-self:end;color:var(--accent);font-size:16px;font-weight:600}
+.sheethead .r:disabled{color:var(--muted);opacity:1}
+.sheetbody{flex:1;overflow-y:auto;padding:20px calc(var(--gut) + var(--sr)) calc(var(--sb) + 28px) calc(var(--gut) + var(--sl))}
+.dialog{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(300px,calc(100% - 48px));background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);animation:pop .18s ease}
+.dialog .dt{padding:20px 18px 16px;text-align:center}
+.dialog h3{font-size:17px;font-weight:600}
+.dialog p{font-size:14px;color:var(--muted);margin-top:6px}
+.dialog .db{display:flex;border-top:.5px solid var(--border)}
+.dialog .db button{flex:1;height:46px;font-size:16px;color:var(--accent)}
+.dialog .db button+button{border-left:.5px solid var(--border);font-weight:600}
+.dialog .db button.danger{color:var(--red)}
+.actions{position:absolute;left:8px;right:8px;bottom:calc(var(--sb) + 8px);display:flex;flex-direction:column;gap:8px;animation:up .25s ease;max-width:504px;margin:0 auto}
+.actions .grp{background:var(--card);border-radius:14px;overflow:hidden}
+.actions .grp:first-child{max-height:calc(100dvh - var(--st) - var(--sb) - 110px);overflow-y:auto;overscroll-behavior:contain}
+.actions .ttl{position:sticky;top:0;background:var(--card);z-index:1}
+.actions .ttl{padding:12px 16px;text-align:center;font-size:13px;color:var(--muted);border-bottom:.5px solid var(--border)}
+.actions .grp button{width:100%;min-height:54px;padding:8px 16px;font-size:16px;line-height:1.25;text-align:center;color:var(--accent);display:flex;align-items:center;justify-content:center;gap:8px}
+.actions .grp button+button{border-top:.5px solid var(--border)}
+.actions .grp button.danger{color:var(--red)}
+.actions .grp button.sel{font-weight:600}
+.actions .cancel{font-weight:600}
+.toast{position:absolute;left:50%;top:calc(var(--st) + 12px);transform:translateX(-50%);z-index:40;background:var(--text);color:var(--bg);padding:10px 16px;border-radius:20px;font-size:14px;font-weight:500;box-shadow:var(--shadow);animation:pop .2s ease;max-width:calc(100% - 40px);text-align:center}
+.banner{margin:0 calc(var(--gut) + var(--sr)) 0 calc(var(--gut) + var(--sl));padding:10px 14px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:500;display:flex;gap:8px;align-items:center}
+.banner svg{width:16px;height:16px;flex:none}
+.banner.warn{background:var(--red-soft);color:var(--red)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:translate(-50%,-50%) scale(.96)}to{opacity:1}}
+.toast{animation:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Claim / loading */
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
+.spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--card2);border-top-color:var(--accent);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.namegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.namebtn{background:var(--card);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;text-align:left;min-width:0}
+.namebtn span{font-size:15px;font-weight:500;line-height:1.2;overflow-wrap:anywhere;min-width:0}
+.namebtn small{display:block;font-size:11px;color:var(--muted)}
+.namebtn:disabled{opacity:.5}
+
+/* Group detail */
+.ghead{display:flex;align-items:center;gap:16px}
+.ghead .gp{position:relative;flex:none}
+.ghead .gphoto{width:68px;height:68px;border-radius:20px}
+.ghead .edit{position:absolute;right:-5px;bottom:-5px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;box-shadow:0 0 0 2px var(--card)}
+.ghead .edit svg{width:13px;height:13px}
+.ghead .chip{align-self:flex-start}
+.ghead h2{font-size:20px;font-weight:700;overflow-wrap:anywhere}
+.invite{display:flex;align-items:center;gap:12px}
+.invite .c{font-family:var(--display);font-size:28px;font-weight:700;letter-spacing:5px;color:var(--accent);flex:1}
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mcard{background:var(--card);border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.mcard .nm{font-size:13px;font-weight:500;line-height:1.2;overflow-wrap:anywhere}
+.chart{width:100%;min-height:200px}
+.chart svg{display:block;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.info{font-size:12px;color:var(--muted);margin:8px 4px 0;line-height:1.4}
+.rankrow{display:flex;align-items:center;gap:10px;padding:10px 12px;min-height:56px}
+.rankrow+.rankrow{border-top:.5px solid var(--border)}
+.rankrow .grow{white-space:normal;overflow-wrap:anywhere;line-height:1.2}
+.rankrow .iconbtn{width:30px;height:30px}
+.rankrow .n{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.namechip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:22px;background:var(--card);font-size:14px;font-weight:500}
+</style>
+</head>
+<body>
+<div id="app"><div class="screen"><div class="center"><div class="spinner" aria-label="A carregar"></div></div></div></div>
+<script>
+"use strict";
+/* ───────────────────────── constants ───────────────────────── */
+/* People are created by each user (no fixed member list). nm() resolves a person's display name. */
+const nm = k => S.people[k]?.name || "Alguém";
+const DEFAULT_AWARDS = [
+  {key:"the_best",label:"The Best",emoji:"🏆",desc:"Melhor membro do ano",order:1},
+  {key:"fdgp",label:"Prémio FDGP",emoji:"😈",desc:"O membro mais egoísta",order:2},
+  {key:"full_of_lifes",label:"Full of Lifes",emoji:"⚡",desc:"O membro menos presente",order:3},
+  {key:"coro_do_ano",label:"Coro do Ano",emoji:"🎶",desc:"O contador de histórias mais inacreditável",order:4},
+];
+const SERIES = ["#0A84FF","#FF9F0A","#30C259","#FF375F","#AF52DE"];
+const MONTHS = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const WD = ["dom","seg","ter","qua","qui","sex","sáb"];
+
+/* ───────────────────────── icons ───────────────────────── */
+const P = {
+  home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/>',
+  chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  back:'<path d="m15 18-6-6 6-6"/>',
+  close:'<path d="M18 6 6 18M6 6l12 12"/>',
+  down:'<path d="m6 9 6 6 6-6"/>',
+  up:'<path d="m18 15-6-6-6 6"/>',
+  right:'<path d="m9 18 6-6-6-6"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+  user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+  edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  trash:'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>',
+  camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  send:'<path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/>',
+  compose:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+  exit:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+  bell:'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/>',
+  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+};
+const ic = (n,extra="") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${P[n]}</svg>`;
+const LOGO = `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M13 30a19 19 0 0 1 38 0z" fill="currentColor"/><path d="M13 30q4.75-3 9.5 0q4.75-3 9.5 0q4.75-3 9.5 0q4.75-3 9.5 0" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M13.5 31 32 54 50.5 31M22.5 31 32 54 41.5 31M32 31v23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+
+/* ───────────────────────── utils ───────────────────────── */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const first = n => (n||"").split(" ")[0];
+const initials = n => (n||"?").split(" ").filter(Boolean).map(w=>w[0]).join("").slice(0,2).toUpperCase();
+const hue = k => { let h=0; for (const c of k||"") h=(h*31+c.charCodeAt(0))%360; return h; };
+const uidGen = () => Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const pct = (a,b) => b>0 ? Math.round(a/b*100) : 0;
+const lsGet = (k,d) => { try { const v = localStorage.getItem("pes:"+k); return v==null?d:JSON.parse(v); } catch { return d; } };
+const lsSet = (k,v) => { try { localStorage.setItem("pes:"+k, JSON.stringify(v)); } catch {} };
+const firstGrapheme = s => { s=(s||"").trim(); if(!s) return ""; try { return [...new Intl.Segmenter("pt",{granularity:"grapheme"}).segment(s)][0].segment; } catch { return Array.from(s).slice(0,2).join(""); } };
+
+/* Time — everything weekly runs on Portugal time (Europe/Lisbon) */
+const lisbonYMD = (d=new Date()) => new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Lisbon",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+const ymdToUTC = ymd => { const [y,m,d]=ymd.split("-").map(Number); return new Date(Date.UTC(y,m-1,d)); };
+const utcToYmd = dt => dt.toISOString().slice(0,10);
+function weekOf(ymd){
+  const dt = ymdToUTC(ymd); const day=(dt.getUTCDay()+6)%7; dt.setUTCDate(dt.getUTCDate()-day+3);
+  const fy = dt.getUTCFullYear(); const jan4=new Date(Date.UTC(fy,0,4));
+  const w = 1+Math.round(((dt-jan4)/864e5-3+((jan4.getUTCDay()+6)%7))/7);
+  return `${fy}-W${String(w).padStart(2,"0")}`;
+}
+function weekMonday(key){
+  const [y,w]=key.split("-W").map(Number); const jan4=new Date(Date.UTC(y,0,4));
+  const mon=new Date(jan4); mon.setUTCDate(jan4.getUTCDate()-((jan4.getUTCDay()+6)%7)+(w-1)*7); return mon;
+}
+const curWeek = () => weekOf(lisbonYMD());
+function weeksBack(n, from=curWeek()){ const out=[]; const m=weekMonday(from); for(let i=n-1;i>=0;i--){ const d=new Date(m); d.setUTCDate(m.getUTCDate()-7*i); out.push(weekOf(utcToYmd(d))); } return out; }
+function weekRange(key){ const m=weekMonday(key); const s=new Date(m); s.setUTCDate(m.getUTCDate()+6);
+  const a=`${m.getUTCDate()}`+(m.getUTCMonth()!==s.getUTCMonth()?` ${MONTHS[m.getUTCMonth()]}`:""); return `${a} a ${s.getUTCDate()} ${MONTHS[s.getUTCMonth()]}`; }
+const weekShort = key => { const m=weekMonday(key); return `${m.getUTCDate()} ${MONTHS[m.getUTCMonth()]}`; };
+function fmtDate(ymd){ if(!ymd) return ""; const d=ymdToUTC(ymd); return `${WD[d.getUTCDay()]}., ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`; }
+function dayLabel(ts){ const ymd=lisbonYMD(new Date(ts)); const today=lisbonYMD(); const y=new Date(); y.setDate(y.getDate()-1);
+  if (ymd===today) return "Hoje"; if (ymd===lisbonYMD(y)) return "Ontem"; return fmtDate(ymd).replace(/ \d{4}$/, ymd.slice(0,4)===today.slice(0,4)?"":" "+ymd.slice(0,4)); }
+const hhmm = ts => new Intl.DateTimeFormat("pt-PT",{timeZone:"Europe/Lisbon",hour:"2-digit",minute:"2-digit"}).format(new Date(ts));
+function ago(ts){ if(!ts) return ""; const m=Math.floor((Date.now()-ts)/6e4); if(m<1) return "agora"; if(m<60) return `${m} min`; const h=Math.floor(m/60); if(h<24) return `${h} h`; const d=Math.floor(h/24); if(d<7) return `${d} d`; const ymd=lisbonYMD(new Date(ts)); return `${+ymd.slice(8)} ${MONTHS[+ymd.slice(5,7)-1]}`; }
+
+/* ───────────────────────── demo data (used by preview mode and for seeding) ───────────────────────── */
+/* Demo dataset: 28 people, 7 groups, 30 weeks of votes and rankings, events and chats. "goncalo-xavier" is the person testing. */
+function generateDemo(nowMs){
+  let seed=11; const rnd=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; };
+  const pick=a=>a[Math.floor(rnd()*a.length)];
+  const me="goncalo-xavier"; const docs={}; const DAY=864e5;
+  const PEOPLE=[["goncalo-xavier","Gonçalo Xavier"],["tuna-cardoso","Tuna Cardoso"],["joao-t","João T"],["zeca-couceiro","Zeca Couceiro"],
+    ["francisco-cabral","Francisco Cabral"],["francisco-guerra","Francisco Guerra"],["joao-porto","João Porto"],["frederico-napoles","Frederico Nápoles"],
+    ["manel-xavier","Manel Xavier"],["sid","Sid"],["jorge","Jorge"],["rui-matos","Rui Matos"],["pedro-lima","Pedro Lima"],["tiago-santos","Tiago Santos"],
+    ["ines-duarte","Inês Duarte"],["marta-ribeiro","Marta Ribeiro"],["ricardo-alves","Ricardo Alves"],["sofia-nunes","Sofia Nunes"],["bruno-teixeira","Bruno Teixeira"],
+    ["catarina-lopes","Catarina Lopes"],["ana-xavier","Ana Xavier"],["rita-xavier","Rita Xavier"],["luis-xavier","Luís Xavier"],["teresa-xavier","Teresa Xavier"],
+    ["beatriz-sousa","Beatriz Sousa"],["carlos-mendes","Carlos Mendes"],["joana-faria","Joana Faria"],["miguel-costa","Miguel Costa"]];
+  PEOPLE.forEach(([k,n],i)=>{ docs["people/"+k]={name:n,uid:null,photo:null,createdAt:nowMs-(220-i)*DAY,demo:true}; });
+  const cw=weekOf(lisbonYMD(new Date(nowMs))); const WEEKS=weeksBack(30,cw);
+  const elc=["goncalo-xavier","tuna-cardoso","joao-t","zeca-couceiro","francisco-cabral","francisco-guerra","joao-porto","frederico-napoles","manel-xavier","sid","jorge"];
+  const G=[
+    {id:"g-elcalderon",name:"El Calderón",code:"CALD3R",members:elc,admins:[me],start:0,
+      awards:[["the_best","The Best","🏆","Melhor membro do ano",["tuna-cardoso","zeca-couceiro",me]],["fdgp","Prémio FDGP","😈","O membro mais egoísta",["sid","frederico-napoles"]],
+        ["full_of_lifes","Full of Lifes","⚡","O membro menos presente",["jorge","joao-porto"]],["coro_do_ano","Coro do Ano","🎶","O contador de histórias mais inacreditável",["joao-t","manel-xavier"]],
+        ["atraso","Rei do Atraso","⏰","Quem chega sempre tarde",["jorge","sid"],12]],
+      events:["Jantar na tasca","Almoço de verão","Noite de jogos","Churrasco de agosto","Aniversário do Sid","Concerto no Coliseu","Jantar de setembro","Cinema","Magusto","Sunset em Santos","Jantar de Natal"]},
+    {id:"g-futebol",name:"Futebol de quinta",code:"BOLA44",members:[me,"tuna-cardoso","sid","jorge","joao-porto","manel-xavier","rui-matos","pedro-lima","tiago-santos"],admins:["tuna-cardoso",me],start:4,
+      awards:[["golo","Golo da época","⚽","",["rui-matos","tuna-cardoso"]],["falhanco","Pior falhanço","🙈","",["jorge","pedro-lima"]],["faltas","Mais faltas","🟨","",["sid","tiago-santos"]]],
+      events:["Jogo no Restelo","Torneio de verão","Jogo de quinta","Jogo contra os Leões","Jogo de quinta","Jantar pós-jogo","Jogo de quinta"]},
+    {id:"g-agencia",name:"Colegas da agência",code:"AGENC7",members:[me,"ines-duarte","marta-ribeiro","ricardo-alves","sofia-nunes","bruno-teixeira","catarina-lopes"],admins:["ines-duarte"],start:8,
+      awards:[["colega","Colega do mês","⭐","Quem mais ajudou a equipa",["ines-duarte","marta-ribeiro",me]],["cafe","Rei do café","☕","Quem bebe mais cafés",["bruno-teixeira","ricardo-alves"]]],
+      events:["Almoço de equipa","Team building","After-work","Jantar de fim de projeto","Almoço de sexta"]},
+    {id:"g-familia",name:"Família Xavier",code:"FAMXV1",members:[me,"manel-xavier","ana-xavier","rita-xavier","luis-xavier","teresa-xavier"],admins:["ana-xavier"],start:2,
+      awards:[["cozinha","Melhor cozinheiro","🍲","",["teresa-xavier","ana-xavier"]],["almoco","Mais atrasado ao almoço","⏰","",["manel-xavier",me]]],
+      events:["Almoço de domingo","Aniversário da avó","Almoço de domingo","Férias no Algarve","Almoço de domingo","Batizado"]},
+    {id:"g-acores",name:"Viagem aos Açores",code:"AZOR26",members:[me,"tuna-cardoso","zeca-couceiro","ines-duarte","rita-xavier"],admins:[me],start:24,
+      awards:[["foto","Melhor fotógrafo","📸","",["rita-xavier","zeca-couceiro"]]],
+      events:["Reunião de planeamento","Compra dos voos"]},
+    {id:"g-leitura",name:"Clube de leitura",code:"LIVRO1",members:["beatriz-sousa","carlos-mendes","joana-faria","miguel-costa","sofia-nunes"],admins:["beatriz-sousa"],start:6,
+      awards:[["livro","Melhor sugestão","📚","",["joana-faria","carlos-mendes"]]],
+      events:["Sessão de março","Sessão de abril","Sessão de maio"]},
+    {id:"g-padel",name:"Padel",code:"PADEL9",members:[me,"rui-matos","catarina-lopes"],admins:[me],start:29,awards:[],events:[]},
+  ];
+  const lazy={"jorge":.45,"joao-porto":.6,"luis-xavier":.5,"bruno-teixeira":.6};
+  G.forEach((g,gi)=>{
+    const created=weekMonday(WEEKS[g.start]).getTime()+DAY;
+    docs["groups/"+g.id]={name:g.name,code:g.code,members:g.members,admins:g.admins,createdBy:g.admins[0],createdAt:created,photo:null,demo:true};
+    g.awards.forEach(([key,label,emoji,desc,fav,from],ai)=>{ docs[`awards/a-${g.id}-${key}`]={groupId:g.id,label,emoji,desc,order:ai+1,createdAt:weekMonday(WEEKS[Math.max(g.start,from||0)]).getTime(),demo:true}; });
+    // events spread from group start to a few weeks ahead
+    const n=g.events.length; const startDay=-(30-g.start)*7+3;
+    g.events.forEach((t,i)=>{
+      const upcoming = i===n-1 && n>3; const off = upcoming ? 20+gi*3 : Math.round(startDay + (i+.5)*((-4-startDay)/n));
+      const d=new Date(nowMs+off*DAY); const creator = (i%3===1 && g.members.includes(me)) ? me : pick(g.members);
+      const att={[creator]:"yes"};
+      g.members.filter(k=>k!==creator).forEach(k=>{ if(rnd()<.8) att[k]= off>0?(rnd()<.4?"yes":"pending") : (rnd()<(lazy[k]?lazy[k]:.8)?"yes":"no"); });
+      if (off<0 && i>=n-3 && g.members.includes(me) && creator!==me) att[me]="pending";
+      if (upcoming && creator!==me && g.members.includes(me)) att[me]="pending";
+      docs[`events/e-${g.id}-${i}`]={groupId:g.id,title:t,desc:i===0?"Primeiro encontro do grupo":(i===n-1&&upcoming?"Confirmem até ao fim do mês":""),date:lisbonYMD(d),createdBy:creator,createdAt:Math.min(nowMs,d.getTime()-2*DAY),att,demo:true};
+    });
+  });
+  // votes & rankings
+  const votes={}, ranks={}; PEOPLE.forEach(([k])=>{ votes[k]={}; ranks[k]={}; });
+  G.forEach((g,gi)=>{
+    const base=[...g.members].sort(()=>rnd()-.5); const phase=Object.fromEntries(g.members.map(k=>[k,rnd()*6.28]));
+    WEEKS.forEach((w,wi)=>{
+      if (wi<g.start) return;
+      g.members.forEach(v=>{
+        const isNow = w===cw; const skipMe = v===me && isNow && g.id==="g-elcalderon";
+        const p = lazy[v] ?? .82;
+        if (!skipMe && rnd()<p){ g.awards.forEach(([key,,, ,fav,from])=>{ if(from && wi<from) return; const pool=g.members.filter(x=>x!==v);
+            let nom = rnd()<.55 ? pick(fav.filter(x=>x!==v).length?fav.filter(x=>x!==v):pool) : pick(pool);
+            (votes[v][w]=votes[v][w]||{})[`a-${g.id}-${key}`]=nom; }); }
+        if (!skipMe && rnd()<p-.05){
+          const others=g.members.filter(x=>x!==v);
+          const order=others.map(x=>[x, base.indexOf(x) + 2.2*Math.sin(wi/4+phase[x]) + rnd()*1.8]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]);
+          const r={}; order.forEach((x,i)=>r[x]=i+1); (ranks[v][w]=ranks[v][w]||{})[g.id]=r; }
+      });
+    });
+  });
+  PEOPLE.forEach(([k])=>{ docs["votes/"+k]={weeks:votes[k],demo:true}; docs["rankings/"+k]={weeks:ranks[k],demo:true}; });
+  // chats
+  const chat=(id,o,msgs)=>{ docs["chats/"+id]={...o,lastAt:null,lastText:"",lastFrom:null,demo:true};
+    msgs.forEach(([who,txt,minAgo],i)=>{ const at=nowMs-minAgo*6e4; docs[`chats/${id}/msgs/m${String(i).padStart(3,"0")}`]={from:who,text:txt,at,demo:true};
+      Object.assign(docs["chats/"+id],{lastAt:at,lastText:txt.slice(0,140),lastFrom:who}); }); };
+  chat("c-natal",{groupId:"g-elcalderon",type:"group",name:"Jantar de Natal 🎄",members:elc,createdBy:"zeca-couceiro",createdAt:nowMs-5*DAY},[
+    ["zeca-couceiro","Malta, já reservei para dia 12. Mesa para 11!",2900],["tuna-cardoso","Grande! Onde é?",2890],["zeca-couceiro","No sítio do ano passado, em Alcântara",2880],
+    ["sid","Eu levo o amigo secreto organizado",1500],["jorge","Vou chegar um bocadinho atrasado 😅",1490],["joao-t","Clássico. Rei do Atraso garantido",1485],
+    ["manel-xavier","Limite do amigo secreto 20€?",300],["frederico-napoles","Por mim 20€ está ótimo",45],["zeca-couceiro","Fechado: 20€. Confirmem presença no evento!",12]]);
+  chat("c-tuna",{groupId:"g-elcalderon",type:"direct",name:"",members:[me,"tuna-cardoso"],createdBy:"tuna-cardoso",createdAt:nowMs-20*DAY},[
+    ["tuna-cardoso","Viste o resultado de ontem?",3000],[me,"Vi, que jogo!",2990],["tuna-cardoso","Para a semana jogamos outra vez quinta?",1440],[me,"Conta comigo",1430],["tuna-cardoso","Leva a bola nova",95]]);
+  chat("c-jogos",{groupId:"g-elcalderon",type:"group",name:"Noite de jogos",members:[me,"zeca-couceiro","francisco-cabral","francisco-guerra","joao-porto"],createdBy:me,createdAt:nowMs-40*DAY},[
+    ["zeca-couceiro","Sábado lá em casa?",9000],["francisco-cabral","Bora, levo o Catan",8990],[me,"Eu levo as pizzas 🍕",8900],["francisco-guerra","Desta vez ganho eu",8800],["joao-porto","Isso é o que dizes sempre",8790]]);
+  chat("c-convocatoria",{groupId:"g-futebol",type:"group",name:"Convocatória",members:[me,"tuna-cardoso","sid","jorge","joao-porto","manel-xavier","rui-matos","pedro-lima","tiago-santos"],createdBy:"tuna-cardoso",createdAt:nowMs-60*DAY},[
+    ["tuna-cardoso","Quinta às 21h, campo 3. Quem vem?",1600],["rui-matos","Presente ⚽",1590],["pedro-lima","Eu vou",1500],[me,"Conta comigo",1480],["jorge","Não dá, tenho jantar",700],["tiago-santos","Levo coletes",60]]);
+  chat("c-almoco-sexta",{groupId:"g-agencia",type:"group",name:"Almoço de sexta",members:[me,"ines-duarte","marta-ribeiro","ricardo-alves","sofia-nunes","bruno-teixeira","catarina-lopes"],createdBy:"ines-duarte",createdAt:nowMs-30*DAY},[
+    ["ines-duarte","Sexta vamos ao japonês?",4300],["marta-ribeiro","Sim!!",4290],["bruno-teixeira","Prefiro hambúrgueres 🍔",4200],["catarina-lopes","Japonês 2, hambúrgueres 1",4190],[me,"Japonês",4100]]);
+  chat("c-ines",{groupId:"g-agencia",type:"direct",name:"",members:[me,"ines-duarte"],createdBy:"ines-duarte",createdAt:nowMs-3*DAY},[
+    ["ines-duarte","Consegues rever a apresentação antes de amanhã?",400],[me,"Sim, vejo hoje à noite",380],["ines-duarte","Obrigada! 🙏",30]]);
+  chat("c-familia",{groupId:"g-familia",type:"group",name:"Almoço de domingo",members:[me,"manel-xavier","ana-xavier","rita-xavier","luis-xavier","teresa-xavier"],createdBy:"ana-xavier",createdAt:nowMs-50*DAY},[
+    ["teresa-xavier","Domingo faço cozido à portuguesa",2000],["ana-xavier","Levo a sobremesa",1990],["manel-xavier","Chego às 13h30",1900],["teresa-xavier","Às 13h, Manel!",1890]]);
+  chat("c-acores",{groupId:"g-acores",type:"group",name:"Planeamento",members:[me,"tuna-cardoso","zeca-couceiro","ines-duarte","rita-xavier"],createdBy:me,createdAt:nowMs-35*DAY},[
+    [me,"Voos comprados ✈️ 14 a 21 de maio",3000],["rita-xavier","Já vi casas em Ponta Delgada",2900],["zeca-couceiro","Temos de ir à Lagoa do Fogo",2000],["ines-duarte","E às Furnas!",150]]);
+  docs["reads/"+me]={chats:{"c-jogos":nowMs,"c-natal":nowMs-2000*6e4,"c-convocatoria":nowMs,"c-familia":nowMs,"c-almoco-sexta":nowMs},demo:true};
+  return docs;
+}
+
+/* ───────────────────────── in-memory store (preview when the shared store is unavailable) ───────────────────────── */
+function MemDB(initial){
+  const data=new Map(Object.entries(initial||{})); const subs=new Set();
+  const notify=()=>queueMicrotask(()=>subs.forEach(s=>s()));
+  const snap=(id,d)=>({id,exists:!!d,data:()=>d,metadata:{fromCache:false,hasPendingWrites:false}});
+  const merge=(a,b)=>{ const o={...a}; for(const k in b){ if(b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])&&a&&typeof a[k]==="object"&&!Array.isArray(a[k])) o[k]=merge(a[k],b[k]); else o[k]=b[k]; } return o; };
+  const docRef=path=>({id:path.split("/").pop(),path,
+    get:async()=>snap(path.split("/").pop(),data.get(path)),
+    set:async v=>{ data.set(path,JSON.parse(JSON.stringify(v))); notify(); },
+    update:async v=>{ if(!data.has(path)) throw {code:"invalid_argument"}; data.set(path,merge(data.get(path),JSON.parse(JSON.stringify(v)))); notify(); },
+    delete:async()=>{ data.delete(path); notify(); },
+    acquire:async()=>({acquired:true}),
+    onSnapshot:(next)=>{ const f=()=>next(snap(path.split("/").pop(),data.get(path))); subs.add(f); f(); return ()=>subs.delete(f); },
+    collection:p=>colRef(path+"/"+p)});
+  const colRef=(path,q={})=>{ const run=()=>{ const depth=path.split("/").length+1; let docs=[...data.entries()].filter(([p])=>p.startsWith(path+"/")&&p.split("/").length===depth).map(([p,d])=>snap(p.split("/").pop(),d));
+      (q.w||[]).forEach(([f,op,v])=>{ docs=docs.filter(s=>{ const x=s.data()[f]; return op==="=="?x===v:op==="array-contains"?(x||[]).includes(v):true; }); });
+      if(q.o){ const [f,dir]=q.o; docs.sort((a,b)=>((a.data()[f]>b.data()[f])?1:-1)*(dir==="desc"?-1:1)); }
+      if(q.l) docs=docs.slice(0,q.l); return {docs,size:docs.length,empty:!docs.length,docChanges:()=>[],metadata:{fromCache:false}}; };
+    return {path,doc:id=>docRef(path+"/"+(id||uidGen())),add:async v=>{ const r=docRef(path+"/"+uidGen()); await r.set(v); return r; },
+      where:(f,op,v)=>colRef(path,{...q,w:[...(q.w||[]),[f,op,v]]}),orderBy:(f,d)=>colRef(path,{...q,o:[f,d]}),limit:n=>colRef(path,{...q,l:n}),
+      get:async()=>run(),onSnapshot:next=>{ const f=()=>next(run()); subs.add(f); f(); return ()=>subs.delete(f); }}; };
+  return {doc:docRef,collection:p=>colRef(p)};
+}
+
+/* ───────────────────────── state ───────────────────────── */
+const S = {
+  db:null, preview:false, uid:null, isOwner:false, canWrite:true,
+  people:{}, groups:{}, awards:{}, events:{}, votes:{}, rankings:{}, chats:{}, reads:{},
+  loaded:new Set(), stale:false,
+  actingAs:lsGet("actingAs",null), groupId:lsGet("group",null), tab:lsGet("tab","home"), theme:lsGet("theme","system"),
+  route:[], // stack of {name, arg}
+  localVotes:{}, claimBusy:false,
+};
+const COLS=["people","groups","awards","events","votes","rankings","chats","reads"];
+
+function myRealMember(){ for (const [k,v] of Object.entries(S.people)) if (v.uid && v.uid===S.uid) return k; return null; }
+function myMember(){ if (S.isOwner && S.actingAs && S.people[S.actingAs]) return S.actingAs; return myRealMember(); }
+const ME = () => myMember();
+const myGroups = () => Object.entries(S.groups).filter(([,g])=>(g.members||[]).includes(ME())).map(([id,g])=>({id,...g})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+function curGroup(){ const gs=myGroups(); return gs.find(g=>g.id===S.groupId) || gs[0] || null; }
+const isAdmin = g => !!g && (g.admins||[]).includes(ME());
+const photo = k => S.people[k]?.photo || null;
+
+function avatar(k,size=36,cls=""){
+  const p=photo(k); const n=nm(k)||"?";
+  const st=`width:${size}px;height:${size}px;font-size:${Math.round(size*.36)}px;background:hsl(${hue(k)} 45% 52%)`;
+  return `<span class="av ${cls}" style="${st}" title="${esc(n)}">${p?`<img src="${esc(p)}" alt="">`:esc(initials(n))}</span>`;
+}
+function stack(keys,size=32,max=8){
+  const shown=keys.slice(0,max); const extra=keys.length-shown.length;
+  return `<span class="stack">${shown.map(k=>avatar(k,size)).join("")}${extra>0?`<span class="av more" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.34)}px">+${extra}</span>`:""}</span>`;
+}
+
+/* ───────────────────────── computations ───────────────────────── */
+const groupEvents = gid => Object.entries(S.events).filter(([,e])=>e.groupId===gid).map(([id,e])=>({id,...e}))
+  .sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.createdAt||0)-(a.createdAt||0));
+const groupAwards = gid => Object.entries(S.awards).filter(([,a])=>a.groupId===gid).map(([id,a])=>({id,...a})).sort((a,b)=>(a.order||0)-(b.order||0)||(a.createdAt||0)-(b.createdAt||0));
+const statusOf = (e,k) => e.createdBy===k ? "yes" : (e.att||{})[k];
+const presentKeys = e => Object.keys(e.att||{}).filter(k=>statusOf(e,k)==="yes");
+const isFuture = e => (e.date||"") > lisbonYMD();
+
+function eventStats(gid,k){
+  const evs=groupEvents(gid); const created=evs.filter(e=>e.createdBy===k).length;
+  const past=evs.filter(e=>!isFuture(e) && (e.att||{})[k]!==undefined);
+  const attended=past.filter(e=>statusOf(e,k)==="yes").length;
+  return {created, attended, invited:past.length, rate:pct(attended,past.length)};
+}
+/* Average friendship ranking: each ranker's most recent ranking up to week w, averaged per person */
+function averages(gid, uptoWeek=curWeek()){
+  const g=S.groups[gid]; if(!g) return [];
+  const sums={};
+  (g.members||[]).forEach(r=>{
+    const weeks=S.rankings[r]?.weeks||{}; const ks=Object.keys(weeks).filter(w=>w<=uptoWeek && weeks[w]?.[gid]).sort();
+    if(!ks.length) return; const rk=weeks[ks[ks.length-1]][gid];
+    Object.entries(rk).forEach(([t,v])=>{ if(!(g.members||[]).includes(t)) return; (sums[t]=sums[t]||{s:0,n:0}); sums[t].s+=v; sums[t].n++; });
+  });
+  return Object.entries(sums).map(([k,v])=>({k,avg:v.s/v.n,n:v.n})).sort((a,b)=>a.avg-b.avg);
+}
+function rankingHistory(gid){
+  const weeks=weeksBack(52); const out=[];
+  for(const w of weeks){ const av=averages(gid,w); if(av.length) out.push({w,av}); }
+  return out;
+}
+function myRankingThisWeek(gid){ return S.rankings[ME()]?.weeks?.[curWeek()]?.[gid] || null; }
+function rankingWeeksDone(k,gid,n=8){ const ws=weeksBack(n); return ws.filter(w=>S.rankings[k]?.weeks?.[w]?.[gid]).length; }
+function voteWeeksDone(k,gid,n=8){ const aw=groupAwards(gid).map(a=>a.id); const ws=weeksBack(n); return ws.filter(w=>{ const v=S.votes[k]?.weeks?.[w]||{}; return aw.some(a=>v[a]); }).length; }
+function activityScore(gid,k){ const st=eventStats(gid,k); const rate=st.invited?st.rate/100:0;
+  return Math.round(100*(.4*rate + .3*rankingWeeksDone(k,gid)/8 + .3*voteWeeksDone(k,gid)/8)); }
+const seasonWeeks = () => { const y=curWeek().slice(0,4); return weeksBack(53).filter(w=>w.startsWith(y)); };
+function standings(gid,awardId,upto=curWeek()){
+  const g=S.groups[gid]; if(!g) return {list:[],total:0}; const counts={}; let total=0; const y=upto.slice(0,4);
+  (g.members||[]).forEach(v=>{ const ws=S.votes[v]?.weeks||{}; Object.entries(ws).forEach(([w,vv])=>{ if(!w.startsWith(y)||w>upto) return; const n=vv[awardId]; if(n&&(g.members||[]).includes(n)){ counts[n]=(counts[n]||0)+1; total++; } }); });
+  const list=Object.entries(counts).map(([k,c])=>({k,votes:c,p:pct(c,total)})).sort((a,b)=>b.votes-a.votes||nm(a.k).localeCompare(nm(b.k)));
+  return {list,total};
+}
+function voterCount(gid,awardId){ const g=S.groups[gid]; const w=curWeek(); return (g?.members||[]).filter(v=>S.votes[v]?.weeks?.[w]?.[awardId]).length; }
+const myVote = (awardId) => S.localVotes[awardId] ?? S.votes[ME()]?.weeks?.[curWeek()]?.[awardId] ?? null;
+
+function pendingFor(k){ return Object.entries(S.events).filter(([,e])=>(e.att||{})[k]==="pending" && e.createdBy!==k && S.groups[e.groupId]?.members?.includes(k)).map(([id,e])=>({id,...e})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")); }
+function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([,c])=>c.groupId===gid && (c.members||[]).includes(me)).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
+function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false; return c.lastAt > (S.reads[me]?.chats?.[c.id]||0); }
+function unreadCount(){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>(c.members||[]).includes(me)&&S.groups[c.groupId]?.members?.includes(me)&&isUnread({id,...c})).length; }
+function chatTitle(c){ const me=ME(); if(c.type==="direct"){ const o=(c.members||[]).find(k=>k!==me); return nm(o)||"Conversa"; } return c.name || (c.members||[]).filter(k=>k!==me).map(k=>first(nm(k))).join(", ") || "Grupo"; }
+
+/* ───────────────────────── db helpers ───────────────────────── */
+async function write(fn, okMsg){
+  if (!S.db) return false;
+  try { await fn(); if(okMsg) toast(okMsg); return true; }
+  catch(e){
+    const code=e?.code; console.warn(e);
+    if (code==="permission-denied") { await alertD("Sem permissão","Não tens permissão para fazer isto neste grupo."); return false; }
+    if (code==="invalid_argument" && !S.preview) { S.canWrite=false; await alertD("Sem permissão para alterar","A tua conta só pode ver esta app. Pede ao dono para te dar acesso de edição."); }
+    else if (code==="quota_exceeded") await alertD("Espaço cheio","A base de dados da app chegou ao limite. Apaga conversas ou eventos antigos.");
+    else await alertD("Não foi possível guardar","Verifica a ligação e tenta outra vez.");
+    return false;
+  }
+}
+const D = p => S.db.doc(p);
+
+/* ───────────────────────── UI primitives: dialogs, sheets, toasts ───────────────────────── */
+const app = document.getElementById("app");
+let layers=[];
+function pushLayer(html, onClose){ const el=document.createElement("div"); el.className="layer"; el.innerHTML=html; app.appendChild(el); const L={el,onClose}; layers.push(L); return L; }
+function popLayer(L){ L=L||layers[layers.length-1]; if(!L) return; layers=layers.filter(x=>x!==L); L.el.remove(); }
+function toast(msg){ app.querySelectorAll(".toast").forEach(x=>x.remove()); const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; app.appendChild(t); setTimeout(()=>t.remove(),2200); }
+function dialog(title,msg,buttons){ return new Promise(res=>{
+  const L=pushLayer(`<div class="overlay"></div><div class="dialog" role="alertdialog" aria-modal="true"><div class="dt"><h3></h3>${msg?"<p></p>":""}</div><div class="db">${buttons.map((b,i)=>`<button data-i="${i}" class="${b.danger?"danger":""}"></button>`).join("")}</div></div>`);
+  L.el.querySelector("h3").textContent=title; if(msg) L.el.querySelector("p").textContent=msg;
+  L.el.querySelectorAll("[data-i]").forEach(b=>{ b.textContent=buttons[+b.dataset.i].t; b.onclick=()=>{ popLayer(L); res(buttons[+b.dataset.i].v); }; });
+  L.el.querySelector("[data-i]:last-child").focus();
+}); }
+const alertD = (t,m) => dialog(t,m,[{t:"OK",v:true}]);
+const confirmD = (t,m,ok="Confirmar",danger=false) => dialog(t,m,[{t:"Cancelar",v:false},{t:ok,v:true,danger}]);
+function actionSheet(title, opts){ return new Promise(res=>{
+  const L=pushLayer(`<div class="overlay" data-x></div><div class="actions" role="dialog" aria-modal="true"><div class="grp">${title?'<div class="ttl"></div>':""}${opts.map((o,i)=>`<button data-i="${i}" class="${o.danger?"danger":""} ${o.sel?"sel":""}"></button>`).join("")}</div><div class="grp"><button class="cancel" data-x>Cancelar</button></div></div>`);
+  if(title) L.el.querySelector(".ttl").textContent=title;
+  L.el.querySelectorAll("[data-i]").forEach(b=>{ const o=opts[+b.dataset.i]; b.innerHTML=(o.sel?ic("check",'style="width:18px;height:18px"'):"")+`<span></span>`; b.querySelector("span").textContent=o.t; b.onclick=()=>{ popLayer(L); res(o.v); }; });
+  L.el.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{ popLayer(L); res(null); });
+}); }
+/* A sheet = full-height modal with the app's one header style: [Cancelar] Title [Action] */
+function openSheet({title, left="Cancelar", right=null, rightDisabled=false, body, short=false, live=false, onRight, onMount}){
+  const L=pushLayer(`<div class="overlay" data-close></div><div class="sheet ${short?"short":""}" role="dialog" aria-modal="true"><div class="sheethead"><button class="l" data-close></button><h2></h2>${right?`<button class="r" data-right ${rightDisabled?"disabled":""}></button>`:"<span></span>"}</div><div class="sheetbody"></div></div>`);
+  L.el.querySelector("h2").textContent=title; L.el.querySelector(".l").textContent=left; if(right) L.el.querySelector("[data-right]").textContent=right;
+  L.body=L.el.querySelector(".sheetbody"); L.right=L.el.querySelector("[data-right]");
+  L.render=()=>{ const st=L.body.scrollTop; L.body.innerHTML=body(L); L.body.scrollTop=st; drawCharts(L.body); };
+  L.live=live; L.render();
+  L.el.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>popLayer(L));
+  if(L.right) L.right.onclick=()=>onRight&&onRight(L);
+  onMount&&onMount(L);
+  return L;
+}
+function setRight(L,enabled){ if(L.right) L.right.disabled=!enabled; }
+
+/* ───────────────────────── charts (measured, never wider than their card) ───────────────────────── */
+let chartSpecs=new Map(); let chartSeq=0;
+function chartBox(spec){ const id="c"+(++chartSeq); chartSpecs.set(id,spec); return `<div class="chart" data-chart="${id}"></div>`; }
+function drawCharts(root){
+  root.querySelectorAll("[data-chart]").forEach(box=>{
+    const spec=chartSpecs.get(box.dataset.chart); if(!spec) return;
+    const W=Math.max(220,Math.floor(box.clientWidth)); const H=spec.h||200; box.style.minHeight=H+"px";
+    const PL=34, PR=12, PT=12, PB=30; const cw=W-PL-PR, ch=H-PT-PB; const n=spec.points.length;
+    const {min,max,invert}=spec;
+    const x=i=>PL+(n===1?cw/2:i*cw/(n-1));
+    const y=v=>{ const r=Math.max(0,Math.min(1,(v-min)/((max-min)||1))); return invert?PT+r*ch:PT+ch-r*ch; };
+    const css=getComputedStyle(document.documentElement); const muted=css.getPropertyValue("--muted").trim(); const border=css.getPropertyValue("--border").trim();
+    let g="";
+    const ticks=spec.ticks||[min,(min+max)/2,max];
+    ticks.forEach(t=>{ g+=`<line x1="${PL}" x2="${W-PR}" y1="${y(t)}" y2="${y(t)}" stroke="${border}" stroke-dasharray="3 4"/><text x="${PL-6}" y="${y(t)+4}" text-anchor="end" font-size="10" fill="${muted}">${esc(spec.fmt(t))}</text>`; });
+    const maxLabels=W<360?4:6; const step=Math.max(1,Math.ceil(n/maxLabels));
+    spec.points.forEach((p,i)=>{ if(i%step===0||i===n-1){ if(i!==n-1 && n-1-i<step*.6) return; const anchor=i===0?"start":i===n-1?"end":"middle"; g+=`<text x="${x(i)}" y="${H-8}" text-anchor="${anchor}" font-size="10" fill="${muted}">${esc(p.label)}</text>`; } });
+    spec.series.forEach((s,si)=>{
+      const col=s.color; let d="", area="", seg=[];
+      const flush=()=>{ if(seg.length>1){ d+=seg.map((p,j)=>(j?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ")+" "; } seg=[]; };
+      spec.points.forEach((p,i)=>{ const v=p.values[s.key]; if(v==null){ flush(); return; } seg.push([x(i),y(v)]); }); flush();
+      g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+      spec.points.forEach((p,i)=>{ const v=p.values[s.key]; if(v==null) return; const last=i===n-1||spec.points.slice(i+1).every(q=>q.values[s.key]==null); g+=`<circle cx="${x(i)}" cy="${y(v)}" r="${last?4:2.6}" fill="${col}" ${last?`stroke="var(--card)" stroke-width="2"`:""}/>`; });
+    });
+    box.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(spec.aria||"Gráfico")}">${g}</svg>`;
+  });
+}
+function legend(series){ return `<div class="legend">${series.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join("")}</div>`; }
+
+/* ───────────────────────── routing & render ───────────────────────── */
+const topRoute = () => S.route[S.route.length-1];
+function go(name,arg){ S.route.push({name,arg}); render(); }
+function back(){ S.route.pop(); render(); }
+function setTab(t){ S.tab=t; S.route=[]; lsSet("tab",t); render(); }
+let scrollMem={}; let lastKey=""; let renderQueued=false;
+function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
+
+function applyTheme(){
+  const root=document.documentElement;
+  if (S.theme==="system") root.removeAttribute("data-pes"); else root.setAttribute("data-pes",S.theme);
+  const dark = S.theme==="dark" || (S.theme==="system" && (root.getAttribute("data-theme")==="dark" || (root.getAttribute("data-theme")!=="light" && matchMedia("(prefers-color-scheme: dark)").matches)));
+  document.querySelector('meta[name="theme-color"]').content = dark?"#000000":"#F2F2F7";
+}
+
+/* Screens register chart specs while building their html, so reset the registry first. */
+function render(){ chartSpecs=new Map(); chartSeq=0; renderInner(); }
+function renderInner(){
+  const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
+  const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
+  if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); return; }
+  let html;
+  if (S.fb && S.authKnown && !S.uid) html=authScreen();
+  else if (FBCFG && !S.authKnown) html=`<div class="center"><div class="spinner"></div></div>`;
+  else if (!S.loaded.has("ready")) html=`<div class="center"><div class="spinner"></div><p class="muted small">${S.stale?"A base de dados ainda não respondeu. Verifica a ligação.":"A carregar…"}</p></div>`;
+  else if (!ME()) html=claimScreen();
+  else if (r) html=({group:groupScreen,settings:settingsScreen,chat:chatShell})[r.name](r.arg);
+  else html=({home:homeScreen,dash:dashScreen,events:eventsScreen,journey:journeyScreen,gap:gapScreen})[S.tab]() + tabbar();
+  const scr=document.createElement("div"); scr.className="screen"; if(r?.name==="chat") scr.dataset.chat=r.arg;
+  scr.innerHTML=html; const prev=app.querySelector(".screen"); if(prev) app.replaceChild(scr,prev); else app.prepend(scr);
+  const sc=scr.querySelector(".scroll[data-key]"); if(sc && scrollMem[sc.dataset.key]!=null) sc.scrollTop=scrollMem[sc.dataset.key];
+  drawCharts(scr);
+  if (r?.name==="chat" && ME()) mountChat(r.arg, scr);
+}
+
+function tabbar(){
+  const pend=pendingFor(ME()).length, unread=unreadCount();
+  const t=(id,label,icon,badge)=>`<button class="tab ${S.tab===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
+  return `<nav class="tabbar">${t("home","Início","home")}${t("dash","Painel","chart")}${t("events","Eventos","cal",pend)}${t("journey","Journey","star")}${t("gap","GAP","chat",unread)}</nav>`;
+}
+function groupPill(){ const g=curGroup(); if(!g) return ""; return `<button class="pill" data-act="pickGroup"><span>${esc(g.name)}</span>${ic("down")}</button>`; }
+function noGroup(){ return `<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("users")}</div><h3>Ainda não tens grupo</h3><p>Cria um grupo ou entra com um código de convite no separador Início.</p></div></div></div>`; }
+
+/* ───────────────────────── screens: claim ───────────────────────── */
+function claimScreen(){
+  const free=Object.entries(S.people).filter(([,p])=>!p.uid).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  return `<div class="scroll pad-bottom" data-key="claim"><div class="section" style="margin-top:calc(var(--st) + 40px)">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin-bottom:28px">
+      <div class="logo big">${LOGO}</div>
+      <h1 style="font-family:var(--display);font-size:34px;font-weight:700">Pês</h1>
+      <p class="muted" style="max-width:32ch">${S.fb?"Falta só o teu perfil: é com este nome que os teus amigos te veem nos grupos.":"Entraste com a tua conta Claude. Cria o teu perfil para entrares nos grupos dos teus amigos."}</p>
+    </div>
+    <div class="label">O teu nome</div>
+    <form class="card pad" id="newProfile" style="display:flex;flex-direction:column;gap:12px">
+      <input id="pname" class="input" maxlength="30" placeholder="Ex.: Gonçalo Xavier" autocomplete="name" aria-label="O teu nome">
+      <button class="btn block" type="submit" ${S.claimBusy?"disabled":""}>Criar perfil</button>
+    </form>
+    ${free.length?`<div class="label" style="margin-top:26px">Já te adicionaram? Escolhe o teu nome</div>
+      <div class="namegrid">${free.map(([k,p])=>`<button class="namebtn" data-act="claim" data-arg="${k}" ${S.claimBusy?"disabled":""}>${avatar(k,34)}<span>${esc(p.name)}</span></button>`).join("")}</div>`:""}
+    ${S.preview?`<p class="info">Pré-visualização: os dados não são guardados.</p>`:""}
+  </div></div>`;
+}
+const slug = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24) || "pessoa";
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="newProfile") return; e.preventDefault();
+  const name=document.getElementById("pname").value.trim().replace(/\s+/g," ");
+  if(name.length<2){ alertD("Escreve o teu nome","Usa pelo menos 2 letras."); return; }
+  if(myRealMember()) return;
+  S.claimBusy=true; render();
+  const key=slug(name)+"-"+Math.random().toString(36).slice(2,6);
+  await write(()=> S.fb? fbCreateProfile(name) : D("people/"+key).set({name,uid:S.uid,photo:null,createdAt:Date.now()}),`Olá, ${first(name)}!`);
+  S.claimBusy=false; S.route=[]; S.tab="home"; render();
+});
+
+/* ───────────────────────── screens: home ───────────────────────── */
+function homeScreen(){
+  const me=ME(); const gs=myGroups();
+  return `<div class="scroll pad-tabs" data-key="home">
+    <div class="tabhead" style="align-items:center"><div class="brand" style="flex:1"><div class="logo">${LOGO}</div><b>Pês</b></div>
+      <button class="roundbtn" data-act="settings" aria-label="Definições">${ic("gear")}</button></div>
+    ${previewBanner()}
+    <div class="hello">${avatar(me,76)}<p>Bem-vindo ao Pês 👋</p><h2>${esc(first(nm(me)))}</h2></div>
+    <div class="section"><div class="label">Os meus grupos</div>
+    ${gs.length? gs.map(g=>`<button class="gcard" data-act="openGroup" data-arg="${g.id}">
+        <div class="gtop"><div class="gphoto">${g.photo?`<img src="${esc(g.photo)}" alt="">`:ic("users")}</div>
+          <div style="flex:1;min-width:0"><div class="rowtitle" style="font-size:17px;font-weight:600">${esc(g.name)}</div><div class="rowsub">${g.members.length} ${g.members.length===1?"membro":"membros"}${isAdmin(g)?" · és admin":""}</div></div>
+          <span class="muted">${ic("right",'style="width:18px;height:18px"')}</span></div>
+        ${stack(g.members,34,9)}</button>`).join("")
+      : `<div class="card"><div class="empty"><div class="ico">${ic("users")}</div><h3>Ainda não tens grupos</h3><p>Cria um grupo ou entra num com o código de convite.</p></div></div>`}
+    </div>
+    <div class="section"><div class="btnrow"><button class="btn" data-act="newGroup">${ic("plus")}Novo grupo</button><button class="btn secondary" data-act="joinGroup">${ic("link")}Entrar num grupo</button></div></div>
+  </div>`;
+}
+function previewBanner(){
+  if (S.preview) return `<div class="banner" style="margin-top:6px">${ic("info")}<span>Pré-visualização com dados de exemplo. Nada fica guardado.</span></div>`;
+  if (S.isOwner && S.actingAs) return `<div class="banner warn" style="margin-top:6px">${ic("user")}<span>Estás a ver a app como ${esc(nm(S.actingAs))}. Muda em Definições.</span></div>`;
+  return "";
+}
+
+/* ───────────────────────── screens: group detail ───────────────────────── */
+function groupScreen(gid){
+  const g=S.groups[gid]; if(!g) return navhead("Grupo")+`<div class="center muted">Este grupo já não existe.</div>`;
+  const admin=isAdmin(g); const me=ME();
+  const members=[...g.members].sort((a,b)=>((g.admins||[]).includes(b)-(g.admins||[]).includes(a))||nm(a).localeCompare(nm(b)));
+  return navhead("Grupo","",admin?`<button class="roundbtn" data-act="groupMenu" data-arg="${gid}" aria-label="Opções do grupo">${ic("more")}</button>`:"")+`
+  <div class="scroll pad-bottom" data-key="group:${gid}">
+    <div class="section"><div class="card pad"><div class="ghead">
+      <div class="gp"><div class="gphoto">${g.photo?`<img src="${esc(g.photo)}" alt="">`:ic("users")}</div>
+        ${admin?`<label class="edit" aria-label="Mudar foto do grupo">${ic("camera")}<input type="file" accept="image/*" hidden data-file="groupPhoto" data-arg="${gid}"></label>`:""}</div>
+      <div style="min-width:0;display:flex;flex-direction:column;gap:6px"><h2>${esc(g.name)}</h2>
+        <div class="small muted">${g.members.length} membros · ${(g.admins||[]).length} ${(g.admins||[]).length===1?"admin":"admins"}</div>
+        ${admin?`<span class="chip">${ic("shield")}És admin</span>`:""}</div>
+    </div></div></div>
+    <div class="section"><div class="label">Código de convite</div><div class="card pad"><div class="invite"><span class="c num">${esc(g.code)}</span>
+      <button class="minibtn" data-act="copyCode" data-arg="${gid}">${ic("copy")}Copiar convite</button></div>
+      <p class="hint" style="margin:8px 0 0">Partilha o código com quem queres convidar. Entram em Início › Entrar num grupo.</p></div></div>
+    <div class="section"><div class="label">Membros${admin?`<span class="small" style="text-transform:none;letter-spacing:0;font-weight:400">Toca num membro para o gerir</span>`:""}</div>
+      <div class="mgrid">${members.map(k=>{ const a=(g.admins||[]).includes(k); return `<button class="mcard" data-act="memberMenu" data-arg="${gid}|${k}" ${!admin||k===me?"tabindex=-1":""}>${avatar(k,52)}<span class="nm">${esc(nm(k))}</span>${a?`<span class="chip">${ic("shield")}Admin</span>`:k===me?`<span class="chip grey">Tu</span>`:""}</button>`; }).join("")}</div></div>
+    <div class="section"><button class="btn danger block" data-act="leaveGroup" data-arg="${gid}">${ic("exit")}Sair do grupo</button></div>
+  </div>`;
+}
+function navhead(title,sub="",right=""){
+  return `<header class="navhead"><button class="roundbtn" data-act="back" aria-label="Voltar">${ic("back")}</button><h2>${esc(title)}${sub?`<span class="sub">${esc(sub)}</span>`:""}</h2><div style="justify-self:end">${right}</div></header>`;
+}
+
+/* ───────────────────────── screens: dashboard ───────────────────────── */
+function dashScreen(){
+  const g=curGroup(); const me=ME();
+  const head=`<div class="tabhead"><div class="titles"><h1>Painel</h1>${groupPill()}</div></div>`;
+  if(!g) return `<div class="scroll pad-tabs" data-key="dash">${head}${noGroup()}</div>`;
+  const st=eventStats(g.id,me); const av=averages(g.id); const myIdx=av.findIndex(a=>a.k===me);
+  const done=!!myRankingThisWeek(g.id); const score=activityScore(g.id,me);
+  const hist=rankingHistory(g.id); const awards=groupAwards(g.id);
+  let chart="";
+  if (hist.length>=2){
+    const latest=hist[hist.length-1].av; const top3=latest.slice(0,3).map(a=>a.k); if(!top3.includes(me)&&latest.some(a=>a.k===me)) top3.push(me);
+    const series=top3.map((k,i)=>({key:k,name:first(nm(k))+(k===me?" (tu)":""),color:SERIES[i]}));
+    const maxR=Math.max(3,(g.members.length-1));
+    chart=`<div class="card pad">${chartBox({points:hist.map(h=>({label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,min:1,max:maxR,invert:true,ticks:[1,Math.round((1+maxR)/2),maxR],fmt:v=>"#"+Math.round(v),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (1 = mais amigo). Uma semana sem dados fica em branco.</p>`;
+  } else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
+  return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}
+    <div class="section" style="margin-top:14px"><div class="label">Resumo</div>
+      <div class="stats">
+        ${stat(st.created,"Eventos criados","neste grupo")}
+        ${stat(st.attended,"Presenças",`em ${st.invited} ${st.invited===1?"evento":"eventos"}`)}
+        ${stat(st.invited?st.rate+"%":"—","Taxa de presença",st.invited?"eventos passados":"sem eventos ainda")}
+        ${stat(myIdx>=0?"#"+(myIdx+1):"—","Posição média",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)}`:"sem votos ainda")}
+        ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
+        <button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span></button>
+      </div></div>
+    <div class="section"><div class="label">Ranking médio atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
+      <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
+        : `<div class="empty"><p>Ainda ninguém submeteu o ranking deste grupo.</p></div>`}</div></div>
+    <div class="section"><div class="label">Evolução do ranking</div>${chart}</div>
+    <div class="section"><div class="label">Probabilidades dos prémios</div>
+      ${awards.length? awards.map(a=>awardBlock(g,a,true)).join(`<div style="height:12px"></div>`) : `<div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>Os admins do grupo criam prémios no separador Journey.</p></div></div>`}
+    </div></div>`;
+}
+function stat(v,k,s,extra=""){ return `<${extra?"button":"div"} class="stat" ${extra}><span class="v num">${esc(v)}</span><span class="k">${esc(k)}</span><span class="s">${esc(s)}</span></${extra?"button":"div"}>`; }
+const expanded=new Set();
+function awardBlock(g,a,dash){
+  const {list,total}=standings(g.id,a.id); const me=ME(); const open=expanded.has(a.id);
+  const rows=(open?list:list.slice(0,1)).map((e,i)=>`<div class="row" style="min-height:48px;padding:8px 16px"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(e.k,30)}<div class="grow"><div class="rowtitle" style="font-size:15px;${e.k===me?"font-weight:600":""}">${esc(nm(e.k))}${e.k===me?" (tu)":""}</div></div><span class="bar" style="width:56px"><i style="width:${e.p}%;${i?"background:var(--muted)":""}"></i></span><span class="num" style="min-width:40px;text-align:right;font-weight:700;font-size:14px;color:${i?"var(--muted)":"var(--accent)"}">${e.p}%</span></div>`).join("");
+  return `<div class="card">${dash?`<div style="padding:14px 16px 6px" class="award"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3><button class="minibtn" data-act="evolution" data-arg="${a.id}">${ic("trend")}Evolução</button></div>`:`<div class="label" style="padding:12px 16px 0;margin:0"><span>Resultados do ano</span><span class="num" style="text-transform:none;letter-spacing:0;font-weight:500">${total} ${total===1?"voto":"votos"}</span></div>`}
+    ${list.length? `<div class="list">${rows}</div>${list.length>1?`<button class="toggle" data-act="toggleAward" data-arg="${a.id}">${open?"Mostrar menos":`Ver todos (${list.length})`}${ic(open?"up":"down")}</button>`:`<div style="height:8px"></div>`}`
+      : `<p class="small muted" style="padding:4px 16px 14px">Ainda sem votos.</p>`}
+    </div>`;
+}
+
+/* ───────────────────────── screens: events ───────────────────────── */
+function eventsScreen(){
+  const g=curGroup(); const me=ME();
+  const head=`<div class="tabhead"><div class="titles"><h1>Eventos</h1>${groupPill()}</div>${g?`<button class="roundbtn fill" data-act="newEvent" aria-label="Novo evento">${ic("plus")}</button>`:""}</div>`;
+  if(!g) return `<div class="scroll pad-tabs" data-key="events">${head}${noGroup()}</div>`;
+  const pend=pendingFor(me).filter(e=>e.groupId===g.id); const evs=groupEvents(g.id);
+  return `<div class="scroll pad-tabs" data-key="events">${head}${previewBanner()}
+    ${pend.length?`<div class="section" style="margin-top:12px"><div class="notice"><div style="display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:600;font-size:14px">${ic("bell",'style="width:18px;height:18px"')}${pend.length} ${pend.length===1?"pedido por responder":"pedidos por responder"}</div>
+      ${pend.slice(0,3).map(e=>`<div class="n"><div><div style="font-weight:600;font-size:15px;overflow-wrap:anywhere">${esc(e.title)}</div><div class="small muted">${esc(nm(e.createdBy))} adicionou-te · ${esc(fmtDate(e.date))}</div></div>
+        <div class="seg2"><button data-act="presence" data-arg="${e.id}|yes">${ic("check")}${isFuture(e)?"Vou":"Estive lá"}</button><button data-act="presence" data-arg="${e.id}|no">${ic("x")}${isFuture(e)?"Não vou":"Não estive"}</button></div></div>`).join("")}
+      ${pend.length>3?`<p class="small" style="color:var(--accent)">E mais ${pend.length-3} na lista abaixo.</p>`:""}</div></div>`:""}
+    <div class="section" style="margin-top:${pend.length?22:12}px"><div class="label">${evs.length} ${evs.length===1?"evento":"eventos"}<span class="small" style="text-transform:none;letter-spacing:0;font-weight:400">Evento de grupo = 4+ presenças</span></div>
+    ${evs.length? `<div style="display:flex;flex-direction:column;gap:12px">${evs.map(e=>eventCard(e,me)).join("")}</div>`
+      : `<div class="card"><div class="empty"><div class="ico">${ic("cal")}</div><h3>Ainda não há eventos</h3><p>Cria o primeiro e marca quem esteve.</p><button class="btn" style="margin-top:8px" data-act="newEvent">${ic("plus")}Novo evento</button></div></div>`}
+    </div></div>`;
+}
+function eventCard(e,me){
+  const d=ymdToUTC(e.date||lisbonYMD()); const pres=presentKeys(e); const invited=Object.keys(e.att||{}).length;
+  const mine=statusOf(e,me); const future=isFuture(e); const creator=e.createdBy===me; const part=(e.att||{})[me]!==undefined;
+  return `<div class="card"><div class="ev"><div class="datebox"><b class="num">${d.getUTCDate()}</b><span>${MONTHS[d.getUTCMonth()]}</span></div>
+    <div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:flex-start"><h3 style="flex:1">${esc(e.title)}</h3>
+      ${creator?`<button class="iconbtn" data-act="eventMenu" data-arg="${e.id}" aria-label="Opções do evento" style="margin:-6px -8px 0 0">${ic("more")}</button>`:""}</div>
+      ${e.desc?`<p class="desc">${esc(e.desc)}</p>`:""}
+      <div class="meta">${pres.length>=4?`<span class="chip">${ic("users")}Evento de grupo</span>`:""}${future?`<span class="chip grey">Em breve</span>`:""}<span>${esc(fmtDate(e.date))}</span><span>por ${esc(creator?"ti":first(nm(e.createdBy)))}</span></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${pres.length?stack(pres,26,7):""}<span class="small muted num">${pres.length} de ${invited} ${future?"confirmados":"presentes"}</span></div>
+    </div></div>
+    ${part&&!creator?`<div class="presence"><span class="q">${mine==="pending"?(future?"Ainda não respondeste. Vais?":"Ainda não respondeste. Estiveste lá?"):(future?"A tua resposta":"Estiveste lá?")}</span>
+      <div class="seg2"><button class="${mine==="yes"?"yes":""}" data-act="presence" data-arg="${e.id}|yes" aria-pressed="${mine==="yes"}">${ic("check")}${future?"Vou":"Estive lá"}</button>
+      <button class="${mine==="no"?"no":""}" data-act="presence" data-arg="${e.id}|no" aria-pressed="${mine==="no"}">${ic("x")}${future?"Não vou":"Não estive"}</button></div></div>`:""}
+    ${creator?`<div class="presence" style="flex-direction:row;align-items:center;gap:6px"><span class="q" style="display:flex;align-items:center;gap:6px">${ic("star",'style="width:13px;height:13px;color:var(--accent)"')}Criaste este evento · estás marcado como presente</span></div>`:""}
+  </div>`;
+}
+
+/* ───────────────────────── screens: journey ───────────────────────── */
+function journeyScreen(){
+  const g=curGroup(); const me=ME();
+  const head=g=>`<div class="tabhead"><div class="titles"><h1>Journey</h1>${groupPill()}</div>${g&&isAdmin(g)?`<button class="roundbtn" data-act="newAward" aria-label="Novo prémio">${ic("plus")}</button>`:""}</div>`;
+  if(!g) return `<div class="scroll pad-tabs" data-key="journey">${head(null)}${noGroup()}</div>`;
+  const aw=groupAwards(g.id); const nLocal=Object.keys(S.localVotes).filter(id=>aw.some(a=>a.id===id)).length;
+  const voted=aw.filter(a=>myVote(a.id)).length;
+  return `<div class="scroll pad-tabs" data-key="journey" style="${nLocal?"padding-bottom:calc(var(--tabh) + var(--sb) + 96px)":""}">${head(g)}${previewBanner()}
+    <div class="section" style="margin-top:10px"><p class="small muted" style="margin:0 4px 10px">Vota uma vez por semana em cada prémio. Os votos são secretos — só aparecem os totais. Podes mudar até domingo às 23:59.</p>
+      ${aw.length?`<div class="dots">${aw.map(a=>`<span class="dot ${myVote(a.id)?"on":""}" title="${esc(a.label)}">${myVote(a.id)?ic("check"):""}</span>`).join("")}<span class="small muted" style="margin-left:4px">${voted}/${aw.length} votados · semana de ${esc(weekRange(curWeek()))}</span></div>`:""}</div>
+    ${aw.length? aw.map(a=>{ const v=myVote(a.id); const local=S.localVotes[a.id]!=null;
+      return `<div class="section"><div class="award" style="margin-bottom:10px"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3>
+        <button class="minibtn" data-act="evolution" data-arg="${a.id}">${ic("trend")}Evolução</button>
+        ${isAdmin(g)?`<button class="iconbtn" data-act="delAward" data-arg="${a.id}" aria-label="Apagar prémio" style="color:var(--red)">${ic("trash")}</button>`:""}</div>
+        ${a.desc?`<p class="small muted" style="margin:-4px 4px 10px 40px">${esc(a.desc)}</p>`:""}
+        <button class="votechip ${v?"set":""} ${local?"local":""}" data-act="vote" data-arg="${a.id}">${v?avatar(v,28):ic("plus")}<span class="grow">${v?esc(nm(v)):"Votar neste prémio"}</span>${v&&!local?`<span class="chip green">${ic("check")}Votado</span>`:""}${local?`<span class="chip">Por submeter</span>`:""}${ic("down")}</button>
+        <div style="height:10px"></div>${awardBlock(g,a,false)}</div>`; }).join("")
+      : `<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>${isAdmin(g)?"Cria o primeiro prémio com + ou começa com os sugeridos.":"Os admins do grupo ainda não criaram prémios."}</p>${isAdmin(g)?`<button class="btn ghost" style="margin-top:8px" data-act="suggestAwards" data-arg="${g.id}">${ic("trophy")}Adicionar prémios sugeridos</button>`:""}</div></div></div>`}
+    </div>
+    ${nLocal?`<div class="floatbar"><button class="btn block" data-act="submitVotes">Submeter ${nLocal} ${nLocal===1?"voto":"votos"}</button></div>`:""}`;
+}
+
+/* ───────────────────────── screens: GAP ───────────────────────── */
+function gapScreen(){
+  const g=curGroup();
+  const head=`<div class="tabhead"><div class="titles"><h1>GAP</h1>${groupPill()}</div>${g?`<button class="roundbtn fill" data-act="newChat" aria-label="Nova conversa">${ic("compose")}</button>`:""}</div>`;
+  if(!g) return `<div class="scroll pad-tabs" data-key="gap">${head}${noGroup()}</div>`;
+  const cs=chatsOf(g.id); const me=ME();
+  return `<div class="scroll pad-tabs" data-key="gap">${head}${previewBanner()}<div class="section" style="margin-top:12px">
+    ${cs.length?`<div class="card list">${cs.map(c=>{ const u=isUnread(c); const other=c.type==="direct"?(c.members||[]).find(k=>k!==me):null;
+      return `<button class="row chatrow" data-act="openChat" data-arg="${c.id}">${other?avatar(other,48):`<span class="gphoto" style="width:48px;height:48px;border-radius:50%">${ic("users")}</span>`}
+        <div class="grow"><div style="display:flex;gap:8px;align-items:baseline"><span class="rowtitle" style="flex:1;${u?"font-weight:700":""}">${esc(chatTitle(c))}</span><span class="small ${u?"":"muted"}" style="${u?"color:var(--accent);font-weight:600":""}">${esc(ago(c.lastAt))}</span></div>
+        <div class="rowsub" style="${u?"color:var(--text)":""}">${c.lastText?`${c.lastFrom===me?"Tu":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:"Sem mensagens"}</div></div>${u?'<span class="dotu" aria-label="Por ler"></span>':""}</button>`; }).join("")}</div>`
+    : `<div class="card"><div class="empty"><div class="ico">${ic("chat")}</div><h3>Ainda sem conversas</h3><p>Começa uma conversa privada ou de grupo.</p><button class="btn" style="margin-top:8px" data-act="newChat">${ic("compose")}Nova conversa</button></div></div>`}
+    <p class="info">Só os participantes veem cada conversa.</p></div></div>`;
+}
+
+/* ───────────────────────── chat screen ───────────────────────── */
+let chatSub=null, chatMsgs=[], chatId=null, chatLoaded=false;
+function chatShell(cid){
+  const c=S.chats[cid]; if(!c) return navhead("Conversa")+`<div class="center muted">Esta conversa já não existe.</div>`;
+  const sub=c.type==="direct"?"Conversa privada":`${(c.members||[]).length} participantes`;
+  return navhead(chatTitle({id:cid,...c}),sub)+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
+    <form class="composer" id="composer"><textarea id="msgInput" rows="1" placeholder="Mensagem" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`;
+}
+function mountChat(cid,scr){
+  if(chatId!==cid){ chatSub&&chatSub(); chatMsgs=[]; chatLoaded=false; chatId=cid;
+    chatSub=S.db.collection(`chats/${cid}/msgs`).orderBy("at","desc").limit(300).onSnapshot(s=>{ chatMsgs=s.docs.map(d=>({id:d.id,...d.data()})).reverse(); chatLoaded=true; updateChat(cid); markRead(cid); }, ()=>{ chatLoaded=true; updateChat(cid); }); }
+  else updateChat(cid);
+  const ta=scr.querySelector("#msgInput"), btn=scr.querySelector("#sendBtn"), form=scr.querySelector("#composer");
+  const draft=lsGet("draft:"+cid,""); ta.value=draft; btn.disabled=!draft.trim();
+  const fit=()=>{ ta.style.height="auto"; ta.style.height=Math.min(120,ta.scrollHeight)+"px"; };
+  ta.addEventListener("input",()=>{ btn.disabled=!ta.value.trim(); fit(); lsSet("draft:"+cid,ta.value); });
+  ta.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){ e.preventDefault(); form.requestSubmit(); } });
+  form.addEventListener("submit",async e=>{ e.preventDefault(); const text=ta.value.trim(); if(!text) return; ta.value=""; lsSet("draft:"+cid,""); btn.disabled=true; fit();
+    const me=ME(); const at=Date.now();
+    const ok=await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add({from:me,text,at}); await D("chats/"+cid).update({lastAt:at,lastText:text.slice(0,140),lastFrom:me}); });
+    if(!ok){ ta.value=text; btn.disabled=false; } ta.focus(); });
+  fit();
+}
+function updateChat(cid){
+  const box=document.getElementById("msgs"); if(!box) return; const sc=document.getElementById("msgScroll");
+  const atBottom=sc.scrollHeight-sc.scrollTop-sc.clientHeight<80;
+  if(!chatLoaded){ return; }
+  const me=ME(); const c=S.chats[cid]||{};
+  if(!chatMsgs.length){ box.innerHTML=`<div class="empty" style="margin-top:40px"><div class="ico">${ic("chat")}</div><h3>Sem mensagens</h3><p>Diz olá 👋</p></div>`; return; }
+  let html="", lastDay="";
+  chatMsgs.forEach((m,i)=>{
+    const day=lisbonYMD(new Date(m.at)); if(day!==lastDay){ html+=`<div class="day">${esc(dayLabel(m.at))}</div>`; lastDay=day; }
+    const prev=chatMsgs[i-1], next=chatMsgs[i+1]; const mine=m.from===me;
+    const firstOf=!prev||prev.from!==m.from||lisbonYMD(new Date(prev.at))!==day||m.at-prev.at>5*6e4;
+    const lastOf=!next||next.from!==m.from||lisbonYMD(new Date(next.at))!==day||next.at-m.at>5*6e4;
+    html+=`<div class="m ${mine?"me":""}">${!mine&&c.type!=="direct"?`<span class="avs">${lastOf?avatar(m.from,28):""}</span>`:""}<div class="col">${!mine&&firstOf&&c.type!=="direct"?`<span class="who">${esc(nm(m.from)||"")}</span>`:""}<div class="bub"></div>${lastOf?`<span class="t">${hhmm(m.at)}</span>`:""}</div></div>`;
+  });
+  box.innerHTML=html; box.querySelectorAll(".bub").forEach((b,i)=>b.textContent=chatMsgs[i].text);
+  if(atBottom||!box.dataset.init){ sc.scrollTop=sc.scrollHeight; box.dataset.init="1"; }
+}
+async function markRead(cid){ const me=ME(); const c=S.chats[cid]; if(!c||!c.lastAt) return; const cur=S.reads[me]?.chats?.[cid]||0; if(cur>=c.lastAt) return;
+  const ref=D("reads/"+me); try{ if(S.reads[me]) await ref.update({chats:{[cid]:c.lastAt}}); else await ref.set({chats:{[cid]:c.lastAt}}); }catch{} }
+
+/* ───────────────────────── settings ───────────────────────── */
+function settingsScreen(){
+  const me=ME(); const th=S.theme;
+  return navhead("Definições")+`<div class="scroll pad-bottom" data-key="settings">
+    <div class="section"><div class="card list"><label class="row" style="cursor:pointer">${avatar(me,58)}<div class="grow"><div class="rowtitle" style="font-size:18px;font-weight:600">${esc(nm(me))}</div><div class="rowsub">Toca para mudar a foto</div></div><span class="roundbtn" style="background:var(--accent-soft)">${ic("camera")}</span><input type="file" accept="image/*" hidden data-file="myPhoto"></label>
+      ${photo(me)?`<button class="row" data-act="removePhoto"><span class="grow" style="color:var(--red)">Remover foto</span></button>`:""}</div></div>
+    <div class="section"><div class="label">Aparência</div><div class="card list">
+      ${[["system","Igual ao dispositivo"],["light","Claro"],["dark","Escuro"]].map(([v,l])=>`<button class="row" data-act="theme" data-arg="${v}"><span class="grow">${l}</span>${th===v?`<span style="color:var(--accent)">${ic("check",'style="width:20px;height:20px"')}</span>`:""}</button>`).join("")}</div></div>
+    <div class="section"><div class="label">Conta</div><div class="card list"><button class="row" data-act="renameMe"><div class="grow"><div class="rowtitle">Nome</div><div class="rowsub">${esc(nm(myRealMember()||me))}</div></div>${ic("edit",'style="width:18px;height:18px;color:var(--muted)"')}</button></div>
+      ${S.fb?`<div class="card list" style="margin-top:12px"><button class="row" data-act="logout"><div class="grow"><div class="rowtitle" style="color:var(--red)">Terminar sessão</div><div class="rowsub">${esc(S.email||"")}</div></div>${ic("exit",'style="width:18px;height:18px;color:var(--red)"')}</button></div>`
+        :`<p class="info">Entras com a tua conta Claude, por isso esta app não tem passwords.</p>`}</div>
+    ${S.isOwner||S.preview?ownerTools():""}
+  </div>`;
+}
+function ownerTools(){
+  return `<div class="section"><div class="label">Ferramentas do dono da app</div><div class="card list">
+    <button class="row" data-act="actAs"><div class="grow"><div class="rowtitle">Ver a app como…</div><div class="rowsub">${S.actingAs?esc(nm(S.actingAs)):"Tu próprio"} · para testar o ponto de vista de cada pessoa</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
+    <button class="row" data-act="releaseClaim"><div class="grow"><div class="rowtitle">Desligar um perfil de uma conta</div><div class="rowsub">Se alguém escolheu o nome errado</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
+    <button class="row" data-act="loadDemo"><div class="grow"><div class="rowtitle">Carregar dados de demonstração</div><div class="rowsub">7 grupos, 28 pessoas e 30 semanas de votos para testar tudo</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
+    <button class="row" data-act="resetAll"><div class="grow"><div class="rowtitle" style="color:var(--red)">Apagar todos os dados</div><div class="rowsub">Antes de convidares os amigos a sério</div></div></button>
+  </div></div>`;
+}
+
+/* ───────────────────────── sheets (forms) ───────────────────────── */
+function pickGroupSheet(){
+  const gs=myGroups(); const cur=curGroup();
+  actionSheet("Escolher grupo", gs.map(g=>{ const me=ME(); const p=pendingFor(me).filter(e=>e.groupId===g.id).length; const u=chatsOf(g.id).filter(isUnread).length; const extra=[p?`${p} por responder`:"",u?`${u} por ler`:""].filter(Boolean).join(", ");
+    return {t:`${g.name}${extra?` · ${extra}`:""}`,v:g.id,sel:cur&&cur.id===g.id}; })).then(v=>{ if(v){ S.groupId=v; lsSet("group",v); S.localVotes={}; render(); } });
+}
+function newGroupSheet(){
+  let name="";
+  openSheet({title:"Novo grupo",right:"Criar",rightDisabled:true,
+    body:()=>`<div style="max-width:440px;margin:24px auto 0;display:flex;flex-direction:column;gap:8px"><h2 style="font-size:24px;font-weight:700;text-align:center">Dá um nome ao grupo</h2><p class="muted small" style="text-align:center;margin-bottom:22px">Depois de criares, partilha o código de convite. Ficas como admin.</p>
+      <div class="field"><label for="gname">Nome do grupo</label><input id="gname" class="input" maxlength="40" placeholder="Ex.: Os Calderões" autocomplete="off"></div></div>`,
+    onMount:L=>{ const i=L.body.querySelector("#gname"); i.focus(); i.oninput=()=>{ name=i.value.trim(); setRight(L,!!name); }; i.onkeydown=e=>{ if(e.key==="Enter"&&name) L.right.click(); }; },
+    onRight:async L=>{ setRight(L,false); const me=ME(); const id="g-"+uidGen();
+      const ok=await write(()=>D("groups/"+id).set({name,code:inviteCode(),members:[me],admins:[me],createdBy:me,createdAt:Date.now(),photo:null}),"Grupo criado");
+      if(ok){ popLayer(L); S.groupId=id; lsSet("group",id); go("group",id); } else setRight(L,true); }});
+}
+function inviteCode(){ const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for(let i=0;i<6;i++) s+=A[Math.floor(Math.random()*A.length)]; return s; }
+function joinGroupSheet(){
+  let code="";
+  openSheet({title:"Entrar num grupo",right:"Entrar",rightDisabled:true,
+    body:()=>`<div style="max-width:440px;margin:24px auto 0"><p class="muted small" style="text-align:center;margin-bottom:22px">Pede o código de 6 letras a alguém do grupo.</p><div class="field"><label for="jcode">Código de convite</label><input id="jcode" class="input code" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters"></div><p class="hint" id="jmsg" style="margin-top:10px"></p></div>`,
+    onMount:L=>{ const i=L.body.querySelector("#jcode"); i.focus(); i.oninput=()=>{ i.value=i.value.toUpperCase().replace(/[^A-Z0-9]/g,""); code=i.value; setRight(L,code.length===6); L.body.querySelector("#jmsg").textContent=""; }; i.onkeydown=e=>{ if(e.key==="Enter"&&code.length===6) L.right.click(); }; },
+    onRight:async L=>{ const me=ME(); const hit=Object.entries(S.groups).find(([,g])=>g.code===code); const msg=L.body.querySelector("#jmsg");
+      if(!hit){ msg.textContent="Não existe nenhum grupo com este código. Confirma as letras."; msg.style.color="var(--red)"; return; }
+      const [id,g]=hit; if(g.members.includes(me)){ popLayer(L); S.groupId=id; lsSet("group",id); go("group",id); return; }
+      setRight(L,false); const ok=await write(()=>D("groups/"+id).update({members:[...g.members,me]}),`Entraste em ${g.name}`);
+      if(ok){ popLayer(L); S.groupId=id; lsSet("group",id); go("group",id); } else setRight(L,true); }});
+}
+function eventSheet(eid){
+  const g=curGroup(); const me=ME(); const ev=eid?S.events[eid]:null;
+  const st={title:ev?.title||"", date:ev?.date||lisbonYMD(), desc:ev?.desc||"", sel:new Set(ev?Object.keys(ev.att||{}).filter(k=>k!==me):[])};
+  const others=g.members.filter(k=>k!==me).sort((a,b)=>nm(a).localeCompare(nm(b)));
+  const valid=()=>st.title.trim()&&/^\d{4}-\d{2}-\d{2}$/.test(st.date);
+  const countTxt=()=>{ const n=st.sel.size+1; return n>=4?`<span style="color:var(--green)">${n} pessoas contigo · pode ser evento de grupo (4+ presenças)</span>`:`${n} ${n===1?"pessoa":"pessoas"} contigo · são precisas 4+ presenças para evento de grupo`; };
+  const L=openSheet({title:eid?"Editar evento":"Novo evento",right:eid?"Guardar":"Criar",rightDisabled:!valid(),
+    body:()=>`<div class="field"><label for="etitle">Nome</label><input id="etitle" class="input" maxlength="60" placeholder="Ex.: Jantar na tasca" value="${esc(st.title)}" autocomplete="off"></div>
+      <div class="field"><label for="edate">Data</label><input id="edate" class="input" type="date" value="${esc(st.date)}"></div>
+      <div class="field"><label for="edesc">Descrição (opcional)</label><textarea id="edesc" class="input" maxlength="300" placeholder="Local, hora, o que levar…">${esc(st.desc)}</textarea></div>
+      <div class="field"><div class="flabel" style="display:flex;justify-content:space-between;align-items:center"><span>Participantes</span><button type="button" class="linkbtn small" data-allp style="text-transform:none;letter-spacing:0;font-size:14px">${st.sel.size===others.length?"Limpar":"Selecionar todos"}</button></div>
+        <p class="hint" style="margin:0 4px 6px">Ficas incluído como criador. Os outros recebem um pedido para confirmar a presença.</p>
+        <div class="card list" id="plist">${others.map(k=>`<button type="button" class="row" data-p="${k}" aria-pressed="${st.sel.has(k)}">${avatar(k,34)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${st.sel.has(k)?"on":""}">${st.sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>
+        <p class="hint" id="pcount" style="margin-top:8px">${countTxt()}</p></div>`,
+    onMount:L=>{ const b=L.body; const upd=()=>setRight(L,!!valid());
+      b.querySelector("#etitle").oninput=e=>{ st.title=e.target.value; upd(); }; b.querySelector("#edate").oninput=e=>{ st.date=e.target.value; upd(); };
+      b.querySelector("#edesc").oninput=e=>{ st.desc=e.target.value; };
+      const refresh=()=>{ b.querySelectorAll("[data-p]").forEach(r=>{ const on=st.sel.has(r.dataset.p); r.setAttribute("aria-pressed",on); const c=r.querySelector(".check"); c.className="check"+(on?" on":""); c.innerHTML=on?ic("check"):""; }); b.querySelector("#pcount").innerHTML=countTxt(); b.querySelector("[data-allp]").textContent=st.sel.size===others.length?"Limpar":"Selecionar todos"; };
+      b.querySelectorAll("[data-p]").forEach(r=>r.onclick=()=>{ const k=r.dataset.p; st.sel.has(k)?st.sel.delete(k):st.sel.add(k); refresh(); });
+      b.querySelector("[data-allp]").onclick=()=>{ if(st.sel.size===others.length) st.sel.clear(); else others.forEach(k=>st.sel.add(k)); refresh(); };
+      if(!eid) b.querySelector("#etitle").focus(); },
+    onRight:async L=>{ if(!valid()) return; setRight(L,false);
+      const att={[me]:"yes"}; st.sel.forEach(k=>{ att[k]= ev?.att?.[k] && ev.att[k]!=="pending" ? ev.att[k] : "pending"; });
+      const body={groupId:ev?.groupId||g.id,title:st.title.trim(),desc:st.desc.trim(),date:st.date,createdBy:ev?.createdBy||me,createdAt:ev?.createdAt||Date.now(),att};
+      const ok=await write(()=>D("events/"+(eid||"e-"+uidGen())).set(body), eid?"Evento atualizado":"Evento criado");
+      if(ok) popLayer(L); else setRight(L,true); }});
+}
+function awardSheet(){
+  const g=curGroup(); const st={emoji:"🏆",label:"",desc:""};
+  openSheet({title:"Novo prémio",right:"Criar",rightDisabled:true,
+    body:()=>`<div style="display:flex;gap:12px;align-items:flex-end"><div class="field" style="width:76px;flex:none"><label for="aemo">Emoji</label><input id="aemo" class="input" style="text-align:center;font-size:24px;padding:0 4px" value="🏆" autocomplete="off"></div>
+      <div class="field" style="flex:1;margin-top:0"><label for="alabel">Nome do prémio</label><input id="alabel" class="input" maxlength="40" placeholder="Ex.: Rei do Atraso" autocomplete="off"></div></div>
+      <div class="field"><label for="adesc">Descrição (opcional)</label><input id="adesc" class="input" maxlength="80" placeholder="Para quem é este prémio?" autocomplete="off"></div>`,
+    onMount:L=>{ const b=L.body; b.querySelector("#alabel").focus(); b.querySelector("#alabel").oninput=e=>{ st.label=e.target.value.trim(); setRight(L,!!st.label); };
+      b.querySelector("#adesc").oninput=e=>st.desc=e.target.value.trim();
+      const em=b.querySelector("#aemo"); em.oninput=()=>{ st.emoji=firstGrapheme(em.value)||"🏆"; }; em.onblur=()=>{ em.value=st.emoji; }; },
+    onRight:async L=>{ setRight(L,false); const order=Math.max(0,...groupAwards(g.id).map(a=>a.order||0))+1;
+      const ok=await write(()=>D("awards/a-"+uidGen()).set({groupId:g.id,label:st.label,emoji:st.emoji,desc:st.desc,order,createdAt:Date.now(),createdBy:ME()}),"Prémio criado");
+      if(ok) popLayer(L); else setRight(L,true); }});
+}
+function votePicker(aid){
+  const g=curGroup(); const me=ME(); const a=S.awards[aid];
+  const L=openSheet({title:a.label,left:"Fechar",short:false,live:true,
+    body:()=>`<p class="muted small" style="text-align:center;margin:-4px 0 14px">${esc(a.desc||"Escolhe uma pessoa")}. O teu voto é secreto.</p>
+      <div class="card list">${g.members.filter(k=>k!==me).sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const on=myVote(aid)===k; return `<button class="row" data-pick="${k}">${avatar(k,38)}<span class="grow rowtitle" style="font-weight:${on?600:400}">${esc(nm(k))}</span><span class="check ${on?"on":""}">${on?ic("check"):""}</span></button>`; }).join("")}</div>`,
+    onMount:L=>{ L.body.addEventListener("click",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return; const saved=S.votes[me]?.weeks?.[curWeek()]?.[aid];
+      if(saved===b.dataset.pick) delete S.localVotes[aid]; else S.localVotes[aid]=b.dataset.pick; popLayer(L); render(); }); }});
+}
+function rankSheet(){
+  const g=curGroup(); const me=ME(); const others=g.members.filter(k=>k!==me);
+  const prevWeeks=Object.keys(S.rankings[me]?.weeks||{}).filter(w=>S.rankings[me].weeks[w][g.id]).sort();
+  const cur=myRankingThisWeek(g.id) || (prevWeeks.length? S.rankings[me].weeks[prevWeeks[prevWeeks.length-1]][g.id] : null);
+  let ranked = cur? Object.entries(cur).filter(([k])=>others.includes(k)).sort((a,b)=>a[1]-b[1]).map(([k])=>k) : [];
+  let unr = others.filter(k=>!ranked.includes(k)).sort((a,b)=>nm(a).localeCompare(nm(b)));
+  const done=!!myRankingThisWeek(g.id);
+  const L=openSheet({title:"Ranking de amizade",right:"Submeter",rightDisabled:unr.length>0,
+    body:()=>`<div class="banner" style="margin:0 0 16px">${ic("lock")}<span>Semana de ${esc(weekRange(curWeek()))}. Podes alterar até domingo às 23:59 (hora de Portugal). Depois fica guardado no histórico.</span></div>
+      ${!done&&cur?`<p class="hint" style="margin:-6px 4px 12px">Começámos com o teu ranking da semana passada. Ajusta e submete.</p>`:""}
+      <div class="label"><span>A tua ordem · 1 = mais amigo</span><span class="num" style="text-transform:none">${ranked.length}/${others.length}</span></div>
+      <div class="bar" style="margin:0 4px 10px"><i style="width:${pct(ranked.length,others.length)}%"></i></div>
+      ${ranked.length?`<div class="card">${ranked.map((k,i)=>`<div class="rankrow"><span class="n num">${i+1}</span>${avatar(k,32)}<span class="grow rowtitle" style="flex:1;min-width:0">${esc(nm(k))}</span>
+        <button class="iconbtn" data-mv="${i}|-1" aria-label="Subir" ${i===0?"disabled":""}>${ic("up")}</button><button class="iconbtn" data-mv="${i}|1" aria-label="Descer" ${i===ranked.length-1?"disabled":""}>${ic("down")}</button><button class="iconbtn" data-rm="${i}" aria-label="Tirar do ranking">${ic("x")}</button></div>`).join("")}</div>`
+        :`<div class="card"><div class="empty"><p>Toca nos nomes abaixo pela ordem que quiseres. O primeiro fica em 1.º.</p></div></div>`}
+      ${unr.length?`<div class="label" style="margin-top:18px">Por ordenar · toca para pôr na posição ${ranked.length+1}</div><div class="chips">${unr.map(k=>`<button class="namechip" data-add="${k}">${avatar(k,26)}${esc(nm(k))}</button>`).join("")}</div>`:""}
+      <button class="btn block" style="margin-top:22px" data-submit ${unr.length?"disabled":""}>Submeter ranking de amizade</button>`,
+    onMount:L=>{ L.body.addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return;
+      if(t.dataset.add){ unr=unr.filter(k=>k!==t.dataset.add); ranked.push(t.dataset.add); }
+      else if(t.dataset.rm!=null){ const k=ranked.splice(+t.dataset.rm,1)[0]; unr.push(k); unr.sort((a,b)=>nm(a).localeCompare(nm(b))); }
+      else if(t.dataset.mv){ const [i,d]=t.dataset.mv.split("|").map(Number); const j=i+d; [ranked[i],ranked[j]]=[ranked[j],ranked[i]]; }
+      else if(t.hasAttribute("data-submit")){ L.right.click(); return; } else return;
+      L.render(); setRight(L,!unr.length); }); },
+    onRight:async L=>{ if(unr.length) return; setRight(L,false); const w=curWeek(); const r={}; ranked.forEach((k,i)=>r[k]=i+1);
+      const doc=S.rankings[me]?JSON.parse(JSON.stringify(S.rankings[me])):{weeks:{}}; doc.weeks=doc.weeks||{}; doc.weeks[w]={...(doc.weeks[w]||{}),[g.id]:r};
+      const ok=await write(()=>D("rankings/"+me).set(doc),"Ranking submetido"); if(ok) popLayer(L); else setRight(L,true); }});
+}
+function evolutionSheet(aid){
+  const g=curGroup(); const a=S.awards[aid];
+  openSheet({title:`${a.emoji||""} ${a.label}`,left:"Fechar",live:true,
+    body:()=>{ const ws=seasonWeeks(); const pts=ws.map(w=>({w,s:standings(g.id,aid,w)})).filter(p=>p.s.total>0);
+      if(pts.length<2) return `<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Continuem a votar todas as semanas para ver a evolução.</p></div></div>`;
+      const top=standings(g.id,aid).list.slice(0,4).map((e,i)=>({key:e.k,name:first(nm(e.k)),color:SERIES[i]}));
+      const mx=Math.min(100,Math.max(20,Math.ceil(Math.max(...pts.flatMap(p=>top.map(t=>p.s.list.find(x=>x.k===t.key)?.p||0)))/10)*10));
+      return `<div class="label">Probabilidade semanal (acumulada no ano)</div><div class="card pad">${chartBox({points:pts.map(p=>({label:weekShort(p.w),values:Object.fromEntries(top.map(t=>[t.key,p.s.list.find(x=>x.k===t.key)?.p??0]))})),series:top,min:0,max:mx,ticks:[0,mx/2,mx],fmt:v=>Math.round(v)+"%",h:230,aria:"Evolução das probabilidades"})}${legend(top)}</div>
+        <p class="info">Percentagem de todos os votos do ano recebidos até cada semana.</p>
+        <div class="label" style="margin-top:22px">Classificação atual</div>${(()=>{ const was=expanded.has(aid); expanded.add(aid); const html=awardBlock(g,{id:aid,...a},false); if(!was) expanded.delete(aid); return html; })()}`; }});
+}
+function newChatSheet(){
+  const g=curGroup(); const me=ME(); const st={type:"direct",sel:new Set(),name:""};
+  const others=g.members.filter(k=>k!==me).sort((a,b)=>nm(a).localeCompare(nm(b)));
+  const ok=()=>st.sel.size>0;
+  const L=openSheet({title:"Nova conversa",right:"Começar",rightDisabled:true,
+    body:()=>`<div class="seg" role="tablist"><button data-type="direct" class="${st.type==="direct"?"on":""}">Privada</button><button data-type="group" class="${st.type==="group"?"on":""}">Grupo</button></div>
+      ${st.type==="group"?`<div class="field" style="margin-top:16px"><label for="cname">Nome da conversa (opcional)</label><input id="cname" class="input" maxlength="40" placeholder="Ex.: Jantar de sábado" value="${esc(st.name)}" autocomplete="off"></div>`:""}
+      <div class="label" style="margin-top:18px">${st.type==="direct"?"Escolhe uma pessoa":"Escolhe os participantes"}</div>
+      <div class="card list">${others.map(k=>`<button class="row" data-m="${k}">${avatar(k,36)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${st.sel.has(k)?"on":""}">${st.sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>`,
+    onMount:L=>{ L.body.addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return;
+        if(t.dataset.type){ st.type=t.dataset.type; st.sel.clear(); L.render(); setRight(L,false); bindName(); return; }
+        if(t.dataset.m){ const k=t.dataset.m; if(st.type==="direct"){ st.sel.clear(); st.sel.add(k); } else st.sel.has(k)?st.sel.delete(k):st.sel.add(k); L.render(); bindName(); setRight(L,ok()); } });
+      const bindName=()=>{ const i=L.body.querySelector("#cname"); if(i) i.oninput=()=>st.name=i.value; }; },
+    onRight:async L=>{ setRight(L,false); const members=[me,...st.sel];
+      if(st.type==="direct"){ const ex=chatsOf(g.id).find(c=>c.type==="direct"&&c.members.length===2&&c.members.includes([...st.sel][0])); if(ex){ popLayer(L); go("chat",ex.id); return; } }
+      const id="c-"+uidGen(); const okw=await write(()=>D("chats/"+id).set({groupId:g.id,type:st.type,name:st.type==="group"?st.name.trim():"",members,createdBy:me,createdAt:Date.now(),lastAt:null,lastText:"",lastFrom:null}));
+      if(okw){ popLayer(L); go("chat",id); } else setRight(L,true); }});
+}
+
+/* ───────────────────────── photos (small thumbnails, not full images) ───────────────────────── */
+async function toThumb(file,size=192){
+  const url=URL.createObjectURL(file);
+  try{ const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
+    const s=Math.min(img.naturalWidth,img.naturalHeight); const c=document.createElement("canvas"); c.width=c.height=size;
+    c.getContext("2d").drawImage(img,(img.naturalWidth-s)/2,(img.naturalHeight-s)/2,s,s,0,0,size,size); return c.toDataURL("image/jpeg",.82); }
+  finally{ URL.revokeObjectURL(url); }
+}
+
+/* ───────────────────────── actions ───────────────────────── */
+const A = {
+  tab:t=>setTab(t), back:()=>back(), settings:()=>go("settings"), openGroup:id=>go("group",id), pickGroup:()=>pickGroupSheet(),
+  newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>awardSheet(), newChat:()=>newChatSheet(),
+  rank:()=>rankSheet(), vote:id=>votePicker(id), evolution:id=>evolutionSheet(id),
+  openChat:id=>go("chat",id),
+  toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
+  allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME();
+    openSheet({title:"Ranking médio",left:"Fechar",live:true,body:()=>`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
+  scoreInfo:()=>{ const g=curGroup(); const me=ME(); const st=eventStats(g.id,me);
+    alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/8) e 30% semanas com votos no Journey (${voteWeeksDone(me,g.id)}/8), nas últimas 8 semanas.`); },
+  presence:async arg=>{ const [id,v]=arg.split("|"); const me=ME(); const e=S.events[id]; if(!e) return; if((e.att||{})[me]===v) return;
+    await write(()=>D("events/"+id).update({att:{[me]:v}}), v==="yes"?"Marcado como presente":"Marcado como ausente"); },
+  eventMenu:async id=>{ const v=await actionSheet(S.events[id]?.title,[{t:"Editar evento",v:"edit"},{t:"Apagar evento",v:"del",danger:true}]);
+    if(v==="edit") eventSheet(id);
+    if(v==="del" && await confirmD("Apagar evento?","As presenças deste evento também deixam de contar nas estatísticas.","Apagar",true)) await write(()=>D("events/"+id).delete(),"Evento apagado"); },
+  delAward:async id=>{ const a=S.awards[id]; if(await confirmD(`Apagar “${a.label}”?`,"O prémio e os resultados deixam de aparecer. Não dá para desfazer.","Apagar",true)) await write(()=>D("awards/"+id).delete(),"Prémio apagado"); },
+  submitVotes:async()=>{ const me=ME(); const w=curWeek(); const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{};
+    doc.weeks[w]={...(doc.weeks[w]||{}),...S.localVotes}; const n=Object.keys(S.localVotes).length;
+    if(await write(()=>D("votes/"+me).set(doc), n===1?"Voto submetido":`${n} votos submetidos`)){ S.localVotes={}; render(); } },
+  copyCode:async gid=>{ const g=S.groups[gid]; const txt=`Junta-te ao grupo “${g.name}” no Pês com o código ${g.code}`;
+    try{ await navigator.clipboard.writeText(txt); toast("Convite copiado"); } catch { await alertD("Copia o convite",txt); } },
+  groupMenu:async gid=>{ const g=S.groups[gid]; const v=await actionSheet(g.name,[{t:"Mudar nome",v:"rename"},{t:"Mudar foto",v:"photo"},...(g.photo?[{t:"Remover foto",v:"nophoto",danger:true}]:[])]);
+    if(v==="rename") renameSheet(gid);
+    if(v==="photo") app.querySelector(`[data-file="groupPhoto"]`)?.click();
+    if(v==="nophoto") await write(()=>D("groups/"+gid).update({photo:null}),"Foto removida"); },
+  memberMenu:async arg=>{ const [gid,k]=arg.split("|"); const g=S.groups[gid]; const me=ME(); if(!isAdmin(g)||k===me) return;
+    const adm=(g.admins||[]).includes(k);
+    const v=await actionSheet(nm(k),[...(adm?[{t:"Tirar de admin",v:"demote"}]:[{t:"Tornar admin",v:"promote"}]),{t:"Remover do grupo",v:"remove",danger:true}]);
+    if(v==="promote"&&await confirmD("Tornar admin?",`${nm(k)} vai poder gerir membros, prémios e a foto do grupo.`,"Tornar admin")) await write(()=>D("groups/"+gid).update({admins:[...g.admins,k]}),`${first(nm(k))} é agora admin`);
+    if(v==="demote") await write(()=>D("groups/"+gid).update({admins:g.admins.filter(x=>x!==k)}),"Já não é admin");
+    if(v==="remove"&&await confirmD("Remover do grupo?",`${nm(k)} deixa de ver este grupo. Pode voltar a entrar com o código de convite.`,"Remover",true)) await write(()=>D("groups/"+gid).update({members:g.members.filter(x=>x!==k),admins:(g.admins||[]).filter(x=>x!==k)}),"Membro removido"); },
+  leaveGroup:async gid=>{ const g=S.groups[gid]; const me=ME(); const rest=g.members.filter(k=>k!==me);
+    const lastAdmin=(g.admins||[]).length===1&&g.admins[0]===me&&rest.length>0;
+    if(!await confirmD(`Sair de ${g.name}?`, rest.length? (lastAdmin?`És o único admin, por isso ${nm(rest[0])} passa a ser admin.`:"Podes voltar com o código de convite.") : "És o último membro, por isso o grupo é apagado.","Sair",true)) return;
+    const ok=await write(()=> rest.length? D("groups/"+gid).update({members:rest,admins:lastAdmin?[rest[0]]:(g.admins||[]).filter(x=>x!==me)}) : D("groups/"+gid).delete(),"Saíste do grupo");
+    if(ok){ S.route=[]; S.tab="home"; render(); } },
+  theme:v=>{ S.theme=v; lsSet("theme",v); applyTheme(); render(); },
+  authMode:v=>{ S.authEmail=document.getElementById("aemail")?.value.trim()||S.authEmail; S.authMode=v; render(); },
+  logout:async()=>{ if(await confirmD("Terminar sessão?","Voltas a precisar do email e da password para entrar.","Terminar sessão")) await S.auth.signOut(); },
+  removePhoto:async()=>{ await write(()=>D("people/"+ME()).update({photo:null}),"Foto removida"); },
+  renameMe:()=>{ const me=myRealMember()||ME(); let name=nm(me);
+    openSheet({title:"O teu nome",right:"Guardar",body:()=>`<div class="field"><label for="rnme">Nome</label><input id="rnme" class="input" maxlength="30" value="${esc(name)}" autocomplete="name"></div>`,
+      onMount:L=>{ const i=L.body.querySelector("#rnme"); i.focus(); i.oninput=()=>{ name=i.value.trim().replace(/\s+/g," "); setRight(L,name.length>=2); }; },
+      onRight:async L=>{ setRight(L,false); if(await write(()=>D("people/"+me).update({name}),"Nome atualizado")) popLayer(L); else setRight(L,true); }}); },
+  claim:async k=>{ const p=S.people[k]; if(!p) return;
+    if(!await confirmD(`És ${p.name}?`,"Este perfil fica associado à tua conta Claude.","Sou eu")) return;
+    S.claimBusy=true; render();
+    try{ if(S.fb){ await fbClaim(k); S.route=[]; S.tab="home"; return; }
+      const ref=D("people/"+k); const L=await ref.acquire({holder:S.uid||"me",ttlMs:5000});
+      if(!L.acquired){ await alertD("Alguém está a escolher este nome","Espera uns segundos e tenta outra vez."); return; }
+      const cur=await ref.get(); if(cur.exists&&cur.data().uid&&cur.data().uid!==S.uid){ await alertD("Perfil já escolhido","Outra conta já está associada a este perfil."); return; }
+      await ref.update({uid:S.uid}); S.route=[]; S.tab="home";
+    } catch(e){ await alertD("Não foi possível guardar","Verifica a ligação e tenta outra vez."); }
+    finally{ S.claimBusy=false; render(); } },
+  actAs:async()=>{ const ps=Object.entries(S.people).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+    const v=await actionSheet("Ver a app como",[{t:"Eu próprio",v:"__me",sel:!S.actingAs},...ps.map(([k,p])=>({t:p.name,v:k,sel:S.actingAs===k}))]);
+    if(!v) return; S.actingAs=v==="__me"?null:v; lsSet("actingAs",S.actingAs); S.localVotes={}; S.groupId=null; render(); },
+  releaseClaim:async()=>{ const taken=Object.entries(S.people).filter(([,p])=>p.uid); if(!taken.length){ alertD("Nenhum perfil está ligado a uma conta",""); return; }
+    const v=await actionSheet("Desligar perfil",taken.map(([k,p])=>({t:p.name+(p.uid===S.uid?" (tu)":""),v:k})));
+    if(v&&await confirmD(`Desligar ${nm(v)}?`,"A conta associada volta a ver o ecrã inicial e pode escolher outro perfil. Os dados ficam.","Desligar",true)) await write(()=> S.fb? fbRelease(v) : D("people/"+v).update({uid:null}),"Perfil desligado"); },
+  resetAll:async()=>{ if(!await confirmD("Apagar todos os dados?","Apaga pessoas, grupos, eventos, votos, rankings e conversas. Fica só o teu perfil. Não dá para desfazer.","Apagar tudo",true)) return;
+    const me=myRealMember(); const keep=me?{[`people/${me}`]:{...S.people[me],demo:false}}:{}; if(S.fb&&me) keep["uids/"+S.uid]={key:me};
+    if(await bulk(keep,"A apagar")){ S.route=[]; S.tab="home"; S.actingAs=null; lsSet("actingAs",null); S.groupId=null; render(); toast("Dados apagados"); } },
+  loadDemo:async()=>{ if(!await confirmD("Carregar dados de demonstração?","Substitui todos os dados atuais por 7 grupos de exemplo, 28 pessoas e 30 semanas de votos. O teu perfil passa a ser o Gonçalo Xavier.","Carregar",true)) return;
+    const docs=generateDemo(Date.now()); docs["people/goncalo-xavier"].uid=S.uid; if(S.fb) docs["uids/"+S.uid]={key:"goncalo-xavier"};
+    const old=myRealMember(); if(old&&S.people[old]?.photo) docs["people/goncalo-xavier"].photo=S.people[old].photo;
+    if(await bulk(docs,"A carregar")){ S.route=[]; S.tab="home"; S.actingAs=null; lsSet("actingAs",null); S.groupId="g-elcalderon"; lsSet("group","g-elcalderon"); render(); toast("Dados de demonstração carregados"); } },
+  suggestAwards:async gid=>{ const base=Math.max(0,...groupAwards(gid).map(a=>a.order||0));
+    await write(async()=>{ for(const [i,a] of DEFAULT_AWARDS.entries()) await D(`awards/a-${gid}-${a.key}`).set({groupId:gid,label:a.label,emoji:a.emoji,desc:a.desc,order:base+i+1,createdAt:Date.now(),createdBy:ME()}); },"Prémios adicionados"); },
+};
+function renameSheet(gid){ const g=S.groups[gid]; let name=g.name;
+  openSheet({title:"Nome do grupo",right:"Guardar",body:()=>`<div class="field"><label for="rn">Nome</label><input id="rn" class="input" maxlength="40" value="${esc(g.name)}" autocomplete="off"></div>`,
+    onMount:L=>{ const i=L.body.querySelector("#rn"); i.focus(); i.select(); i.oninput=()=>{ name=i.value.trim(); setRight(L,!!name); }; },
+    onRight:async L=>{ setRight(L,false); if(await write(()=>D("groups/"+gid).update({name}),"Nome atualizado")) popLayer(L); else setRight(L,true); }}); }
+/* Replace the whole store with `docs` (path → body), deleting everything else. Paced writes with retries and a progress overlay. */
+async function bulk(docs,label){
+  const L=pushLayer(`<div class="overlay"></div><div class="dialog"><div class="dt"><div class="spinner" style="margin:0 auto 12px"></div><h3></h3><p class="num">A preparar…</p></div></div>`);
+  L.el.querySelector("h3").textContent=label+"…"; const p=L.el.querySelector("p");
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  const retry=async fn=>{ for(let i=0;;i++){ try{ return await fn(); } catch(e){ if(i<6&&["resource_exhausted","unavailable","resource-exhausted"].includes(e?.code)){ await sleep(500*2**i); continue; } throw e; } } };
+  try{
+    const del=[];
+    for(const c of S.fb?[...COLS,"uids"]:[...COLS,"owners","profiles"]){ const snap=await retry(()=>S.db.collection(c).get()); for(const d of snap.docs){ del.push(`${c}/${d.id}`);
+      if(c==="chats"){ const ms=await retry(()=>S.db.collection(`chats/${d.id}/msgs`).get()); ms.docs.forEach(m=>del.push(`chats/${d.id}/msgs/${m.id}`)); } } }
+    const toDel=del.filter(x=>!(x in docs)); const toSet=Object.entries(docs); const total=toDel.length+toSet.length; let n=0;
+    if(S.fb){ const ops=[...toDel.map(x=>[x,null]),...toSet];
+      for(let i=0;i<ops.length;i+=400){ const b=S.raw.batch(); ops.slice(i,i+400).forEach(([path,body])=> body===null? b.delete(S.raw.doc(path)) : b.set(S.raw.doc(path),body)); await retry(()=>b.commit()); n+=Math.min(400,ops.length-i); p.textContent=`${n} de ${total}`; } }
+    else {
+    for(const path of toDel){ await retry(()=>D(path).delete()); p.textContent=`${++n} de ${total}`; await sleep(25); }
+    for(const [path,body] of toSet){ await retry(()=>D(path).set(body)); p.textContent=`${++n} de ${total}`; await sleep(25); } }
+    popLayer(L); return true;
+  } catch(e){ popLayer(L); await alertD("A operação parou a meio","Tenta outra vez. Os dados podem ter ficado incompletos até repetires."); return false; }
+}
+
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act]"); if(!t||!app.contains(t)) return; if(t.closest(".layer")&&!t.closest(".layer").contains(t)) return;
+  const f=A[t.dataset.act]; if(f){ e.preventDefault(); f(t.dataset.arg); }
+});
+document.addEventListener("change",async e=>{
+  const f=e.target.closest("[data-file]"); if(!f||!f.files?.[0]) return;
+  try{ const thumb=await toThumb(f.files[0]);
+    if(f.dataset.file==="myPhoto") await write(()=>D("people/"+ME()).update({photo:thumb}),"Foto atualizada");
+    if(f.dataset.file==="groupPhoto") await write(()=>D("groups/"+f.dataset.arg).update({photo:thumb}),"Foto do grupo atualizada");
+  } catch { alertD("Imagem inválida","Escolhe uma fotografia em JPG ou PNG."); }
+  f.value="";
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&layers.length){ const L=layers[layers.length-1]; L.el.querySelector("[data-close],[data-x]")?.click(); } });
+
+/* ───────────────────────── standalone mode: Firebase Auth + Firestore ───────────────────────── */
+const FBCFG = window.PES_FIREBASE || null;
+let fbSubs=[], scopeSubs=[], fbScopeKey="";
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+function fbAdapter(fdb){
+  const wrapDoc=r=>({id:r.id,path:r.path,get:()=>r.get(),set:d=>r.set(d),update:d=>r.set(d,{merge:true}),delete:()=>r.delete(),
+    onSnapshot:(n,e)=>r.onSnapshot(n,e),collection:p=>wrapCol(r.collection(p))});
+  const wrapQ=q=>({where:(...a)=>wrapQ(q.where(...a)),orderBy:(...a)=>wrapQ(q.orderBy(...a)),limit:n=>wrapQ(q.limit(n)),get:()=>q.get(),onSnapshot:(n,e)=>q.onSnapshot(n,e)});
+  const wrapCol=c=>({...wrapQ(c),path:c.path,doc:id=>wrapDoc(id?c.doc(id):c.doc()),add:async d=>wrapDoc(await c.add(d))});
+  return {doc:p=>wrapDoc(fdb.doc(p)),collection:p=>wrapCol(fdb.collection(p))};
+}
+function fbUnsubAll(){ [...fbSubs,...scopeSubs].forEach(u=>{ try{u();}catch{} }); fbSubs=[]; scopeSubs=[]; fbScopeKey=""; }
+function fbSubscribe(){
+  const base=["people","groups","votes","rankings"]; const pending=new Set(base);
+  const timer=setTimeout(()=>{ S.stale=true; scheduleRender(); },10000);
+  base.forEach(c=>fbSubs.push(S.db.collection(c).onSnapshot(snap=>{
+    S[c]=Object.fromEntries(snap.docs.map(d=>[d.id,d.data()]));
+    if(pending.delete(c)&&!pending.size){ clearTimeout(timer); S.stale=false; }
+    if(!pending.size) fbScope(); scheduleRender();
+  }, err=>{ console.warn(c,err); pending.delete(c); if(!pending.size){ clearTimeout(timer); fbScope(); } scheduleRender(); })));
+}
+/* Group-scoped data: only what the current person may see (security rules check membership per group). */
+function fbScope(){
+  const me=ME(); const gids=me?Object.entries(S.groups).filter(([,g])=>(g.members||[]).includes(me)).map(([id])=>id).sort():[];
+  const key=me+"|"+gids.join(",");
+  if(key===fbScopeKey){ S.loaded.add("ready"); return; }
+  fbScopeKey=key; scopeSubs.forEach(u=>{ try{u();}catch{} }); scopeSubs=[]; S.events={}; S.awards={}; S.chats={}; S.reads={};
+  if(me){
+    ["events","awards"].forEach(c=>{ const per={};
+      gids.forEach(gid=>scopeSubs.push(S.db.collection(c).where("groupId","==",gid).onSnapshot(s=>{ per[gid]=Object.fromEntries(s.docs.map(d=>[d.id,d.data()])); S[c]=Object.assign({},...Object.values(per)); scheduleRender(); }, e=>console.warn(c,gid,e)))); });
+    scopeSubs.push(S.db.collection("chats").where("members","array-contains",me).onSnapshot(s=>{ S.chats=Object.fromEntries(s.docs.map(d=>[d.id,d.data()])); scheduleRender(); }, e=>console.warn("chats",e)));
+    scopeSubs.push(S.db.doc("reads/"+me).onSnapshot(d=>{ S.reads=d.exists?{[me]:d.data()}:{}; scheduleRender(); }, ()=>{}));
+  }
+  S.loaded.add("ready");
+}
+async function fbBoot(){
+  const v="10.12.2", base=`https://www.gstatic.com/firebasejs/${v}/`;
+  try{ await loadScript(base+"firebase-app-compat.js"); await Promise.all([loadScript(base+"firebase-auth-compat.js"),loadScript(base+"firebase-firestore-compat.js")]); }
+  catch{ app.querySelector(".screen").innerHTML=`<div class="center"><h2>Sem ligação</h2><p class="muted">Não foi possível carregar a app. Verifica a internet e recarrega a página.</p></div>`; return; }
+  firebase.initializeApp(FBCFG); const fdb=firebase.firestore(); S.raw=fdb; S.db=fbAdapter(fdb); S.fb=true;
+  S.auth=firebase.auth(); S.auth.languageCode="pt";
+  S.auth.onAuthStateChanged(async u=>{
+    fbUnsubAll(); S.loaded.clear(); COLS.forEach(c=>S[c]={}); S.route=[]; S.localVotes={};
+    S.authKnown=true;
+    if(!u){ S.uid=null; S.isOwner=false; render(); return; }
+    S.uid=u.uid; S.email=u.email; render();
+    try{ const ref=fdb.doc("config/app"); let c=await ref.get(); if(!c.exists){ try{ await ref.set({ownerUid:u.uid,createdAt:Date.now()}); c=await ref.get(); }catch{} }
+      S.isOwner=!!(c.exists&&c.data().ownerUid===u.uid); }catch{ S.isOwner=false; }
+    if(!S.isOwner){ S.actingAs=null; }
+    fbSubscribe();
+  });
+}
+function authScreen(){
+  const m=S.authMode||"login";
+  return `<div class="scroll pad-bottom" data-key="auth"><div class="section" style="margin-top:calc(var(--st) + 40px);max-width:440px;margin-left:auto;margin-right:auto">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin-bottom:26px">
+      <div class="logo big">${LOGO}</div><h1 style="font-family:var(--display);font-size:34px;font-weight:700">Pês</h1>
+      <p class="muted">Os teus grupos de amigos, eventos e prémios do ano.</p></div>
+    ${m!=="reset"?`<div class="seg" style="margin-bottom:14px"><button data-act="authMode" data-arg="login" class="${m==="login"?"on":""}">Entrar</button><button data-act="authMode" data-arg="register" class="${m==="register"?"on":""}">Criar conta</button></div>`:""}
+    <form class="card pad" id="authForm" style="display:flex;flex-direction:column;gap:14px" novalidate>
+      ${m==="reset"?`<h2 style="font-size:20px;font-weight:700">Recuperar password</h2><p class="small muted">Enviamos-te um email com um link para escolheres uma password nova.</p>`:""}
+      <div class="field"><label for="aemail">Email</label><input id="aemail" class="input" type="email" autocomplete="email" placeholder="o.teu@email.com" value="${esc(S.authEmail||"")}"></div>
+      ${m!=="reset"?`<div class="field" style="margin-top:0"><label for="apw">Password</label><input id="apw" class="input" type="password" autocomplete="${m==="login"?"current-password":"new-password"}" placeholder="${m==="login"?"A tua password":"Pelo menos 6 caracteres"}"></div>`:""}
+      ${m==="register"?`<div class="field" style="margin-top:0"><label for="apw2">Repetir password</label><input id="apw2" class="input" type="password" autocomplete="new-password" placeholder="Escreve outra vez"></div>`:""}
+      <p class="hint" id="aerr" style="color:var(--red);margin:0" role="alert"></p>
+      <button class="btn block" type="submit">${m==="login"?"Entrar":m==="register"?"Criar conta":"Enviar email"}</button>
+      ${m==="login"?`<button type="button" class="linkbtn" data-act="authMode" data-arg="reset">Esqueci-me da password</button>`:""}
+      ${m==="reset"?`<button type="button" class="linkbtn" data-act="authMode" data-arg="login">Voltar a entrar</button>`:""}
+    </form></div></div>`;
+}
+const AUTH_ERR={"auth/invalid-email":"Esse email não parece válido.","auth/missing-password":"Escreve a password.","auth/invalid-credential":"Email ou password errados.","auth/wrong-password":"Email ou password errados.","auth/user-not-found":"Não existe conta com esse email.","auth/email-already-in-use":"Já existe uma conta com esse email. Entra em vez de criar.","auth/weak-password":"A password tem de ter pelo menos 6 caracteres.","auth/too-many-requests":"Demasiadas tentativas. Espera uns minutos.","auth/network-request-failed":"Sem ligação à internet."};
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="authForm") return; e.preventDefault();
+  const m=S.authMode||"login"; const email=document.getElementById("aemail").value.trim(); S.authEmail=email;
+  const pw=document.getElementById("apw")?.value||""; const err=document.getElementById("aerr"); const btn=e.target.querySelector('[type=submit]');
+  if(m==="register"&&pw!==document.getElementById("apw2").value){ err.textContent="As passwords não são iguais."; return; }
+  btn.disabled=true; err.textContent="";
+  try{
+    if(m==="login") await S.auth.signInWithEmailAndPassword(email,pw);
+    else if(m==="register") await S.auth.createUserWithEmailAndPassword(email,pw);
+    else { await S.auth.sendPasswordResetEmail(email); S.authMode="login"; render(); toast("Email enviado. Vê também o spam."); return; }
+  } catch(x){ err.textContent=AUTH_ERR[x.code]||"Não foi possível continuar. Tenta outra vez."; btn.disabled=false; }
+});
+async function fbCreateProfile(name){
+  const key=slug(name)+"-"+Math.random().toString(36).slice(2,6); const b=S.raw.batch();
+  b.set(S.raw.doc("people/"+key),{name,uid:S.uid,photo:null,createdAt:Date.now()}); b.set(S.raw.doc("uids/"+S.uid),{key}); await b.commit();
+}
+async function fbClaim(k){ const b=S.raw.batch(); b.set(S.raw.doc("people/"+k),{uid:S.uid},{merge:true}); b.set(S.raw.doc("uids/"+S.uid),{key:k}); await b.commit(); }
+async function fbRelease(k){ const uid=S.people[k]?.uid; const b=S.raw.batch(); b.set(S.raw.doc("people/"+k),{uid:null},{merge:true}); if(uid) b.delete(S.raw.doc("uids/"+uid)); await b.commit(); }
+
+/* ───────────────────────── boot ───────────────────────── */
+function subscribeAll(){
+  let pending=new Set(COLS);
+  const timer=setTimeout(()=>{ S.stale=true; scheduleRender(); },10000);
+  COLS.forEach(c=>{
+    S.db.collection(c).onSnapshot(snap=>{
+      const o={}; snap.docs.forEach(d=>o[d.id]=d.data()); S[c]=o;
+      if(!snap.metadata?.fromCache && pending.delete(c) && !pending.size){ clearTimeout(timer); S.stale=false; S.loaded.add("ready"); }
+      if(snap.metadata?.fromCache===false||S.loaded.has("ready")) scheduleRender();
+      if(!S.loaded.has("ready") && pending.size===0){ S.loaded.add("ready"); }
+    }, err=>{ pending.delete(c); if(!pending.size){ clearTimeout(timer); S.loaded.add("ready"); } scheduleRender(); });
+  });
+}
+async function boot(){
+  applyTheme();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{ applyTheme(); scheduleRender(); });
+  new MutationObserver(()=>{ applyTheme(); scheduleRender(); }).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  window.addEventListener("resize",()=>scheduleRender());
+  if (FBCFG){ render(); fbBoot(); return; }
+  let db=null, user=null;
+  if (window.claude?.use){ [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]); }
+  if (db){
+    S.db=db; S.uid=user?await user.id():null; S.isOwner=user?await user.isOwner():false;
+    if(!S.uid){ app.querySelector(".screen").innerHTML=`<div class="center"><div class="logo big">${LOGO}</div><h2>Inicia sessão no Claude</h2><p class="muted" style="max-width:30ch">Abre esta app com a tua conta Claude para poderes entrar.</p></div>`; return; }
+    subscribeAll();
+  } else {
+    S.preview=true; S.db=MemDB(generateDemo(Date.now())); S.uid="preview"; S.isOwner=true;
+    await S.db.doc("people/goncalo-xavier").update({uid:"preview"});
+    subscribeAll();
+  }
+  render();
+}
+boot();
+</script>
+</body>
+</html>

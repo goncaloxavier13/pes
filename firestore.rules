@@ -1,0 +1,77 @@
+rules_version = '2';
+// Pês — security rules. Everyone signed in sees people and groups (needed to join with a code);
+// events, prizes, chats and messages only for members; each person writes only their own votes and rankings.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signed() { return request.auth != null; }
+    function isOwner() { return signed() && exists(/databases/$(db)/documents/config/app)
+      && get(/databases/$(db)/documents/config/app).data.ownerUid == request.auth.uid; }
+    function hasKey() { return signed() && exists(/databases/$(db)/documents/uids/$(request.auth.uid)); }
+    function myKey() { return get(/databases/$(db)/documents/uids/$(request.auth.uid)).data.key; }
+    function grp(gid) { return get(/databases/$(db)/documents/groups/$(gid)).data; }
+    function isMember(gid) { return hasKey() && myKey() in grp(gid).members; }
+    function isGAdmin(gid) { return hasKey() && myKey() in grp(gid).admins; }
+
+    match /config/app {
+      allow read: if signed();
+      allow create: if signed() && request.auth.token.email == "goncaloxavier13@gmail.com"
+        && request.resource.data.ownerUid == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+    match /uids/{uid} {
+      allow get: if signed() && (request.auth.uid == uid || isOwner());
+      allow list: if isOwner();
+      allow create: if signed() && request.auth.uid == uid
+        && getAfter(/databases/$(db)/documents/people/$(request.resource.data.key)).data.uid == request.auth.uid;
+      allow update, delete: if isOwner();
+    }
+    match /people/{key} {
+      allow read: if signed();
+      allow create: if isOwner() || (signed() && request.resource.data.uid == request.auth.uid);
+      allow update: if isOwner()
+        || (resource.data.uid == request.auth.uid && request.resource.data.uid == request.auth.uid)
+        || (resource.data.uid == null && request.resource.data.uid == request.auth.uid && !hasKey());
+      allow delete: if isOwner();
+    }
+    match /groups/{gid} {
+      allow read: if signed();
+      allow create: if isOwner() || (hasKey() && myKey() in request.resource.data.admins && myKey() in request.resource.data.members);
+      allow update: if isOwner() || isGAdmin(gid)
+        || (hasKey() && myKey() in request.resource.data.members && !(myKey() in resource.data.members)
+            && request.resource.data.members.size() == resource.data.members.size() + 1
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members']))
+        || (hasKey() && myKey() in resource.data.members && !(myKey() in request.resource.data.members)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'admins']));
+      allow delete: if isOwner() || isGAdmin(gid) || (isMember(gid) && resource.data.members.size() == 1);
+    }
+    match /awards/{id} {
+      allow read: if isOwner() || isMember(resource.data.groupId);
+      allow create, update: if isOwner() || isGAdmin(request.resource.data.groupId);
+      allow delete: if isOwner() || isGAdmin(resource.data.groupId);
+    }
+    match /events/{id} {
+      allow read: if isOwner() || isMember(resource.data.groupId);
+      allow create: if isOwner() || (isMember(request.resource.data.groupId) && request.resource.data.createdBy == myKey());
+      allow update: if isOwner() || (hasKey() && resource.data.createdBy == myKey())
+        || (isMember(resource.data.groupId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['att'])
+            && request.resource.data.att.diff(resource.data.att).affectedKeys().hasOnly([myKey()]));
+      allow delete: if isOwner() || (hasKey() && resource.data.createdBy == myKey());
+    }
+    match /votes/{key} { allow read: if signed(); allow write: if isOwner() || (hasKey() && key == myKey()); }
+    match /rankings/{key} { allow read: if signed(); allow write: if isOwner() || (hasKey() && key == myKey()); }
+    match /reads/{key} { allow read, write: if isOwner() || (hasKey() && key == myKey()); }
+    match /chats/{cid} {
+      allow read: if isOwner() || (hasKey() && myKey() in resource.data.members);
+      allow create: if isOwner() || (hasKey() && myKey() in request.resource.data.members && isMember(request.resource.data.groupId));
+      allow update: if isOwner() || (hasKey() && myKey() in resource.data.members);
+      allow delete: if isOwner();
+      match /msgs/{mid} {
+        allow read: if isOwner() || (hasKey() && myKey() in get(/databases/$(db)/documents/chats/$(cid)).data.members);
+        allow create: if isOwner() || (hasKey() && request.resource.data.from == myKey()
+          && myKey() in get(/databases/$(db)/documents/chats/$(cid)).data.members);
+        allow delete: if isOwner();
+      }
+    }
+  }
+}
