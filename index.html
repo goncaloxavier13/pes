@@ -125,10 +125,11 @@ p{margin:0}
 .tab svg{width:24px;height:24px}
 .tab.on{color:var(--accent)}
 .tab.hometab{color:#fff}
-.tab.hometab svg{width:26px;height:26px;padding:11px;box-sizing:content-box;border-radius:50%;background:var(--accent);margin-top:-22px;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 45%,transparent),0 0 0 4px var(--card)}
+.tab.hometab .hbub{flex:none;width:56px;height:56px;min-width:56px;min-height:56px;aspect-ratio:1/1;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;margin-top:-26px;box-sizing:border-box;border:4px solid var(--card);box-shadow:0 3px 10px rgba(0,0,0,.18);background-clip:padding-box}
+.tab.hometab .hbub svg{width:24px;height:24px;display:block}
 .tab.hometab span:last-child{color:var(--muted)}
 .tab.hometab.on span:last-child{color:var(--accent);font-weight:600}
-.tab.hometab .badge{top:-18px;left:calc(50% + 12px)}
+.tab.hometab .badge{top:-24px;left:calc(50% + 10px)}
 .tabhead .titles .gname{font-family:inherit;line-height:1.2;letter-spacing:0;font-size:15px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--card)}
 
@@ -820,7 +821,7 @@ function renderInner(){
 function tabbar(){
   const g=curGroup(); const n=g?groupNotifs(g.id):{msgs:0,evs:0};
   const others=myGroups().filter(x=>!g||x.id!==g.id).reduce((s,x)=>s+groupNotifs(x.id).total,0);
-  const t=(id,label,icon,badge)=>`<button class="tab ${id==="home"?"hometab ":""}${S.tab===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
+  const t=(id,label,icon,badge)=>`<button class="tab ${id==="home"?"hometab ":""}${S.tab===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${id==="home"?`<span class="hbub">${ic(icon)}</span>`:ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
   return `<nav class="tabbar">${t("dash","Dashboard","chart")}${t("events","Eventos","cal",n.evs)}${t("home","Início","home",others)}${t("journey","Journey","star")}${t("gap","GAP","chat",n.msgs)}</nav>`;
 }
 function groupPill(){ const g=curGroup(); if(!g) return ""; return `<div class="gname">${esc(g.name)}</div>`; }
