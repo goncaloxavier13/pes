@@ -124,6 +124,12 @@ p{margin:0}
 .tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:500;color:var(--muted);height:48px;justify-content:center;position:relative}
 .tab svg{width:24px;height:24px}
 .tab.on{color:var(--accent)}
+.tab.hometab{color:#fff}
+.tab.hometab svg{width:26px;height:26px;padding:11px;box-sizing:content-box;border-radius:50%;background:var(--accent);margin-top:-22px;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 45%,transparent),0 0 0 4px var(--card)}
+.tab.hometab span:last-child{color:var(--muted)}
+.tab.hometab.on span:last-child{color:var(--accent);font-weight:600}
+.tab.hometab .badge{top:-18px;left:calc(50% + 12px)}
+.tabhead .titles .gname{font-family:inherit;line-height:1.2;letter-spacing:0;font-size:15px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--card)}
 
 /* Stats */
@@ -205,6 +211,14 @@ p{margin:0}
 .gcard{display:block;width:100%;text-align:left;background:var(--card);border-radius:18px;padding:16px}
 .gcard+.gcard{margin-top:12px}
 .gtop{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.gcard{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gcard:active{transform:scale(.99)}
+.gside{display:flex;align-items:center;gap:8px;flex:none}
+.gcount{min-width:22px;height:22px;padding:0 7px;border-radius:11px;background:var(--red);color:#fff!important;font-size:12px;font-weight:700;display:grid;place-items:center}
+.ginfo{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--accent);background:var(--accent-soft)}
+.ginfo svg{width:20px;height:20px}
+.gnotes{font-size:13px;color:var(--red);font-weight:500;margin:-4px 0 12px}
+.gfoot{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .gphoto{width:48px;height:48px;border-radius:14px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;overflow:hidden;flex:none}
 .gphoto img{width:100%;height:100%;object-fit:cover}
 .gphoto svg{width:24px;height:24px}
@@ -595,7 +609,7 @@ const S = {
   db:null, preview:false, uid:null, isOwner:false, canWrite:true,
   people:{}, groups:{}, awards:{}, events:{}, votes:{}, rankings:{}, chats:{}, reads:{},
   loaded:new Set(), stale:false,
-  actingAs:lsGet("actingAs",null), groupId:lsGet("group",null), tab:lsGet("tab","home"), theme:lsGet("theme","system"),
+  actingAs:lsGet("actingAs",null), groupId:lsGet("group",null), tab:"home", theme:lsGet("theme","system"),
   route:[], // stack of {name, arg}
   localVotes:{}, claimBusy:false,
 };
@@ -673,6 +687,12 @@ function pendingFor(k){ return Object.entries(S.events).filter(([,e])=>(e.att||{
 function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([,c])=>c.groupId===gid && (c.members||[]).includes(me)).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
 function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false; return c.lastAt > (S.reads[me]?.chats?.[c.id]||0); }
 function unreadCount(){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>(c.members||[]).includes(me)&&S.groups[c.groupId]?.members?.includes(me)&&isUnread({id,...c})).length; }
+function voteClosing(gid){ const dow=ymdToUTC(lisbonYMD()).getUTCDay(); if(dow!==6&&dow!==0) return false;
+  const g=S.groups[gid]; const me=ME(); const wk=curWeek(); const v=S.votes[me]?.weeks?.[wk]||{};
+  const missVote=groupAwards(gid).some(a=>!v[a.id]&&!(gid===S.groupId&&S.localVotes[a.id])); const missRank=(g?.members||[]).length>1&&!myRankingThisWeek(gid);
+  return missVote||missRank; }
+function groupNotifs(gid){ const me=ME(); const msgs=chatsOf(gid).filter(isUnread).length; const evs=pendingFor(me).filter(e=>e.groupId===gid).length; const vote=voteClosing(gid);
+  return {msgs,evs,vote,total:msgs+evs+(vote?1:0)}; }
 function chatTitle(c){ const me=ME(); if(c.type==="direct"){ const o=(c.members||[]).find(k=>k!==me); return nm(o)||"Conversa"; } return c.name || (c.members||[]).filter(k=>k!==me).map(k=>first(nm(k))).join(", ") || "Grupo"; }
 
 /* ───────────────────────── db helpers ───────────────────────── */
@@ -757,7 +777,15 @@ function legend(series){ return `<div class="legend">${series.map(s=>`<span><i s
 const topRoute = () => S.route[S.route.length-1];
 function go(name,arg){ S.route.push({name,arg}); render(); }
 function back(){ S.route.pop(); render(); }
-function setTab(t){ S.tab=t; S.route=[]; lsSet("tab",t); render(); }
+function setTab(t){ S.tab=t; S.route=[]; render(); }
+function enterGroup(gid,tab="dash"){ if(S.groupId!==gid) S.localVotes={}; S.groupId=gid; lsSet("group",gid); setTab(tab); }
+/* Deep links from push notifications: ?g=<group>&t=<tab>&c=<chat> */
+function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c")}; }catch{ return null; } }
+S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceState(null,"",location.pathname); }catch{} }
+navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
+function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
+  if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
+  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -771,6 +799,7 @@ function applyTheme(){
 /* Screens register chart specs while building their html, so reset the registry first. */
 function render(){ chartSpecs=new Map(); chartSeq=0; renderInner(); }
 function renderInner(){
+  applyLink();
   const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
   const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
   if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); return; }
@@ -789,11 +818,12 @@ function renderInner(){
 }
 
 function tabbar(){
-  const pend=pendingFor(ME()).length, unread=unreadCount();
-  const t=(id,label,icon,badge)=>`<button class="tab ${S.tab===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
-  return `<nav class="tabbar">${t("home","Início","home")}${t("dash","Painel","chart")}${t("events","Eventos","cal",pend)}${t("journey","Journey","star")}${t("gap","GAP","chat",unread)}</nav>`;
+  const g=curGroup(); const n=g?groupNotifs(g.id):{msgs:0,evs:0};
+  const others=myGroups().filter(x=>!g||x.id!==g.id).reduce((s,x)=>s+groupNotifs(x.id).total,0);
+  const t=(id,label,icon,badge)=>`<button class="tab ${id==="home"?"hometab ":""}${S.tab===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
+  return `<nav class="tabbar">${t("dash","Dashboard","chart")}${t("events","Eventos","cal",n.evs)}${t("home","Início","home",others)}${t("journey","Journey","star")}${t("gap","GAP","chat",n.msgs)}</nav>`;
 }
-function groupPill(){ const g=curGroup(); if(!g) return ""; return `<button class="pill" data-act="pickGroup"><span>${esc(g.name)}</span>${ic("down")}</button>`; }
+function groupPill(){ const g=curGroup(); if(!g) return ""; return `<div class="gname">${esc(g.name)}</div>`; }
 function noGroup(){ return `<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("users")}</div><h3>Ainda não tens grupo</h3><p>Cria um grupo ou entra com um código de convite no separador Início.</p></div></div></div>`; }
 
 /* ───────────────────────── screens: claim ───────────────────────── */
@@ -836,11 +866,14 @@ function homeScreen(){
     ${previewBanner()}
     <div class="hello">${avatar(me,76)}<p>Bem-vindo ao Pês 👋</p><h2>${esc(first(nm(me)))}</h2></div>
     <div class="section"><div class="label">Os meus grupos</div>
-    ${gs.length? gs.map(g=>`<button class="gcard" data-act="openGroup" data-arg="${g.id}">
+    ${gs.length? gs.map(g=>{ const n=groupNotifs(g.id);
+        const det=[n.msgs?`${n.msgs} ${n.msgs===1?"mensagem":"mensagens"}`:"",n.evs?`${n.evs} ${n.evs===1?"evento novo":"eventos novos"}`:"",n.vote?"votação fecha domingo":""].filter(Boolean).join(" · ");
+        return `<div class="gcard" role="button" tabindex="0" data-act="enterGroup" data-arg="${g.id}" aria-label="Abrir ${esc(g.name)}">
         <div class="gtop"><div class="gphoto">${g.photo?`<img src="${esc(g.photo)}" alt="">`:ic("users")}</div>
           <div style="flex:1;min-width:0"><div class="rowtitle" style="font-size:17px;font-weight:600">${esc(g.name)}</div><div class="rowsub">${g.members.length} ${g.members.length===1?"membro":"membros"}${isAdmin(g)?" · és admin":""}</div></div>
-          <span class="muted">${ic("right",'style="width:18px;height:18px"')}</span></div>
-        ${stack(g.members,34,9)}</button>`).join("")
+          <div class="gside">${n.total?`<span class="gcount num" aria-label="${n.total} avisos">${n.total}</span>`:""}<button class="ginfo" data-act="openGroup" data-arg="${g.id}" aria-label="Informação do grupo ${esc(g.name)}">${ic("info")}</button></div></div>
+        ${det?`<div class="gnotes">${esc(det)}</div>`:""}
+        <div class="gfoot">${stack(g.members,34,9)}<span class="muted">${ic("right",'style="width:18px;height:18px"')}</span></div></div>`; }).join("")
       : `<div class="card"><div class="empty"><div class="ico">${ic("users")}</div><h3>Ainda não tens grupos</h3><p>Cria um grupo ou entra num com o código de convite.</p></div></div>`}
     </div>
     <div class="section"><div class="btnrow"><button class="btn" data-act="newGroup">${ic("plus")}Novo grupo</button><button class="btn secondary" data-act="joinGroup">${ic("link")}Entrar num grupo</button></div></div>
@@ -882,7 +915,7 @@ function navhead(title,sub="",right="",titleAct=""){
 /* ───────────────────────── screens: dashboard ───────────────────────── */
 function dashScreen(){
   const g=curGroup(); const me=ME();
-  const head=`<div class="tabhead"><div class="titles"><h1>Painel</h1>${groupPill()}</div></div>`;
+  const head=`<div class="tabhead"><div class="titles"><h1>Dashboard</h1>${groupPill()}</div></div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="dash">${head}${noGroup()}</div>`;
   const st=eventStats(g.id,me); const av=averages(g.id); const myIdx=av.findIndex(a=>a.k===me);
   const done=!!myRankingThisWeek(g.id); const score=activityScore(g.id,me);
@@ -1065,11 +1098,6 @@ function ownerTools(){
 }
 
 /* ───────────────────────── sheets (forms) ───────────────────────── */
-function pickGroupSheet(){
-  const gs=myGroups(); const cur=curGroup();
-  actionSheet("Escolher grupo", gs.map(g=>{ const me=ME(); const p=pendingFor(me).filter(e=>e.groupId===g.id).length; const u=chatsOf(g.id).filter(isUnread).length; const extra=[p?`${p} por responder`:"",u?`${u} por ler`:""].filter(Boolean).join(", ");
-    return {t:`${g.name}${extra?` · ${extra}`:""}`,v:g.id,sel:cur&&cur.id===g.id}; })).then(v=>{ if(v){ S.groupId=v; lsSet("group",v); S.localVotes={}; render(); } });
-}
 function newGroupSheet(){
   let name="";
   openSheet({title:"Novo grupo",right:"Criar",rightDisabled:true,
@@ -1212,7 +1240,7 @@ async function toThumb(file,size=192){
 
 /* ───────────────────────── actions ───────────────────────── */
 const A = {
-  tab:t=>setTab(t), back:()=>back(), settings:()=>go("settings"), openGroup:id=>go("group",id), pickGroup:()=>pickGroupSheet(),
+  tab:t=>setTab(t), back:()=>back(), settings:()=>go("settings"), openGroup:id=>go("group",id), enterGroup:id=>enterGroup(id),
   newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>awardSheet(), newChat:()=>newChatSheet(),
   rank:()=>rankSheet(), vote:id=>votePicker(id), evolution:id=>evolutionSheet(id),
   openChat:id=>go("chat",id),

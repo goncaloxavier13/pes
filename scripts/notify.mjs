@@ -48,7 +48,7 @@ for (const d of (await db.collection("events").where("createdAt", ">", since).ge
   const e = d.data(); const g = groups[e.groupId]; if (!g) continue;
   for (const k of Object.keys(e.att || {})) {
     if (k === e.createdBy || e.att[k] === "no") continue;
-    await send(k, "events", { title: `Novo evento em ${g.name}`, body: `${first(e.createdBy)} adicionou-te a “${e.title}” · ${fmtDay(e.date)}${e.time ? " às " + e.time : ""}`, tag: "ev-" + d.id });
+    await send(k, "events", { title: `Novo evento em ${g.name}`, body: `${first(e.createdBy)} adicionou-te a “${e.title}” · ${fmtDay(e.date)}${e.time ? " às " + e.time : ""}`, tag: "ev-" + d.id, url: `./?g=${e.groupId}&t=events` });
   }
 }
 
@@ -64,7 +64,7 @@ for (const c of (await db.collection("chats").where("lastAt", ">", since).get())
     await send(k, "messages", {
       title: title || name(last.from),
       body: mine.length === 1 ? `${title ? first(last.from) + ": " : ""}${last.text}`.slice(0, 180) : `${mine.length} mensagens novas · ${first(last.from)}: ${last.text}`.slice(0, 180),
-      tag: "chat-" + c.id,
+      tag: "chat-" + c.id, url: `./?g=${chat.groupId}&t=gap&c=${c.id}`,
     });
   }
 }
@@ -76,7 +76,7 @@ if (hourLx() >= 18) {
     const e = d.data(); if (e.reminded) continue;
     for (const k of Object.keys(e.att || {})) {
       if (e.att[k] === "no") continue;
-      await send(k, "reminders", { title: `Amanhã: ${e.title}`, body: [e.time && `às ${e.time}`, e.place].filter(Boolean).join(" · ") || "Não te esqueças!", tag: "rem-" + d.id });
+      await send(k, "reminders", { title: `Amanhã: ${e.title}`, body: [e.time && `às ${e.time}`, e.place].filter(Boolean).join(" · ") || "Não te esqueças!", tag: "rem-" + d.id, url: `./?g=${e.groupId}&t=events` });
     }
     await d.ref.update({ reminded: true });
   }
@@ -86,17 +86,17 @@ if (hourLx() >= 18) {
 const wk = weekOf(ymd());
 if (weekdayLx() === "Sun" && hourLx() >= 18 && st.weekly !== wk) {
   const [awards, votes, rankings] = await Promise.all([all("awards"), all("votes"), all("rankings")]);
-  const todo = {};
+  const todo = {}, firstG = {};
   for (const [gid, g] of Object.entries(groups)) {
     const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id);
     for (const k of g.members || []) {
       const v = votes[k]?.weeks?.[wk] || {}; const r = rankings[k]?.weeks?.[wk]?.[gid];
       const missingVote = aw.some(id => !v[id]); const missingRank = (g.members || []).length > 1 && !r;
-      if (missingVote || missingRank) (todo[k] = todo[k] || []).push(g.name);
+      if (missingVote || missingRank) { (todo[k] = todo[k] || []).push(g.name); (firstG[k] = firstG[k] || gid); }
     }
   }
   for (const [k, gs] of Object.entries(todo))
-    await send(k, "votes", { title: "Ainda vais a tempo de votar", body: `Faltam os teus votos ou o ranking em ${gs.slice(0, 3).join(", ")}. O prazo acaba hoje às 23:59.`, tag: "votes-" + wk });
+    await send(k, "votes", { title: "Ainda vais a tempo de votar", body: `Faltam os teus votos ou o ranking em ${gs.slice(0, 3).join(", ")}. O prazo acaba hoje às 23:59.`, tag: "votes-" + wk, url: `./?g=${firstG[k]}&t=journey` });
   st.weekly = wk;
 }
 
