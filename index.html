@@ -1255,6 +1255,10 @@ const A = {
   openChat:id=>go("chat",id),
   eventPhotos:id=>eventPhotosSheet(id), gala:gid=>openGala(gid||curGroup()?.id),
   pushOn:()=>enablePush(), pushOff:()=>disablePush(),
+  pushTest:async()=>{ if(!pushSupported()||Notification.permission!=="granted"){ toast("Ativa primeiro as notificações"); return; }
+    const reg=await navigator.serviceWorker.getRegistration(); if(!reg){ toast("Ativa primeiro as notificações"); return; }
+    const g=curGroup(); toast("A enviar daqui a 5 segundos…");
+    setTimeout(()=>{ reg.showNotification(g?`Nova mensagem em ${g.name}`:"Pês",{body:"Isto é uma notificação de teste. Toca para abrir o GAP.",icon:"icons/icon-192.png",badge:"icons/icon-192.png",tag:"teste",data:{url:g?`./?g=${g.id}&t=gap`:"./"}}).catch(()=>toast("O telemóvel não deixou mostrar a notificação")); },5000); },
   pushPref:async k=>{ const me=myRealMember(); const cur=S.reads[me]?.push?.prefs?.[k]!==false; await write(()=>D("reads/"+me).update({push:{prefs:{[k]:!cur}}})); },
   chatInfo:cid=>{ const c=S.chats[cid]; if(!c) return; const me=ME(); const g=S.groups[c.groupId];
     openSheet({title:chatTitle({id:cid,...c}),left:"Fechar",live:true,body:()=>{ const cc=S.chats[cid]||c;
@@ -1587,6 +1591,7 @@ function notifSection(){
   return `<div class="section"><div class="label">Notificações</div><div class="card list">
     <div class="row"><div class="grow"><div class="rowtitle">${st.on?"Ativas neste telemóvel":"Desligadas neste telemóvel"}</div><div class="rowsub">${st.on?"Chegam com até 10 minutos de atraso":isIOS&&!isStandalone()?"No iPhone, adiciona primeiro a app ao ecrã principal":"Recebe avisos mesmo com a app fechada"}</div></div>
       <button class="minibtn" data-act="${st.on?"pushOff":"pushOn"}">${st.on?"Desligar":"Ativar"}</button></div>
+    ${st.on?`<button class="row" data-act="pushTest"><div class="grow"><div class="rowtitle" style="color:var(--accent)">Simular notificação</div><div class="rowsub">Chega daqui a 5 segundos. Bloqueia o ecrã ou sai da app para a veres.</div></div></button>`:""}
     ${PUSH_PREFS.map(([k,l,d])=>{ const on=st.prefs[k]!==false; return `<button class="row" data-act="pushPref" data-arg="${k}" role="switch" aria-checked="${on}" ${st.count?"":"disabled"}><div class="grow"><div class="rowtitle">${l}</div><div class="rowsub">${d}</div></div><span class="switch ${on?"on":""}"><i></i></span></button>`; }).join("")}
   </div></div>`;
 }
