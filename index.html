@@ -51,7 +51,11 @@ p{margin:0}
 .num{font-variant-numeric:tabular-nums}
 #app{position:relative;height:100%;max-width:520px;margin:0 auto;background:var(--bg);overflow:hidden}
 @media (min-width:560px){#app{border-left:1px solid var(--border);border-right:1px solid var(--border)}}
-.screen{position:absolute;inset:0;display:flex;flex-direction:column}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.screen.under{z-index:0;pointer-events:none}
+.screen.swiping{z-index:1;box-shadow:-10px 0 30px rgba(0,0,0,.18)}
+.sheet.swiping,.viewer.swiping,.gala.swiping{box-shadow:-10px 0 30px rgba(0,0,0,.18)}
+.sttap{position:absolute;left:0;right:0;top:0;height:max(var(--st),0px);z-index:40}
 .scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .pad-tabs{padding-bottom:calc(var(--tabh) + var(--sb) + 28px)}
 .pad-bottom{padding-bottom:calc(var(--sb) + 28px)}
@@ -798,12 +802,20 @@ function applyTheme(){
 }
 
 /* Screens register chart specs while building their html, so reset the registry first. */
-function render(){ chartSpecs=new Map(); chartSeq=0; renderInner(); }
+function render(){ if(S.swiping){ S.renderPending=true; return; } chartSpecs=new Map(); chartSeq=0; renderInner(); }
 function renderInner(){
   applyLink();
   const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
   const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
   if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); return; }
+  const html=screenHtml(r);
+  const scr=document.createElement("div"); scr.className="screen"; if(r?.name==="chat") scr.dataset.chat=r.arg;
+  scr.innerHTML=html; const prev=app.querySelector(".screen:not(.under)"); app.querySelectorAll(".screen.under").forEach(x=>x.remove()); if(prev) app.replaceChild(scr,prev); else app.prepend(scr);
+  const sc=scr.querySelector(".scroll[data-key]"); if(sc && scrollMem[sc.dataset.key]!=null) sc.scrollTop=scrollMem[sc.dataset.key];
+  drawCharts(scr);
+  if (r?.name==="chat" && ME()) mountChat(r.arg, scr);
+}
+function screenHtml(r){
   let html;
   if (S.fb && S.authKnown && !S.uid) html=authScreen();
   else if (FBCFG && !S.authKnown) html=`<div class="center"><div class="spinner"></div></div>`;
@@ -811,11 +823,7 @@ function renderInner(){
   else if (!ME()) html=claimScreen();
   else if (r) html=({group:groupScreen,settings:settingsScreen,chat:chatShell})[r.name](r.arg);
   else html=({home:homeScreen,dash:dashScreen,events:eventsScreen,journey:journeyScreen,gap:gapScreen})[S.tab]() + tabbar();
-  const scr=document.createElement("div"); scr.className="screen"; if(r?.name==="chat") scr.dataset.chat=r.arg;
-  scr.innerHTML=html; const prev=app.querySelector(".screen"); if(prev) app.replaceChild(scr,prev); else app.prepend(scr);
-  const sc=scr.querySelector(".scroll[data-key]"); if(sc && scrollMem[sc.dataset.key]!=null) sc.scrollTop=scrollMem[sc.dataset.key];
-  drawCharts(scr);
-  if (r?.name==="chat" && ME()) mountChat(r.arg, scr);
+  return html;
 }
 
 function tabbar(){
@@ -1241,7 +1249,7 @@ async function toThumb(file,size=192){
 
 /* ───────────────────────── actions ───────────────────────── */
 const A = {
-  tab:t=>setTab(t), back:()=>back(), settings:()=>go("settings"), openGroup:id=>go("group",id), enterGroup:id=>enterGroup(id),
+  tab:t=>{ if(S.tab===t&&!S.route.length&&!layers.length){ scrollTopNow(); return; } setTab(t); }, back:()=>back(), settings:()=>go("settings"), openGroup:id=>go("group",id), enterGroup:id=>enterGroup(id),
   newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>awardSheet(), newChat:()=>newChatSheet(),
   rank:()=>rankSheet(), vote:id=>votePicker(id), evolution:id=>evolutionSheet(id),
   openChat:id=>go("chat",id),
@@ -1347,6 +1355,62 @@ document.addEventListener("click",e=>{
   const t=e.target.closest("[data-act]"); if(!t||!app.contains(t)) return; if(t.closest(".layer")&&!t.closest(".layer").contains(t)) return;
   const f=A[t.dataset.act]; if(f){ e.preventDefault(); f(t.dataset.arg); }
 });
+/* ───────── tap the top of the screen (status bar or title) to scroll back to the top ───────── */
+function scrollTopNow(){
+  const L=layers[layers.length-1];
+  const el=L ? L.el.querySelector(".sheetbody,.scroll") : app.querySelector(".screen:not(.under) .scroll");
+  if(el && el.scrollTop>0){ try{ el.scrollTo({top:0,behavior:"smooth"}); }catch{ el.scrollTop=0; } }
+}
+(()=>{ const st=document.createElement("div"); st.className="sttap"; st.setAttribute("aria-hidden","true"); app.appendChild(st);
+  st.addEventListener("click",scrollTopNow); })();
+document.addEventListener("click",e=>{ if(e.target.closest("[data-act],a,input,textarea,select")) return;
+  if(e.target.closest(".tabhead h1,.navhead > h2,.sheethead h2")) scrollTopNow(); });
+
+/* ───────── swipe from the left edge to go back (like iOS) ───────── */
+(()=>{
+  let sw=null; const EDGE=28;
+  function target(){
+    const L=layers[layers.length-1];
+    if(L){ const c=L.el.querySelector("[data-close],[data-x]"); if(!c) return null;
+      return {el:L.el.querySelector(".sheet,.actions,.viewer,.gala")||L.el, overlay:L.el.querySelector(".overlay"), done:()=>c.click()}; }
+    if(!ME()) return null;
+    const cur=app.querySelector(".screen:not(.under)"); if(!cur) return null;
+    if(S.route.length) return {el:cur, page:true, prev:{route:S.route.slice(0,-1),tab:S.tab}, done:()=>back()};
+    if(S.tab!=="home") return {el:cur, page:true, prev:{route:[],tab:"home"}, done:()=>setTab("home")};
+    return null;
+  }
+  function makeUnder(prev){
+    const top=prev.route[prev.route.length-1]; if(top?.name==="chat") return null;
+    const keep={route:S.route,tab:S.tab}; S.route=prev.route; S.tab=prev.tab;
+    let html=""; try{ chartSpecs=new Map(); chartSeq=0; html=screenHtml(top); } finally { S.route=keep.route; S.tab=keep.tab; }
+    const u=document.createElement("div"); u.className="screen under"; u.innerHTML=html; app.insertBefore(u,app.firstChild);
+    const sc=u.querySelector(".scroll[data-key]"); if(sc&&scrollMem[sc.dataset.key]!=null) sc.scrollTop=scrollMem[sc.dataset.key];
+    try{ drawCharts(u); }catch{} return u;
+  }
+  const W=()=>app.clientWidth;
+  app.addEventListener("touchstart",e=>{ sw=null; if(e.touches.length!==1) return;
+    const x=e.touches[0].clientX-app.getBoundingClientRect().left; if(x>EDGE) return;
+    const t=target(); if(!t||!t.el) return; sw={...t,x0:e.touches[0].clientX,y0:e.touches[0].clientY,t0:Date.now(),dx:0,on:false}; },{passive:true});
+  app.addEventListener("touchmove",e=>{ if(!sw) return; const p=e.touches[0]; const dx=p.clientX-sw.x0, dy=p.clientY-sw.y0;
+    if(!sw.on){ if(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)){ sw=null; return; } if(dx<8) return;
+      sw.on=true; S.swiping=true; sw.el.style.transition="none"; sw.el.classList.add("swiping"); document.activeElement?.blur?.();
+      if(sw.page){ sw.under=makeUnder(sw.prev); if(sw.under){ sw.under.style.transition="none"; } } }
+    e.preventDefault(); sw.dx=Math.max(0,dx); const f=sw.dx/W();
+    sw.el.style.transform=`translateX(${sw.dx}px)`;
+    if(sw.under) sw.under.style.transform=`translateX(${-30*(1-f)}%)`;
+    if(sw.overlay) sw.overlay.style.opacity=String(Math.max(0,1-f)); },{passive:false});
+  function end(){ if(!sw) return; const s=sw; sw=null; if(!s.on) return;
+    const v=s.dx/Math.max(1,Date.now()-s.t0); const ok=s.dx>W()*0.35||(v>0.45&&s.dx>50);
+    const ease="transform .25s cubic-bezier(.2,.8,.2,1)";
+    s.el.style.transition=ease; if(s.under) s.under.style.transition=ease;
+    if(s.overlay){ s.overlay.style.transition="opacity .25s"; s.overlay.style.opacity=ok?"0":""; }
+    if(ok){ s.el.style.transform=`translateX(${W()}px)`; if(s.under) s.under.style.transform="translateX(0)";
+      setTimeout(()=>{ if(s.under){ s.under.remove(); } S.swiping=false; S.renderPending=false; s.done(); },240); }
+    else { s.el.style.transform=""; if(s.under) s.under.style.transform="translateX(-30%)";
+      setTimeout(()=>{ s.el.style.transition=""; s.el.classList.remove("swiping"); s.under?.remove(); S.swiping=false; if(S.renderPending){ S.renderPending=false; render(); } },260); } }
+  app.addEventListener("touchend",end); app.addEventListener("touchcancel",end);
+})();
+
 document.addEventListener("change",async e=>{
   const f=e.target.closest("[data-file]"); if(!f||!f.files?.[0]) return;
   try{ const thumb=await toThumb(f.files[0]);
