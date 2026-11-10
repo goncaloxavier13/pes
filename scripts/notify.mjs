@@ -88,6 +88,8 @@ if (weekdayLx() === "Sun" && hourLx() >= 18 && st.weekly !== wk) {
   const [awards, votes, rankings] = await Promise.all([all("awards"), all("votes"), all("rankings")]);
   const todo = {}, firstG = {};
   for (const [gid, g] of Object.entries(groups)) {
+    // Gala already happened this week: the season is closed until Monday, no reminder
+    if ((g.galas || []).some(d => d < ymd() && weekOf(d) === wk)) continue;
     const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id);
     for (const k of g.members || []) {
       const v = votes[k]?.weeks?.[wk] || {}; const r = rankings[k]?.weeks?.[wk]?.[gid];
