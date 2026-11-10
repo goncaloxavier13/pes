@@ -1654,7 +1654,7 @@ function authScreen(){
   return `<div class="scroll pad-bottom" data-key="auth"><div class="section" style="margin-top:calc(var(--st) + 40px);max-width:440px;margin-left:auto;margin-right:auto">
     <div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin-bottom:26px">
       <div class="logo big">${LOGO}</div><h1 style="font-family:var(--display);font-size:34px;font-weight:700">Pês</h1>
-      <p class="muted">Os teus grupos de amigos, eventos e prémios do ano.</p></div>
+      <p class="muted">Bem-vindo ao mundo dos Lifes.</p></div>
     ${m!=="reset"?`<div class="seg" style="margin-bottom:14px"><button data-act="authMode" data-arg="login" class="${m==="login"?"on":""}">Entrar</button><button data-act="authMode" data-arg="register" class="${m==="register"?"on":""}">Criar conta</button></div>`:""}
     <form class="card pad" id="authForm" style="display:flex;flex-direction:column;gap:14px" novalidate>
       ${m==="reset"?`<h2 style="font-size:20px;font-weight:700">Recuperar password</h2><p class="small muted">Enviamos-te um email com um link para escolheres uma password nova.</p>`:""}
