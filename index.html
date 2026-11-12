@@ -743,7 +743,8 @@ const myVote = (awardId) => S.localVotes[awardId] ?? S.votes[ME()]?.weeks?.[curW
 
 function pendingFor(k){ return Object.entries(S.events).filter(([,e])=>(e.att||{})[k]==="pending" && e.createdBy!==k && S.groups[e.groupId]?.members?.includes(k)).map(([id,e])=>({id,...e})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")); }
 function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([,c])=>c.groupId===gid && (c.members||[]).includes(me)).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
-function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false; return c.lastAt > (S.reads[me]?.chats?.[c.id]||0); }
+const openChatId = () => { const r=topRoute(); return r?.name==="chat"&&document.visibilityState!=="hidden" ? r.arg : null; };
+function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false; if(c.id===openChatId()) return false; return c.lastAt > (S.reads[me]?.chats?.[c.id]||0); }
 function unreadCount(){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>(c.members||[]).includes(me)&&S.groups[c.groupId]?.members?.includes(me)&&isUnread({id,...c})).length; }
 function voteClosing(gid){ const dow=ymdToUTC(lisbonYMD()).getUTCDay(); if(dow!==6&&dow!==0) return false; if(votingClosed(gid)) return false;
   const g=S.groups[gid]; const me=ME(); const wk=curWeek(); const v=S.votes[me]?.weeks?.[wk]||{};
@@ -912,13 +913,13 @@ function renderInner(){
   applyLink();
   const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
   const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
-  if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); return; }
+  if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); markRead(r.arg); return; }
   const html=screenHtml(r);
   const scr=document.createElement("div"); scr.className="screen"; if(r?.name==="chat") scr.dataset.chat=r.arg;
   scr.innerHTML=html; const prev=app.querySelector(".screen:not(.under)"); app.querySelectorAll(".screen.under").forEach(x=>x.remove()); if(prev) app.replaceChild(scr,prev); else app.prepend(scr);
   const sc=scr.querySelector(".scroll[data-key]"); if(sc && scrollMem[sc.dataset.key]!=null) sc.scrollTop=scrollMem[sc.dataset.key];
   drawCharts(scr);
-  if (r?.name==="chat" && ME()) mountChat(r.arg, scr);
+  if (r?.name==="chat" && ME()) { mountChat(r.arg, scr); markRead(r.arg); }
 }
 function screenHtml(r){
   let html;
@@ -1194,8 +1195,17 @@ function updateChat(cid){
   box.innerHTML=html; box.querySelectorAll(".bub").forEach((b,i)=>b.textContent=chatMsgs[i].text);
   if(atBottom||!box.dataset.init){ sc.scrollTop=sc.scrollHeight; box.dataset.init="1"; }
 }
-async function markRead(cid){ const me=ME(); const c=S.chats[cid]; if(!c||!c.lastAt) return; const cur=S.reads[me]?.chats?.[cid]||0; if(cur>=c.lastAt) return;
-  const ref=D("reads/"+me); try{ if(S.reads[me]) await ref.update({chats:{[cid]:c.lastAt}}); else await ref.set({chats:{[cid]:c.lastAt}}); }catch{} }
+/* Mark a conversation as read up to its newest message. Called when it opens, when new messages arrive,
+   when the chat document changes while it is open, and when the app comes back to the foreground. */
+async function markRead(cid){ const me=ME(); const c=S.chats[cid]; if(!me||!c) return;
+  clearChatNotifs(cid);
+  const lastMsg=chatId===cid&&chatMsgs.length?chatMsgs[chatMsgs.length-1].at||0:0;
+  const v=Math.max(c.lastAt||0,lastMsg); if(!v) return; const cur=S.reads[me]?.chats?.[cid]||0; if(cur>=v) return;
+  S.reads={...S.reads,[me]:{...(S.reads[me]||{}),chats:{...(S.reads[me]?.chats||{}),[cid]:v}}}; // show it as read right away
+  try{ await D("reads/"+me).update({chats:{[cid]:v}}); }catch{ try{ await D("reads/"+me).set({chats:{[cid]:v}}); }catch{} } }
+/* Remove this conversation's notifications from the phone's notification centre */
+async function clearChatNotifs(cid){ try{ const reg=await navigator.serviceWorker?.getRegistration(); const ns=await reg?.getNotifications?.({tag:"chat-"+cid}); (ns||[]).forEach(n=>n.close()); }catch{} }
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ const cid=openChatId(); if(cid) markRead(cid); scheduleRender(); } });
 
 /* ───────────────────────── settings ───────────────────────── */
 function settingsScreen(){
