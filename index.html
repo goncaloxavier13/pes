@@ -134,6 +134,13 @@ p{margin:0}
 .tab.hometab span:last-child{color:var(--muted)}
 .tab.hometab.on span:last-child{color:var(--accent);font-weight:600}
 .tab.hometab .badge{top:-24px;left:calc(50% + 10px)}
+.gline{display:flex;align-items:center;gap:8px;min-width:0}
+.seasonpill{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 9px 0 10px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600;white-space:nowrap;flex:none}
+.seasonpill svg{width:14px;height:14px}
+.seasonpill.past{background:var(--gold);color:#3a2a00}
+.pastbanner{background:color-mix(in srgb,var(--gold) 18%,transparent);color:var(--text)}
+.pastbanner span{flex:1}
+.pastbanner button{flex:none;font-size:13px;font-weight:600;color:var(--accent);padding:4px 2px}
 .tabhead .titles .gname{font-family:inherit;line-height:1.2;letter-spacing:0;font-size:15px;font-weight:600;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px var(--card)}
 
@@ -515,15 +522,21 @@ function generateDemo(nowMs){
     ["ines-duarte","Inês Duarte"],["marta-ribeiro","Marta Ribeiro"],["ricardo-alves","Ricardo Alves"],["sofia-nunes","Sofia Nunes"],["bruno-teixeira","Bruno Teixeira"],
     ["catarina-lopes","Catarina Lopes"],["ana-xavier","Ana Xavier"],["rita-xavier","Rita Xavier"],["luis-xavier","Luís Xavier"],["teresa-xavier","Teresa Xavier"],
     ["beatriz-sousa","Beatriz Sousa"],["carlos-mendes","Carlos Mendes"],["joana-faria","Joana Faria"],["miguel-costa","Miguel Costa"]];
-  PEOPLE.forEach(([k,n],i)=>{ docs["people/"+k]={name:n,uid:null,photo:null,createdAt:nowMs-(220-i)*DAY,demo:true}; });
-  const cw=weekOf(lisbonYMD(new Date(nowMs))); const WEEKS=weeksBack(30,cw);
+  PEOPLE.forEach(([k,n],i)=>{ docs["people/"+k]={name:n,uid:null,photo:null,createdAt:Date.UTC(2024,11,1)+i*DAY,demo:true}; });
+  // El Calderón has history since the first week of January 2025 (two seasons: Gala 2025 and Gala 2026); the other groups keep ~30 weeks
+  const cw=weekOf(lisbonYMD(new Date(nowMs))); const NW=Math.max(31,weeksBetween("2025-W02",cw)+1); const WEEKS=weeksBack(NW,cw); const SH=NW-30;
+  const today=lisbonYMD(new Date(nowMs)); const gala26=today<="2026-12-19"?"2026-12-19":addDays(today,35);
   const elc=["goncalo-xavier","tuna-cardoso","joao-t","zeca-couceiro","francisco-cabral","francisco-guerra","joao-porto","frederico-napoles","manel-xavier","sid","jorge"];
   const G=[
-    {id:"g-elcalderon",name:"El Calderón",code:"CALD3R",members:elc,admins:[me],start:0,galas:[addDays(lisbonYMD(new Date(nowMs)),39)],
+    {id:"g-elcalderon",name:"El Calderón",code:"CALD3R",members:elc,admins:[me],start:-SH,galas:["2025-12-20",gala26],season2:"2025-W52",
       awards:[["the_best","The Best","🏆","Melhor membro do ano",["tuna-cardoso","zeca-couceiro",me]],["fdgp","Prémio FDGP","😈","O membro mais egoísta",["sid","frederico-napoles"]],
         ["full_of_lifes","Full of Lifes","⚡","O membro menos presente",["jorge","joao-porto"]],["coro_do_ano","Coro do Ano","🎶","O contador de histórias mais inacreditável",["joao-t","manel-xavier"]],
-        ["atraso","Rei do Atraso","⏰","Quem chega sempre tarde",["jorge","sid"],12]],
-      events:["Jantar na tasca","Almoço de verão","Noite de jogos","Churrasco de agosto","Aniversário do Sid","Concerto no Coliseu","Jantar de setembro","Cinema","Magusto","Sunset em Santos","Jantar de Natal"]},
+        ["atraso","Rei do Atraso","⏰","Quem chega sempre tarde",["jorge","sid"],12-SH]],
+      fav25:{the_best:["francisco-cabral","manel-xavier"],fdgp:["joao-porto","zeca-couceiro"],full_of_lifes:["francisco-guerra","sid"],coro_do_ano:["tuna-cardoso","frederico-napoles"],atraso:["joao-t","jorge"]},
+      events:[["Jantar de Reis","2025-01-10"],["Carnaval em Torres","2025-03-02"],["Jantar de março","2025-03-21"],["Páscoa no Alentejo","2025-04-19"],["Arraial de Santo António","2025-06-12"],
+        ["Fim de semana em Comporta","2025-07-12"],["Festival de verão","2025-08-08"],["Jantar de regresso","2025-09-19"],["Magusto 2025","2025-11-08"],["Gala de Natal 2025","2025-12-20"],
+        ["Jantar de Ano Novo","2026-01-09"],["Ski na Serra da Estrela","2026-02-14"],["Jantar na tasca","2026-03-13"],["Páscoa em Óbidos","2026-04-04"],["Arraial de Santo António","2026-06-12"],["Almoço de verão","2026-07-04"],
+        ["Noite de jogos","2026-07-25"],["Churrasco de agosto","2026-08-15"],["Aniversário do Sid","2026-09-05"],["Concerto no Coliseu","2026-09-26"],["Cinema","2026-10-16"],["Magusto","2026-11-07"],["Jantar de Natal","2026-12-12"]]},
     {id:"g-futebol",name:"Futebol de quinta",code:"BOLA44",members:[me,"tuna-cardoso","sid","jorge","joao-porto","manel-xavier","rui-matos","pedro-lima","tiago-santos"],admins:["tuna-cardoso",me],start:4,galas:[addDays(lisbonYMD(new Date(nowMs)),-15*7-2)],
       awards:[["golo","Golo da época","⚽","",["rui-matos","tuna-cardoso"]],["falhanco","Pior falhanço","🙈","",["jorge","pedro-lima"]],["faltas","Mais faltas","🟨","",["sid","tiago-santos"]]],
       events:["Jogo no Restelo","Torneio de verão","Jogo de quinta","Jogo contra os Leões","Jogo de quinta","Jantar pós-jogo","Jogo de quinta"]},
@@ -542,14 +555,16 @@ function generateDemo(nowMs){
     {id:"g-padel",name:"Padel",code:"PADEL9",members:[me,"rui-matos","catarina-lopes"],admins:[me],start:29,awards:[],events:[]},
   ];
   const lazy={"jorge":.45,"joao-porto":.6,"luis-xavier":.5,"bruno-teixeira":.6};
+  G.forEach(g=>{ g.start+=SH; });
   G.forEach((g,gi)=>{
     const created=weekMonday(WEEKS[g.start]).getTime()+DAY;
     docs["groups/"+g.id]={name:g.name,code:g.code,members:g.members,admins:g.admins,createdBy:g.admins[0],createdAt:created,galas:g.galas||[],photo:null,demo:true};
-    g.awards.forEach(([key,label,emoji,desc,fav,from],ai)=>{ docs[`awards/a-${g.id}-${key}`]={groupId:g.id,label,emoji,desc,order:ai+1,createdAt:weekMonday(WEEKS[Math.max(g.start,from||0)]).getTime(),demo:true}; });
+    g.awards.forEach(([key,label,emoji,desc,fav,from],ai)=>{ docs[`awards/a-${g.id}-${key}`]={groupId:g.id,label,emoji,desc,order:ai+1,createdAt:weekMonday(WEEKS[Math.max(g.start,from!=null?from+SH:0)]).getTime(),demo:true}; });
     // events spread from group start to a few weeks ahead
-    const n=g.events.length; const startDay=-(30-g.start)*7+3;
-    g.events.forEach((t,i)=>{
-      const upcoming = i===n-1 && n>3; const off = upcoming ? 20+gi*3 : Math.round(startDay + (i+.5)*((-4-startDay)/n));
+    const n=g.events.length; const startDay=-(NW-g.start)*7+3;
+    g.events.forEach((t0,i)=>{ const t=Array.isArray(t0)?t0[0]:t0; const fixed=Array.isArray(t0)?t0[1]:null;
+      let off = (i===n-1 && n>3) ? 20+gi*3 : Math.round(startDay + (i+.5)*((-4-startDay)/n));
+      if(fixed) off=Math.round((ymdToUTC(fixed)-ymdToUTC(today))/DAY); const upcoming=off>0;
       const d=new Date(nowMs+off*DAY); const creator = (i%3===1 && g.members.includes(me)) ? me : pick(g.members);
       const att={[creator]:"yes"};
       g.members.filter(k=>k!==creator).forEach(k=>{ if(rnd()<.8) att[k]= off>0?(rnd()<.4?"yes":"pending") : (rnd()<(lazy[k]?lazy[k]:.8)?"yes":"no"); });
@@ -562,18 +577,20 @@ function generateDemo(nowMs){
   // votes & rankings
   const votes={}, ranks={}; PEOPLE.forEach(([k])=>{ votes[k]={}; ranks[k]={}; });
   G.forEach((g,gi)=>{
-    const base=[...g.members].sort(()=>rnd()-.5); const phase=Object.fromEntries(g.members.map(k=>[k,rnd()*6.28]));
+    const base=[...g.members].sort(()=>rnd()-.5); const base2=[...g.members].sort(()=>rnd()-.5); const phase=Object.fromEntries(g.members.map(k=>[k,rnd()*6.28]));
     WEEKS.forEach((w,wi)=>{
       if (wi<g.start) return;
       g.members.forEach(v=>{
         const isNow = w===cw; const skipMe = v===me && isNow && g.id==="g-elcalderon";
         const p = lazy[v] ?? .82;
-        if (!skipMe && rnd()<p){ g.awards.forEach(([key,,, ,fav,from])=>{ if(from && wi<from) return; const pool=g.members.filter(x=>x!==v);
-            let nom = rnd()<.55 ? pick(fav.filter(x=>x!==v).length?fav.filter(x=>x!==v):pool) : pick(pool);
+        const old=g.season2&&w<g.season2;
+        if (!skipMe && rnd()<p){ g.awards.forEach(([key,,, ,fav0,from])=>{ if(from!=null && wi<from+SH) return; const pool=g.members.filter(x=>x!==v);
+            const fav=old&&g.fav25?.[key]?g.fav25[key]:fav0; const fv=fav.filter(x=>x!==v);
+            let nom = rnd()<.55 ? (fv.length&&rnd()<.55?fv[0]:pick(fv.length?fv:pool)) : pick(pool);
             (votes[v][w]=votes[v][w]||{})[`a-${g.id}-${key}`]=nom; }); }
         if (!skipMe && rnd()<p-.05){
           const others=g.members.filter(x=>x!==v);
-          const order=others.map(x=>[x, base.indexOf(x) + 2.2*Math.sin(wi/4+phase[x]) + rnd()*1.8]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]);
+          const order=others.map(x=>[x, (old?base2:base).indexOf(x) + 2.2*Math.sin(wi/4+phase[x]) + rnd()*1.8]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]);
           const r={}; order.forEach((x,i)=>r[x]=i+1); (ranks[v][w]=ranks[v][w]||{})[g.id]=r; }
       });
     });
@@ -672,13 +689,13 @@ function upcomingSoon(gid){ const me=ME(); const t=lisbonYMD(), tm=tomorrowYMD()
   return groupEvents(gid).filter(e=>(e.date===t||e.date===tm)&&(e.att||{})[me]!==undefined&&statusOf(e,me)!=="no").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)); }
 
 function eventStats(gid,k){
-  const s=currentSeason(gid); const evs=groupEvents(gid).filter(e=>inSeasonD(s,e.date||"")); const created=evs.filter(e=>e.createdBy===k).length;
+  const s=viewSeason(gid); const evs=groupEvents(gid).filter(e=>inSeasonD(s,e.date||"")); const created=evs.filter(e=>e.createdBy===k).length;
   const past=evs.filter(e=>!isFuture(e) && (e.att||{})[k]!==undefined);
   const attended=past.filter(e=>statusOf(e,k)==="yes").length;
   return {created, attended, invited:past.length, rate:pct(attended,past.length)};
 }
 /* Average friendship ranking: each ranker's most recent ranking up to week w, averaged per person */
-function averages(gid, uptoWeek=curWeek(), s=currentSeason(gid)){
+function averages(gid, uptoWeek=curWeek(), s=viewSeason(gid)){
   const g=S.groups[gid]; if(!g) return [];
   const sums={};
   (g.members||[]).forEach(r=>{
@@ -689,13 +706,13 @@ function averages(gid, uptoWeek=curWeek(), s=currentSeason(gid)){
   return Object.entries(sums).map(([k,v])=>({k,avg:v.s/v.n,n:v.n})).sort((a,b)=>a.avg-b.avg);
 }
 function firstRankingWeek(gid){ const g=S.groups[gid]; let f=null; (g?.members||[]).forEach(k=>Object.entries(S.rankings[k]?.weeks||{}).forEach(([w,v])=>{ if(v?.[gid]&&(!f||w<f)) f=w; })); return f; }
-function rankingHistory(gid,weeks=weeksBack(52),s=currentSeason(gid)){
+function rankingHistory(gid,weeks=weeksBack(52),s=viewSeason(gid)){
   const out=[];
   for(const w of weeks){ const av=averages(gid,w,s); if(av.length) out.push({w,av}); }
   return out;
 }
 function myRankingThisWeek(gid){ return S.rankings[ME()]?.weeks?.[curWeek()]?.[gid] || null; }
-function scoreWeeks(gid){ const s=currentSeason(gid); return weeksBack(8).filter(w=>inSeasonW(s,w)); }
+function scoreWeeks(gid){ const s=viewSeason(gid); const cw=curWeek(); const end=s.endW&&s.endW<cw?s.endW:cw; return weeksBack(8,end).filter(w=>inSeasonW(s,w)); }
 function rankingWeeksDone(k,gid){ const ws=scoreWeeks(gid); return ws.filter(w=>S.rankings[k]?.weeks?.[w]?.[gid]).length; }
 function voteWeeksDone(k,gid){ const aw=groupAwards(gid).map(a=>a.id); const ws=scoreWeeks(gid); return ws.filter(w=>{ const v=S.votes[k]?.weeks?.[w]||{}; return aw.some(a=>v[a]); }).length; }
 function activityScore(gid,k){ const st=eventStats(gid,k); const rate=st.invited?st.rate/100:0;
@@ -720,19 +737,24 @@ const inSeasonD=(s,d)=>(!s.startD||d>=s.startD)&&(!s.endD||d<=s.endD);
 function pastGalas(gid){ const t=lisbonYMD(); return seasonsOf(gid).filter(x=>x.gala&&x.gala<t); }
 /* After the gala, until Monday: the old season is closed and the new one has not started */
 function votingClosed(gid){ const t=lisbonYMD(), w=curWeek(); return pastGalas(gid).find(x=>x.endW===w)||null; }
-const seasonPending = gid => { const s=currentSeason(gid); return !!(s.startW&&s.startW>curWeek()); };
+/* Which season the screens show: the current one, or a past one picked with the season selector */
+function viewSeason(gid){ const i=S.seasonSel?.[gid]; if(i!=null){ const x=seasonsOf(gid)[i]; if(x&&x.gala&&x.gala<lisbonYMD()) return x; } return currentSeason(gid); }
+const viewingPast = gid => { const i=S.seasonSel?.[gid]; return i!=null && viewSeason(gid).i===i && currentSeason(gid).i!==i; };
+function seasonName(gid,x){ if(x.gala) return `Época ${x.year}`; const prev=seasonsOf(gid)[x.i-1]; return prev?.year?`Época ${+prev.year+1}`:"Época atual"; }
+function seasonChoices(gid){ const t=lisbonYMD(); const cur=currentSeason(gid); return seasonsOf(gid).filter(x=>x.i<=cur.i&&(!x.startD||x.startD<=t)||x.i===cur.i).reverse(); }
+const seasonPending = gid => { if(viewingPast(gid)) return false; const s=currentSeason(gid); return !!(s.startW&&s.startW>curWeek()); };
 /* Results stay hidden during the 4 weeks before the gala (and on the day itself) */
 const HIDE_DAYS=28;
-function resultsHidden(gid){ const s=currentSeason(gid); if(!s.gala) return null; const t=lisbonYMD(); return t>=addDays(s.gala,-HIDE_DAYS)&&t<=s.gala ? s : null; }
+function resultsHidden(gid){ if(viewingPast(gid)) return null; const s=currentSeason(gid); if(!s.gala) return null; const t=lisbonYMD(); return t>=addDays(s.gala,-HIDE_DAYS)&&t<=s.gala ? s : null; }
 function daysUntil(ymd){ return Math.round((ymdToUTC(ymd)-ymdToUTC(lisbonYMD()))/864e5); }
 const shortDate = ymd => { const d=ymdToUTC(ymd); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; };
 function firstDataWeek(gid){ const g=S.groups[gid]; const aw=new Set(groupAwards(gid).map(a=>a.id)); let f=firstRankingWeek(gid);
   (g?.members||[]).forEach(k=>Object.entries(S.votes[k]?.weeks||{}).forEach(([w,v])=>{ if(Object.keys(v||{}).some(a=>aw.has(a))&&(!f||w<f)) f=w; })); return f; }
-function seasonWeeks(gid,s=currentSeason(gid)){
+function seasonWeeks(gid,s=viewSeason(gid)){
   const cw=curWeek(); const end=s.endW&&s.endW<cw?s.endW:cw; const start=s.startW||firstDataWeek(gid)||end;
   if(start>end) return []; return weeksBack(Math.min(260,weeksBetween(start,end)+1),end);
 }
-function standings(gid,awardId,upto=curWeek(),s=currentSeason(gid)){
+function standings(gid,awardId,upto=curWeek(),s=viewSeason(gid)){
   const g=S.groups[gid]; if(!g) return {list:[],total:0}; const counts={}; let total=0;
   (g.members||[]).forEach(v=>{ const ws=S.votes[v]?.weeks||{}; Object.entries(ws).forEach(([w,vv])=>{ if(!inSeasonW(s,w)||w>upto) return; const n=vv[awardId]; if(n&&(g.members||[]).includes(n)){ counts[n]=(counts[n]||0)+1; total++; } }); });
   const list=Object.entries(counts).map(([k,c])=>({k,votes:c,p:pct(c,total)})).sort((a,b)=>b.votes-a.votes||nm(a.k).localeCompare(nm(b.k)));
@@ -938,7 +960,16 @@ function tabbar(){
   const t=(id,label,icon,badge)=>`<button class="tab ${id==="home"?"hometab ":""}${S.tab===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${id==="home"?`<span class="hbub">${ic(icon)}</span>`:ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
   return `<nav class="tabbar">${t("dash","Dashboard","chart")}${t("events","Eventos","cal",n.evs)}${t("home","Início","home",others)}${t("journey","Journey","star")}${t("gap","GAP","chat",n.msgs)}</nav>`;
 }
-function groupPill(){ const g=curGroup(); if(!g) return ""; return `<div class="gname">${esc(g.name)}</div>`; }
+function groupPill(withSeason){ const g=curGroup(); if(!g) return "";
+  const ch=withSeason?seasonChoices(g.id):[]; const v=viewSeason(g.id);
+  const pill=ch.length>1?`<button class="seasonpill ${viewingPast(g.id)?"past":""}" data-act="pickSeason" aria-label="Escolher época">${esc(seasonName(g.id,v))}${ic("down")}</button>`:"";
+  return `<div class="gline"><div class="gname">${esc(g.name)}</div>${pill}</div>`; }
+function seasonSheet(gid){ const ch=seasonChoices(gid); const v=viewSeason(gid); const cur=currentSeason(gid);
+  openSheet({title:"Escolher época",left:"Fechar",short:true,body:()=>`<div class="card list">${ch.map(x=>{ const from=x.startD?shortDate(x.startD)+" "+x.startD.slice(0,4):"Início"; const to=x.gala?fmtDate(x.gala):"hoje";
+    return `<button class="row" data-act="setSeason" data-arg="${gid}|${x.i}"><span style="font-size:22px">${x.i===cur.i?"🟢":"🏆"}</span><div class="grow"><div class="rowtitle">${esc(seasonName(gid,x))}${x.i===cur.i?" · atual":""}</div><div class="rowsub">${esc(from)} – ${esc(to)}${x.gala&&x.i!==cur.i?` · Gala ${esc(x.year)}`:""}</div></div>${x.i===v.i?`<span style="color:var(--accent)">${ic("check",'style="width:20px;height:20px"')}</span>`:""}</button>`; }).join("")}</div>
+    <p class="info">As épocas passadas mostram os resultados finais. Para votar, volta à época atual.</p>`}); }
+function pastSeasonBanner(g){ if(!viewingPast(g.id)) return ""; const v=viewSeason(g.id);
+  return `<div class="banner pastbanner" style="margin-top:12px">${ic("cal")}<span>A ver a ${esc(seasonName(g.id,v))}, terminada na Gala de ${esc(fmtDate(v.gala))}.</span><button data-act="setSeason" data-arg="${g.id}|">Época atual</button></div>`; }
 function noGroup(){ return `<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("users")}</div><h3>Ainda não tens grupo</h3><p>Cria um grupo ou entra com um código de convite no separador Início.</p></div></div></div>`; }
 
 /* ───────────────────────── screens: claim ───────────────────────── */
@@ -1030,12 +1061,12 @@ function navhead(title,sub="",right="",titleAct=""){
 /* ───────────────────────── screens: dashboard ───────────────────────── */
 function dashScreen(){
   const g=curGroup(); const me=ME();
-  const head=`<div class="tabhead"><div class="titles"><h1>Dashboard</h1>${groupPill()}</div></div>`;
+  const head=`<div class="tabhead"><div class="titles"><h1>Dashboard</h1>${groupPill(true)}</div></div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="dash">${head}${noGroup()}</div>`;
   const st=eventStats(g.id,me); const av=averages(g.id); const myIdx=av.findIndex(a=>a.k===me);
   const done=!!myRankingThisWeek(g.id); const score=activityScore(g.id,me);
   const awards=groupAwards(g.id);
-  const ss=currentSeason(g.id); const sw=seasonWeeks(g.id); const to=curWeek();
+  const sw=seasonWeeks(g.id); const to=sw[sw.length-1]||curWeek(); const past=viewingPast(g.id);
   const opts=RANGES.filter(([v])=>!v||v<sw.length); let rg=chartRange("dash",0); if(!opts.some(o=>o[0]===rg)) rg=0;
   const wks=rg?sw.slice(-rg):sw; const from=wks[0];
   const hist=wks.length?rankingHistory(g.id,wks):[]; const first0=hist.length>0;
@@ -1049,7 +1080,7 @@ function dashScreen(){
     chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
-  return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${seasonBanner(g)}
+  return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?pastSeasonBanner(g):seasonBanner(g)}
     <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
       <div class="stats">
         ${stat(st.created,"Eventos criados","nesta época")}
@@ -1057,7 +1088,7 @@ function dashScreen(){
         ${stat(st.invited?st.rate+"%":"—","Taxa de presença",st.invited?"eventos passados":"sem eventos ainda")}
         ${stat(myIdx>=0?"#"+(myIdx+1):"—","Posição média",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)}`:"sem votos ainda")}
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
-        ${votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span></button>`}
+        ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span></button>`}
       </div></div>
     <div class="section"><div class="label">Ranking médio da época${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
       <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
@@ -1119,25 +1150,25 @@ function eventCard(e,me){
 /* ───────────────────────── screens: journey ───────────────────────── */
 function journeyScreen(){
   const g=curGroup(); const me=ME();
-  const head=g=>`<div class="tabhead"><div class="titles"><h1>Journey</h1>${groupPill()}</div>${g?`<button class="roundbtn" data-act="galaInfo" data-arg="${g.id}" aria-label="Gala de fim de ano" style="color:var(--gold)">${ic("trophy")}</button>`:""}${g&&isAdmin(g)?`<button class="roundbtn" data-act="newAward" aria-label="Novo prémio">${ic("plus")}</button>`:""}</div>`;
+  const head=g=>`<div class="tabhead"><div class="titles"><h1>Journey</h1>${groupPill(true)}</div>${g?`<button class="roundbtn" data-act="galaInfo" data-arg="${g.id}" aria-label="Gala de fim de ano" style="color:var(--gold)">${ic("trophy")}</button>`:""}${g&&isAdmin(g)?`<button class="roundbtn" data-act="newAward" aria-label="Novo prémio">${ic("plus")}</button>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="journey">${head(null)}${noGroup()}</div>`;
   const aw=groupAwards(g.id); const nLocal=Object.keys(S.localVotes).filter(id=>aw.some(a=>a.id===id)).length;
-  const voted=aw.filter(a=>myVote(a.id)).length; const closed=votingClosed(g.id);
+  const voted=aw.filter(a=>myVote(a.id)).length; const past=viewingPast(g.id); const closed=past?null:votingClosed(g.id); const lock=past||!!closed;
   return `<div class="scroll pad-tabs" data-key="journey" style="${nLocal?"padding-bottom:calc(var(--tabh) + var(--sb) + 96px)":""}">${head(g)}${previewBanner()}
-    <div class="section" style="margin-top:10px">${galaBanner(g)}</div>
+    ${past?pastSeasonBanner(g)+`<div class="section" style="margin-top:12px"><button class="galabanner" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}"><span class="ge">🎞️</span><span style="flex:1;text-align:left"><b>Rever a Gala ${esc(viewSeason(g.id).year)}</b><small>Os vencedores e os momentos da época</small></span>${ic("right")}</button></div>`:`<div class="section" style="margin-top:10px">${galaBanner(g)}</div>`}
     ${closed?`<div class="banner" style="margin-top:14px">${ic("lock")}<span>A época terminou na Gala ${esc(closed.year)}. Os votos recomeçam segunda-feira, ${esc(shortDate(addDays(closed.gala,7-((ymdToUTC(closed.gala).getUTCDay()+6)%7))))}, numa época nova.</span></div>`:""}
-    <div class="section" style="margin-top:14px"${closed?' hidden':''}><p class="small muted" style="margin:0 4px 10px">Vota uma vez por semana em cada prémio. Os votos são secretos — só aparecem os totais. Podes mudar até domingo às 23:59.</p>
+    <div class="section" style="margin-top:14px"${lock?' hidden':''}><p class="small muted" style="margin:0 4px 10px">Vota uma vez por semana em cada prémio. Os votos são secretos — só aparecem os totais. Podes mudar até domingo às 23:59.</p>
       ${aw.length?`<div class="dots">${aw.map(a=>`<span class="dot ${myVote(a.id)?"on":""}" title="${esc(a.label)}">${myVote(a.id)?ic("check"):""}</span>`).join("")}<span class="small muted" style="margin-left:4px">${voted}/${aw.length} votados · semana de ${esc(weekRange(curWeek()))}</span></div>`:""}</div>
     ${aw.length? aw.map(a=>{ const v=myVote(a.id); const local=S.localVotes[a.id]!=null;
       return `<div class="section"><div class="award" style="margin-bottom:10px"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3>
         <button class="minibtn" data-act="evolution" data-arg="${a.id}">${ic("trend")}Evolução</button>
         ${isAdmin(g)?`<button class="iconbtn" data-act="delAward" data-arg="${a.id}" aria-label="Apagar prémio" style="color:var(--red)">${ic("trash")}</button>`:""}</div>
         ${a.desc?`<p class="small muted" style="margin:-4px 4px 10px 40px">${esc(a.desc)}</p>`:""}
-        ${closed?"":`<button class="votechip ${v?"set":""} ${local?"local":""}" data-act="vote" data-arg="${a.id}">${v?avatar(v,28):ic("plus")}<span class="grow">${v?esc(nm(v)):"Votar neste prémio"}</span>${v&&!local?`<span class="chip green">${ic("check")}Votado</span>`:""}${local?`<span class="chip">Por submeter</span>`:""}${ic("down")}</button>
+        ${lock?"":`<button class="votechip ${v?"set":""} ${local?"local":""}" data-act="vote" data-arg="${a.id}">${v?avatar(v,28):ic("plus")}<span class="grow">${v?esc(nm(v)):"Votar neste prémio"}</span>${v&&!local?`<span class="chip green">${ic("check")}Votado</span>`:""}${local?`<span class="chip">Por submeter</span>`:""}${ic("down")}</button>
         <div style="height:10px"></div>`}${awardBlock(g,a,false)}</div>`; }).join("")
       : `<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>${isAdmin(g)?"Cria o primeiro prémio com + ou começa com os sugeridos.":"Os admins do grupo ainda não criaram prémios."}</p>${isAdmin(g)?`<button class="btn ghost" style="margin-top:8px" data-act="suggestAwards" data-arg="${g.id}">${ic("trophy")}Adicionar prémios sugeridos</button>`:""}</div></div></div>`}
     </div>
-    ${nLocal?`<div class="floatbar"><button class="btn block" data-act="submitVotes">Submeter ${nLocal} ${nLocal===1?"voto":"votos"}</button></div>`:""}`;
+    ${nLocal&&!lock?`<div class="floatbar"><button class="btn block" data-act="submitVotes">Submeter ${nLocal} ${nLocal===1?"voto":"votos"}</button></div>`:""}`;
 }
 
 /* ───────────────────────── screens: GAP ───────────────────────── */
@@ -1226,7 +1257,7 @@ function ownerTools(){
   return `<div class="section"><div class="label">Ferramentas do dono da app</div><div class="card list">
     <button class="row" data-act="actAs"><div class="grow"><div class="rowtitle">Ver a app como…</div><div class="rowsub">${S.actingAs?esc(nm(S.actingAs)):"Tu próprio"} · para testar o ponto de vista de cada pessoa</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
     <button class="row" data-act="releaseClaim"><div class="grow"><div class="rowtitle">Desligar um perfil de uma conta</div><div class="rowsub">Se alguém escolheu o nome errado</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
-    <button class="row" data-act="loadDemo"><div class="grow"><div class="rowtitle">Carregar dados de demonstração</div><div class="rowsub">7 grupos, 28 pessoas e 30 semanas de votos para testar tudo</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
+    <button class="row" data-act="loadDemo"><div class="grow"><div class="rowtitle">Carregar dados de demonstração</div><div class="rowsub">7 grupos e 28 pessoas. O El Calderón tem histórico desde janeiro de 2025 (Gala 2025 e época 2026)</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
     <button class="row" data-act="resetAll"><div class="grow"><div class="rowtitle" style="color:var(--red)">Apagar todos os dados</div><div class="rowsub">Antes de convidares os amigos a sério</div></div></button>
   </div></div>`;
 }
@@ -1347,7 +1378,7 @@ function evolutionSheet(aid){
       const mx=Math.min(100,Math.max(20,Math.ceil(Math.max(0,...pts.flatMap(p=>top.map(t=>p.s.list.find(x=>x.k===t.key)?.p||0)))/20)*20));
       return `<div class="label">Probabilidade semanal (acumulada na época)</div><div class="card pad">${picker}${pts.length?chartBox({points:pts.map(p=>({w:p.w,label:weekShort(p.w),values:Object.fromEntries(top.map(t=>[t.key,p.s.list.find(x=>x.k===t.key)?.p??0]))})),series:top,from,to,min:0,max:mx,ticks:[0,mx/4,mx/2,mx*3/4,mx],fmt:v=>Math.round(v)+"%",h:240,aria:"Evolução das probabilidades"}):`<div class="empty" style="padding:28px 8px"><h3>Sem votos neste período</h3><p>Escolhe um período maior.</p></div>`}${legend(top)}</div>
         <p class="info">Percentagem de todos os votos da época recebidos até cada semana. Toca no gráfico para ver os valores.</p>
-        <div class="label" style="margin-top:22px">Classificação atual</div>${(()=>{ const was=expanded.has(aid); expanded.add(aid); const html=awardBlock(g,{id:aid,...a},false); if(!was) expanded.delete(aid); return html; })()}`; }});
+        <div class="label" style="margin-top:22px">${viewingPast(g.id)?"Classificação final":"Classificação atual"}</div>${(()=>{ const was=expanded.has(aid); expanded.add(aid); const html=awardBlock(g,{id:aid,...a},false); if(!was) expanded.delete(aid); return html; })()}`; }});
 }
 function newChatSheet(){
   const g=curGroup(); const me=ME(); const st={type:"direct",sel:new Set(),name:""};
@@ -1382,6 +1413,8 @@ const A = {
   tab:t=>{ if(S.tab===t&&!S.route.length&&!layers.length){ scrollTopNow(); return; } setTab(t); }, back:()=>back(), settings:()=>go("settings"), openGroup:id=>go("group",id), enterGroup:id=>enterGroup(id),
   newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>awardSheet(), newChat:()=>newChatSheet(),
   chartRange:a=>{ const [id,v]=a.split("|"); S.ranges={...(S.ranges||{}),[id]:+v}; lsSet("range:"+id,+v); scheduleRender(); },
+  pickSeason:()=>{ const g=curGroup(); if(g) seasonSheet(g.id); },
+  setSeason:a=>{ const [gid,i]=a.split("|"); const sel={...(S.seasonSel||{})}; if(i===""||+i===currentSeason(gid).i) delete sel[gid]; else sel[gid]=+i; S.seasonSel=sel; S.localVotes={}; if(layers.length) popLayer(); scheduleRender(); },
   rank:()=>{ if(votingClosed(curGroup()?.id)){ toast("Época fechada. Volta segunda-feira."); return; } rankSheet(); },
   vote:id=>{ if(votingClosed(curGroup()?.id)){ toast("Época fechada. Volta segunda-feira."); return; } votePicker(id); }, evolution:id=>evolutionSheet(id),
   openChat:id=>go("chat",id),
@@ -1458,7 +1491,7 @@ const A = {
   resetAll:async()=>{ if(!await confirmD("Apagar todos os dados?","Apaga pessoas, grupos, eventos, votos, rankings e conversas. Fica só o teu perfil. Não dá para desfazer.","Apagar tudo",true)) return;
     const me=myRealMember(); const keep=me?{[`people/${me}`]:{...S.people[me],demo:false}}:{}; if(S.fb&&me) keep["uids/"+S.uid]={key:me};
     if(await bulk(keep,"A apagar")){ S.route=[]; S.tab="home"; S.actingAs=null; lsSet("actingAs",null); S.groupId=null; render(); toast("Dados apagados"); } },
-  loadDemo:async()=>{ if(!await confirmD("Carregar dados de demonstração?","Substitui todos os dados atuais por 7 grupos de exemplo, 28 pessoas e 30 semanas de votos. O teu perfil passa a ser o Gonçalo Xavier.","Carregar",true)) return;
+  loadDemo:async()=>{ if(!await confirmD("Carregar dados de demonstração?","Substitui todos os dados atuais por 7 grupos de exemplo e 28 pessoas. O El Calderón fica com histórico desde janeiro de 2025. O teu perfil passa a ser o Gonçalo Xavier.","Carregar",true)) return;
     const docs=generateDemo(Date.now()); docs["people/goncalo-xavier"].uid=S.uid; if(S.fb) docs["uids/"+S.uid]={key:"goncalo-xavier"};
     const old=myRealMember(); if(old&&S.people[old]?.photo) docs["people/goncalo-xavier"].photo=S.people[old].photo;
     if(await bulk(docs,"A carregar")){ S.route=[]; S.tab="home"; S.actingAs=null; lsSet("actingAs",null); S.groupId="g-elcalderon"; lsSet("group","g-elcalderon"); render(); toast("Dados de demonstração carregados"); } },
