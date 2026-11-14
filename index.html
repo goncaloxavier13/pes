@@ -1437,7 +1437,7 @@ async function toThumb(file,size=192){
 /* ───────────────────────── actions ───────────────────────── */
 const A = {
   tab:t=>{ if(S.tab===t&&!S.route.length&&!layers.length){ scrollTopNow(); return; } setTab(t); }, back:()=>back(), settings:()=>go("settings"), openGroup:id=>go("group",id), enterGroup:id=>enterGroup(id),
-  newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>awardSheet(), newChat:()=>newChatSheet(),
+  newGroup:()=>newGroupSheet(), joinGroup:()=>joinGroupSheet(), newEvent:()=>eventSheet(null), newAward:()=>{ if(!isAdmin(curGroup())){ toast("Só os admins podem criar prémios"); return; } awardSheet(); }, newChat:()=>newChatSheet(),
   chartRange:a=>{ const [id,v]=a.split("|"); S.ranges={...(S.ranges||{}),[id]:+v}; lsSet("range:"+id,+v); scheduleRender(); },
   pickSeason:()=>{ const g=curGroup(); if(g) seasonSheet(g.id); },
   setSeason:a=>{ const [gid,i]=a.split("|"); const sel={...(S.seasonSel||{})}; if(i===""||+i===currentSeason(gid).i) delete sel[gid]; else sel[gid]=+i; S.seasonSel=sel; S.localVotes={}; if(layers.length) popLayer(); scheduleRender(); },
@@ -1473,7 +1473,7 @@ const A = {
   eventMenu:async id=>{ const v=await actionSheet(S.events[id]?.title,[{t:"Editar evento",v:"edit"},{t:"Apagar evento",v:"del",danger:true}]);
     if(v==="edit") eventSheet(id);
     if(v==="del" && await confirmD("Apagar evento?","As presenças deste evento também deixam de contar nas estatísticas.","Apagar",true)) await write(()=>D("events/"+id).delete(),"Evento apagado"); },
-  delAward:async id=>{ const a=S.awards[id]; if(await confirmD(`Apagar “${a.label}”?`,"O prémio e os resultados deixam de aparecer. Não dá para desfazer.","Apagar",true)) await write(()=>D("awards/"+id).delete(),"Prémio apagado"); },
+  delAward:async id=>{ const a=S.awards[id]; if(!a||!isAdmin(S.groups[a.groupId])){ toast("Só os admins podem apagar prémios"); return; } if(await confirmD(`Apagar “${a.label}”?`,"O prémio e os resultados deixam de aparecer. Não dá para desfazer.","Apagar",true)) await write(()=>D("awards/"+id).delete(),"Prémio apagado"); },
   submitVotes:async()=>{ const me=ME(); const w=curWeek(); const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{};
     doc.weeks[w]={...(doc.weeks[w]||{}),...S.localVotes}; const n=Object.keys(S.localVotes).length;
     if(await write(()=>D("votes/"+me).set(doc), n===1?"Voto submetido":`${n} votos submetidos`)){ S.localVotes={}; render(); } },
