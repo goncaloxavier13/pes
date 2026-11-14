@@ -705,6 +705,14 @@ function averages(gid, uptoWeek=curWeek(), s=viewSeason(gid)){
   });
   return Object.entries(sums).map(([k,v])=>({k,avg:v.s/v.n,n:v.n})).sort((a,b)=>a.avg-b.avg);
 }
+/* Average position over every weekly ranking of the season (stable; the evolution chart shows it week by week) */
+function seasonAverages(gid, uptoWeek=curWeek(), s=viewSeason(gid)){
+  const g=S.groups[gid]; if(!g) return []; const sums={}; const mem=g.members||[];
+  mem.forEach(r=>{ const weeks=S.rankings[r]?.weeks||{};
+    Object.keys(weeks).forEach(w=>{ if(w>uptoWeek||!inSeasonW(s,w)||!weeks[w]?.[gid]) return;
+      Object.entries(weeks[w][gid]).forEach(([t,v])=>{ if(!mem.includes(t)) return; (sums[t]=sums[t]||{s:0,n:0}); sums[t].s+=v; sums[t].n++; }); }); });
+  return Object.entries(sums).map(([k,v])=>({k,avg:v.s/v.n,n:v.n})).sort((a,b)=>a.avg-b.avg);
+}
 function firstRankingWeek(gid){ const g=S.groups[gid]; let f=null; (g?.members||[]).forEach(k=>Object.entries(S.rankings[k]?.weeks||{}).forEach(([w,v])=>{ if(v?.[gid]&&(!f||w<f)) f=w; })); return f; }
 function rankingHistory(gid,weeks=weeksBack(52),s=viewSeason(gid)){
   const out=[];
@@ -1090,9 +1098,14 @@ function dashScreen(){
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span></button>`}
       </div></div>
-    <div class="section"><div class="label">Ranking médio da época${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
+    <div class="section"><div class="label">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
       <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
         : `<div class="empty"><p>${seasonPending(g.id)?"Época nova: o ranking recomeça na próxima semana.":"Ainda ninguém submeteu o ranking nesta época."}</p></div>`}</div></div>
+    ${(()=>{ const sa=seasonAverages(g.id); if(!sa.length) return ""; const open=expanded.has("seasonAvg"); const rows=(open?sa:sa.slice(0,3));
+      return `<div class="section"><div class="label">Rating médio da época</div><div class="card">
+        <div class="list">${rows.map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">em ${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div>
+        ${sa.length>3?`<button class="toggle" data-act="toggleAward" data-arg="seasonAvg">${open?"Mostrar menos":`Ver todos (${sa.length})`}${ic(open?"up":"down")}</button>`:""}</div>
+        <p class="info">Média de todas as posições recebidas nos rankings semanais da época. Quanto mais baixo, melhor.</p></div>`; })()}
     <div class="section"><div class="label">Evolução do ranking</div>${chart}</div>
     <div class="section"><div class="label">Probabilidades dos prémios</div>
       ${awards.length? awards.map(a=>awardBlock(g,a,true)).join(`<div style="height:12px"></div>`) : `<div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>Os admins do grupo criam prémios no separador Journey.</p></div></div>`}
@@ -1435,7 +1448,7 @@ const A = {
         <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>`; }}); },
   toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
   allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME();
-    openSheet({title:"Ranking médio",left:"Fechar",live:true,body:()=>`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
+    openSheet({title:"Ranking atual",left:"Fechar",live:true,body:()=>`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
   scoreInfo:()=>{ const g=curGroup(); const me=ME(); const st=eventStats(g.id,me);
     alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}) e 30% semanas com votos no Journey (${voteWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}), nas últimas 8 semanas desta época.`); },
   presence:async arg=>{ const [id,v]=arg.split("|"); const me=ME(); const e=S.events[id]; if(!e) return; if((e.att||{})[me]===v) return;
