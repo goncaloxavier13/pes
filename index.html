@@ -740,7 +740,7 @@ function votingClosed(gid){ const t=lisbonYMD(), w=curWeek(); return pastGalas(g
 /* Which season the screens show: the current one, or a past one picked with the season selector */
 function viewSeason(gid){ const i=S.seasonSel?.[gid]; if(i!=null){ const x=seasonsOf(gid)[i]; if(x&&x.gala&&x.gala<lisbonYMD()) return x; } return currentSeason(gid); }
 const viewingPast = gid => { const i=S.seasonSel?.[gid]; return i!=null && viewSeason(gid).i===i && currentSeason(gid).i!==i; };
-function seasonName(gid,x){ if(x.gala) return `Época ${x.year}`; const prev=seasonsOf(gid)[x.i-1]; return prev?.year?`Época ${+prev.year+1}`:"Época atual"; }
+function seasonName(gid,x){ if(x.gala) return `Época ${x.year}`; const prev=seasonsOf(gid)[x.i-1]; return prev?.year?`Época ${+prev.year+1}`:`Época ${(x.startD&&x.startD>lisbonYMD().slice(0,4)+"-12-01"?+x.startD.slice(0,4)+1:lisbonYMD().slice(0,4))}`; }
 function seasonChoices(gid){ const t=lisbonYMD(); const cur=currentSeason(gid); return seasonsOf(gid).filter(x=>x.i<=cur.i&&(!x.startD||x.startD<=t)||x.i===cur.i).reverse(); }
 const seasonPending = gid => { if(viewingPast(gid)) return false; const s=currentSeason(gid); return !!(s.startW&&s.startW>curWeek()); };
 /* Results stay hidden during the 4 weeks before the gala (and on the day itself) */
