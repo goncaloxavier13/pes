@@ -1445,8 +1445,10 @@ const A = {
   vote:id=>{ if(votingClosed(curGroup()?.id)){ toast("Época fechada. Volta segunda-feira."); return; } votePicker(id); }, evolution:id=>evolutionSheet(id),
   openChat:id=>go("chat",id),
   eventPhotos:id=>eventPhotosSheet(id), gala:gid=>galaInfoSheet(gid||curGroup()?.id), galaInfo:gid=>galaInfoSheet(gid), galaDate:gid=>galaDateSheet(gid),
-  openGala:a=>{ const [gid,si,mode]=a.split("|"); const s=seasonsOf(gid)[+si]; const t=lisbonYMD();
-    if(!s) return; if(mode!=="preview"&&!(s.gala&&s.gala<=t)){ toast("A gala só abre no dia marcado"); return; } openGala(gid,+si); },
+  openGala:a=>{ const [gid,si,mode]=a.split("|"); const s=seasonsOf(gid)[+si];
+    if(!s) return; if(!galaOpen(gid,s)&&!(mode==="preview"&&S.preview)){ galaLockedSheet(gid,s); return; } openGala(gid,+si); },
+  startGala:async a=>{ const [gid,d]=a.split("|"); if(!await confirmD("Começar a Gala?","A Gala fica aberta para todos os membros do grupo. Faz isto no jantar, quando estiverem todos juntos.","Começar")) return;
+    const g=S.groups[gid]; if(await write(()=>D("groups/"+gid).update({galaStarted:{...(g.galaStarted||{}),[d]:Date.now()}}),"A Gala começou! 🎉")){ if(layers.length) popLayer(); const s=seasonsOf(gid).find(x=>x.gala===d); if(s) setTimeout(()=>openGala(gid,s.i),400); } },
   pushOn:()=>enablePush(), pushOff:()=>disablePush(),
   pushTest:async()=>{ if(!pushSupported()||Notification.permission!=="granted"){ toast("Ativa primeiro as notificações"); return; }
     const reg=await navigator.serviceWorker.getRegistration(); if(!reg){ toast("Ativa primeiro as notificações"); return; }
@@ -1667,10 +1669,15 @@ function seasonBanner(g){
   if(last&&daysUntil(last.gala)>=-14&&s.open) return `<div class="banner" style="margin-top:12px">${ic("star")}<span>Época nova desde ${esc(shortDate(addDays(last.gala,1)))}. Os números recomeçaram do zero.</span></div>`;
   return "";
 }
+/* The Gala is confidential: it opens only when an admin starts it at the dinner (or once the gala day has passed) */
+function galaOpen(gid,s){ if(!s?.gala) return false; const t=lisbonYMD(); if(s.gala<t) return true; return s.gala===t && !!S.groups[gid]?.galaStarted?.[s.gala]; }
+function galaLockedSheet(gid,s){ openSheet({title:"Gala",left:"Fechar",short:true,body:()=>`<div class="card lockcard">${ic("lock")}<b>Ainda é segredo 🤫</b><span>A informação só vai ser disponibilizada no jantar de Natal${s?.gala?`, na Gala ${esc(s.year)} (${esc(fmtDate(s.gala))})`:""}.</span></div>`}); }
 function galaBanner(g){
   const s=currentSeason(g.id); const admin=isAdmin(g); const last=pastGalas(g.id).pop(); const t=lisbonYMD();
   const b=(act,arg,emo,title,sub)=>`<button class="galabanner" data-act="${act}" data-arg="${arg}"><span class="ge">${emo}</span><span style="flex:1;text-align:left"><b>${title}</b><small>${sub}</small></span>${ic("right")}</button>`;
-  if(s.gala===t) return b("openGala",`${g.id}|${s.i}`,"🏆",`A Gala ${esc(s.year)} é hoje!`,"Juntem-se e toquem aqui para revelar os vencedores.");
+  if(s.gala===t) return galaOpen(g.id,s) ? b("openGala",`${g.id}|${s.i}`,"🏆",`A Gala ${esc(s.year)} começou!`,"Toca para ver a revelação dos vencedores.")
+    : admin ? b("startGala",`${g.id}|${s.gala}`,"🏆",`A Gala ${esc(s.year)} é hoje!`,"No jantar, toca aqui para começar a Gala para todos.")
+    : b("galaInfo",g.id,"🏆",`A Gala ${esc(s.year)} é hoje!`,"Começa no jantar, quando um admin a abrir.");
   if(s.gala){ const n=daysUntil(s.gala); return b("galaInfo",g.id,"🏆",`Gala ${esc(s.year)} · ${esc(shortDate(s.gala))}`,`${n===1?"Falta 1 dia":`Faltam ${n} dias`}${resultsHidden(g.id)?" · resultados escondidos até lá":""}`); }
   if(last&&daysUntil(last.gala)>=-30) return b("openGala",`${g.id}|${last.i}`,"🎞️",`Rever a Gala ${esc(last.year)}`,"Já começou uma época nova.");
   return b("galaInfo",g.id,"🏆","Próxima gala",admin?"Data por definir. Toca para escolher o dia.":"Data por definir pelos admins do grupo.");
@@ -1681,7 +1688,7 @@ function galaInfoSheet(gid){
     const hideFrom=s.gala?addDays(s.gala,-HIDE_DAYS):null;
     const top=s.gala?`<div class="card pad galainfo"><div class="gi-emo">🏆</div><h2>Gala ${esc(s.year)}</h2><p class="gi-date">${esc(fmtDate(s.gala))}</p>
         <p class="gi-count num">${s.gala===t?"É hoje!":daysUntil(s.gala)===1?"Falta 1 dia":`Faltam ${daysUntil(s.gala)} dias`}</p>
-        ${s.gala===t?`<button class="btn block" data-act="openGala" data-arg="${gid}|${s.i}">${ic("trophy")}Abrir a Gala</button>`:""}
+        ${s.gala===t?(galaOpen(gid,s)?`<button class="btn block" data-act="openGala" data-arg="${gid}|${s.i}">${ic("trophy")}Abrir a Gala</button>`:admin?`<button class="btn block" data-act="startGala" data-arg="${gid}|${s.gala}">${ic("trophy")}Começar a Gala</button><p class="small muted" style="margin:6px 0 0">Carrega só no jantar: abre a Gala para todos.</p>`:`<p class="small muted" style="margin:0">A Gala começa no jantar, quando um admin a abrir.</p>`):""}
         ${admin&&s.gala>t?`<button class="btn ghost block" data-act="galaDate" data-arg="${gid}">${ic("cal")}Alterar data</button>`:""}</div>
       <p class="info">A Gala fecha a época. Os resultados dos prémios ficam escondidos a partir de ${esc(fmtDate(hideFrom))} e só são revelados na Gala. No dia seguinte começa uma época nova, com tudo a zero.</p>`
     : `<div class="card pad galainfo"><div class="gi-emo">🗓️</div><h2>Próxima gala</h2><p class="gi-date">Data por definir</p>
