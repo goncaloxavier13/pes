@@ -962,7 +962,7 @@ function tabbar(){
 }
 function groupPill(withSeason){ const g=curGroup(); if(!g) return "";
   const ch=withSeason?seasonChoices(g.id):[]; const v=viewSeason(g.id);
-  const pill=ch.length>1?`<button class="seasonpill ${viewingPast(g.id)?"past":""}" data-act="pickSeason" aria-label="Escolher época">${esc(seasonName(g.id,v))}${ic("down")}</button>`:"";
+  const pill=ch.length?`<button class="seasonpill ${viewingPast(g.id)?"past":""}" data-act="pickSeason" aria-label="Escolher época">${esc(seasonName(g.id,v))}${ic("down")}</button>`:"";
   return `<div class="gline"><div class="gname">${esc(g.name)}</div>${pill}</div>`; }
 function seasonSheet(gid){ const ch=seasonChoices(gid); const v=viewSeason(gid); const cur=currentSeason(gid);
   openSheet({title:"Escolher época",left:"Fechar",short:true,body:()=>`<div class="card list">${ch.map(x=>{ const from=x.startD?shortDate(x.startD)+" "+x.startD.slice(0,4):"Início"; const to=x.gala?fmtDate(x.gala):"hoje";
