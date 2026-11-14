@@ -1127,11 +1127,14 @@ function awardBlock(g,a,dash){
 /* ───────────────────────── screens: events ───────────────────────── */
 function eventsScreen(){
   const g=curGroup(); const me=ME();
-  const head=`<div class="tabhead"><div class="titles"><h1>Eventos</h1>${groupPill()}</div>${g?`<button class="roundbtn fill" data-act="newEvent" aria-label="Novo evento">${ic("plus")}</button>`:""}</div>`;
+  const head=`<div class="tabhead"><div class="titles"><h1>Eventos</h1>${groupPill(true)}</div>${g?`<button class="roundbtn fill" data-act="newEvent" aria-label="Novo evento">${ic("plus")}</button>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="events">${head}${noGroup()}</div>`;
-  const pend=pendingFor(me).filter(e=>e.groupId===g.id); const evs=groupEvents(g.id);
-  const soon=upcomingSoon(g.id);
-  return `<div class="scroll pad-tabs" data-key="events">${head}${previewBanner()}
+  const past=viewingPast(g.id); const vs=viewSeason(g.id);
+  // Current season: everything from its start on (including future events). Past season: only its own dates.
+  const inView=e=>{ const d=e.date||""; return past?inSeasonD(vs,d):(!vs.startD||d>=vs.startD); };
+  const pend=past?[]:pendingFor(me).filter(e=>e.groupId===g.id&&inView(e)); const evs=groupEvents(g.id).filter(inView);
+  const soon=past?[]:upcomingSoon(g.id);
+  return `<div class="scroll pad-tabs" data-key="events">${head}${previewBanner()}${pastSeasonBanner(g)}
     ${soon.length?`<div class="section" style="margin-top:12px;display:flex;flex-direction:column;gap:8px">${soon.map(e=>`<div class="soon">${ic("bell")}<div style="flex:1;min-width:0"><b>${e.date===lisbonYMD()?"Hoje":"Amanhã"}${e.time?` às ${esc(e.time)}`:""}: ${esc(e.title)}</b>${e.place?`<a href="${esc(mapsUrl(e.place))}" target="_blank" rel="noopener">${esc(e.place)}</a>`:""}</div></div>`).join("")}</div>`:""}
     ${pend.length?`<div class="section" style="margin-top:12px"><div class="notice"><div style="display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:600;font-size:14px">${ic("bell",'style="width:18px;height:18px"')}${pend.length} ${pend.length===1?"pedido por responder":"pedidos por responder"}</div>
       ${pend.slice(0,3).map(e=>`<div class="n"><div><div style="font-weight:600;font-size:15px;overflow-wrap:anywhere">${esc(e.title)}</div><div class="small muted">${esc(nm(e.createdBy))} adicionou-te · ${esc(fmtDate(e.date))}</div></div>
@@ -1139,7 +1142,8 @@ function eventsScreen(){
       ${pend.length>3?`<p class="small" style="color:var(--accent)">E mais ${pend.length-3} na lista abaixo.</p>`:""}</div></div>`:""}
     <div class="section" style="margin-top:${pend.length?22:12}px"><div class="label">${evs.length} ${evs.length===1?"evento":"eventos"}<span class="small" style="text-transform:none;letter-spacing:0;font-weight:400">Evento de grupo = 4+ presenças</span></div>
     ${evs.length? `<div style="display:flex;flex-direction:column;gap:12px">${evs.map(e=>eventCard(e,me)).join("")}</div>`
-      : `<div class="card"><div class="empty"><div class="ico">${ic("cal")}</div><h3>Ainda não há eventos</h3><p>Cria o primeiro e marca quem esteve.</p><button class="btn" style="margin-top:8px" data-act="newEvent">${ic("plus")}Novo evento</button></div></div>`}
+      : past?`<div class="card"><div class="empty"><div class="ico">${ic("cal")}</div><h3>Sem eventos nesta época</h3><p>Não houve eventos registados na ${esc(seasonName(g.id,vs))}.</p></div></div>`
+      : `<div class="card"><div class="empty"><div class="ico">${ic("cal")}</div><h3>Ainda não há eventos nesta época</h3><p>Cria o primeiro e marca quem esteve.</p><button class="btn" style="margin-top:8px" data-act="newEvent">${ic("plus")}Novo evento</button></div></div>`}
     </div></div>`;
 }
 function eventCard(e,me){
