@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794781389">
+<meta name="pes-version" content="1794782458">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1296,8 +1296,8 @@ async function clearChatNotifs(cid){ try{ const reg=await navigator.serviceWorke
 const MYVER=document.querySelector('meta[name="pes-version"]')?.content||"dev"; let lastVerCheck=0;
 async function checkUpdate(){ if(MYVER==="dev"||!/^https?:/.test(location.protocol)) return; if(Date.now()-lastVerCheck<30000) return; lastVerCheck=Date.now();
   try{ const t=await (await fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"})).text(); const m=t.match(/name="pes-version" content="([^"]+)"/);
-    if(m&&m[1]!==MYVER){ if(layers.length){ lastVerCheck=0; return; } location.reload(); } }catch{} }
-setTimeout(checkUpdate,3000);
+    if(m&&m[1]!==MYVER){ location.reload(); } }catch{} }
+setTimeout(checkUpdate,3000); setInterval(()=>{ if(document.visibilityState==="visible") checkUpdate(); },60000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ checkUpdate(); const cid=openChatId(); if(cid) markRead(cid); scheduleRender(); } });
 
 /* ───────────────────────── settings ───────────────────────── */
@@ -1522,9 +1522,9 @@ const A = {
         <button class="btn ghost block danger" style="margin-top:22px" data-act="deleteChat" data-arg="${cid}">${ic("trash")}Apagar conversa</button>`; }}); },
   toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
   allSeasonAvg:()=>{ const g=curGroup(); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
-    openSheet({title:"Rating médio da época",left:"Fechar",live:true,body:()=>`<div class="card list">${seasonAverages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">em ${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média de todas as posições recebidas nos rankings semanais da época. Quanto mais baixo, melhor.</p>`}); },
+    openSheet({title:"Rating médio da época",left:"Fechar",live:true,body:()=>(rankLocked(g.id)||firstWeekReveal(g.id))?`<div class="card lockcard">${ic("lock")}<b>Rankings bloqueados</b></div>`:`<div class="card list">${seasonAverages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">em ${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média de todas as posições recebidas nos rankings semanais da época. Quanto mais baixo, melhor.</p>`}); },
   allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
-    openSheet({title:"Ranking atual",left:"Fechar",live:true,body:()=>`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
+    openSheet({title:"Ranking atual",left:"Fechar",live:true,body:()=>(rankLocked(g.id)||firstWeekReveal(g.id))?`<div class="card lockcard">${ic("lock")}<b>Rankings bloqueados</b></div>`:`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
   scoreInfo:()=>{ const g=curGroup(); const me=ME(); const st=eventStats(g.id,me);
     alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}) e 30% semanas com votos no Journey (${voteWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}), nas últimas 8 semanas desta época.`); },
   presence:async arg=>{ const [id,v]=arg.split("|"); const me=ME(); const e=S.events[id]; if(!e) return; if((e.att||{})[me]===v) return;
