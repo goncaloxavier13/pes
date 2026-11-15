@@ -318,6 +318,12 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .lockcard{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:22px 18px;width:100%;color:var(--muted);font-size:14px}
 .lockcard>svg{width:30px;height:30px;color:var(--gold)}
 .lockcard b{color:var(--text);font-size:17px;font-weight:700}
+.keepin{display:flex;align-items:center;gap:10px;font-size:15px;cursor:pointer;margin:2px 2px 0;-webkit-tap-highlight-color:transparent}
+.keepin input{position:absolute;opacity:0;pointer-events:none}
+.keepin .kbox{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border);display:grid;place-items:center;color:transparent;flex:none;transition:background .15s,border-color .15s}
+.keepin .kbox svg{width:15px;height:15px}
+.keepin input:checked+.kbox{background:var(--accent);border-color:var(--accent);color:#fff}
+.keepin input:focus-visible+.kbox{outline:2px solid var(--accent);outline-offset:2px}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -1884,6 +1890,7 @@ async function fbBoot(){
   try{ navigator.serviceWorker?.register("sw.js").catch(()=>{}); }catch{}
   firebase.initializeApp(FBCFG); const fdb=firebase.firestore(); S.raw=fdb; S.db=fbAdapter(fdb); S.fb=true;
   S.auth=firebase.auth(); S.auth.languageCode="pt";
+  if(lsGet("keepSignedIn",true)) S.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
   S.auth.onAuthStateChanged(async u=>{
     fbUnsubAll(); S.loaded.clear(); COLS.forEach(c=>S[c]={}); S.route=[]; S.localVotes={};
     S.authKnown=true;
@@ -1907,6 +1914,7 @@ function authScreen(){
       <div class="field"><label for="aemail">Email</label><input id="aemail" class="input" type="email" autocomplete="email" placeholder="o.teu@email.com" value="${esc(S.authEmail||"")}"></div>
       ${m!=="reset"?`<div class="field" style="margin-top:0"><label for="apw">Password</label><input id="apw" class="input" type="password" autocomplete="${m==="login"?"current-password":"new-password"}" placeholder="${m==="login"?"A tua password":"Pelo menos 6 caracteres"}"></div>`:""}
       ${m==="register"?`<div class="field" style="margin-top:0"><label for="apw2">Repetir password</label><input id="apw2" class="input" type="password" autocomplete="new-password" placeholder="Escreve outra vez"></div>`:""}
+      ${m!=="reset"?`<label class="keepin"><input id="akeep" type="checkbox" ${lsGet("keepSignedIn",true)?"checked":""}><span class="kbox">${ic("check")}</span><span>Manter sessão iniciada</span></label>`:""}
       <p class="hint" id="aerr" style="color:var(--red);margin:0" role="alert"></p>
       <button class="btn block" type="submit">${m==="login"?"Entrar":m==="register"?"Criar conta":"Enviar email"}</button>
       ${m==="login"?`<button type="button" class="linkbtn" data-act="authMode" data-arg="reset">Esqueci-me da password</button>`:""}
@@ -1921,6 +1929,8 @@ document.addEventListener("submit",async e=>{
   if(m==="register"&&pw!==document.getElementById("apw2").value){ err.textContent="As passwords não são iguais."; return; }
   btn.disabled=true; err.textContent="";
   try{
+    const keep=document.getElementById("akeep"); if(keep){ lsSet("keepSignedIn",keep.checked);
+      try{ await S.auth.setPersistence(keep.checked?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION); }catch{} }
     if(m==="login") await S.auth.signInWithEmailAndPassword(email,pw);
     else if(m==="register") await S.auth.createUserWithEmailAndPassword(email,pw);
     else { await S.auth.sendPasswordResetEmail(email); S.authMode="login"; render(); toast("Email enviado. Vê também o spam."); return; }
