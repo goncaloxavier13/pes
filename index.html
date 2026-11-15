@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794749766">
+<meta name="pes-version" content="1794750071">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -667,7 +667,7 @@ const S = {
 };
 const COLS=["people","groups","awards","events","votes","rankings","chats","reads"];
 
-function myRealMember(){ for (const [k,v] of Object.entries(S.people)) if (v.uid && v.uid===S.uid) return k; return null; }
+function myRealMember(){ if (S.fb && S.myKey) return S.myKey; for (const [k,v] of Object.entries(S.people)) if (v.uid && v.uid===S.uid) return k; return null; }
 function myMember(){ if (S.isOwner && S.actingAs && S.people[S.actingAs]) return S.actingAs; return myRealMember(); }
 const ME = () => myMember();
 const myGroups = () => Object.entries(S.groups).filter(([,g])=>(g.members||[]).includes(ME())).map(([id,g])=>({id,...g})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
@@ -786,6 +786,12 @@ function voterCount(gid,awardId){ const g=S.groups[gid]; const w=curWeek(); retu
 const myVote = (awardId) => S.localVotes[awardId] ?? S.votes[ME()]?.weeks?.[curWeek()]?.[awardId] ?? null;
 
 function pendingFor(k){ return Object.entries(S.events).filter(([,e])=>(e.att||{})[k]==="pending" && e.createdBy!==k && S.groups[e.groupId]?.members?.includes(k)).map(([id,e])=>({id,...e})).sort((a,b)=>(b.date||"").localeCompare(a.date||"")); }
+let chatSyncBusy=false;
+async function syncAllGroupChats(){ if(chatSyncBusy||!S.fb||!ME()) return; chatSyncBusy=true;
+  try{ for(const [cid,c] of Object.entries(S.chats)){ if(!c.allGroup) continue; const g=S.groups[c.groupId]; if(!g) continue;
+      const miss=(g.members||[]).filter(k=>!(c.members||[]).includes(k)); if(!miss.length) continue;
+      try{ await S.raw.doc("chats/"+cid).update({members:firebase.firestore.FieldValue.arrayUnion(...miss)}); }catch(e){ console.warn("chat sync",e); } } }
+  finally{ chatSyncBusy=false; } }
 function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([,c])=>c.groupId===gid && (c.members||[]).includes(me)).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
 const openChatId = () => { const r=topRoute(); return r?.name==="chat"&&document.visibilityState!=="hidden" ? r.arg : null; };
 function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false; if(c.id===openChatId()) return false; return c.lastAt > (S.reads[me]?.chats?.[c.id]||0); }
@@ -970,6 +976,7 @@ function screenHtml(r){
   if (S.fb && S.authKnown && !S.uid) html=authScreen();
   else if (FBCFG && !S.authKnown) html=`<div class="center"><div class="spinner"></div></div>`;
   else if (!S.loaded.has("ready")) html=`<div class="center"><div class="spinner"></div><p class="muted small">${S.stale?"A base de dados ainda não respondeu. Verifica a ligação.":"A carregar…"}</p></div>`;
+  else if (!ME() && S.fb && (!S.uidChecked || !S.peopleOk)) html=`<div class="center"><div class="spinner"></div><p class="muted small">${S.stale?"A base de dados ainda não respondeu. Verifica a ligação.":"A carregar…"}</p></div>`;
   else if (!ME()) html=claimScreen();
   else if (r) html=({group:groupScreen,settings:settingsScreen,chat:chatShell})[r.name](r.arg);
   else html=({home:homeScreen,dash:dashScreen,events:eventsScreen,journey:journeyScreen,gap:gapScreen})[S.tab]() + tabbar();
@@ -1011,6 +1018,7 @@ function claimScreen(){
     ${free.length?`<div class="label" style="margin-top:26px">Já te adicionaram? Escolhe o teu nome</div>
       <div class="namegrid">${free.map(([k,p])=>`<button class="namebtn" data-act="claim" data-arg="${k}" ${S.claimBusy?"disabled":""}>${avatar(k,34)}<span>${esc(p.name)}</span></button>`).join("")}</div>`:""}
     ${S.preview?`<p class="info">Pré-visualização: os dados não são guardados.</p>`:""}
+    ${S.fb&&S.email?`<p class="info" style="text-align:center">Tens sessão iniciada como <b>${esc(S.email)}</b>. Se já tens perfil com outro email, <button class="linkbtn" data-act="logout" style="display:inline;padding:0">sai e entra com esse</button>.</p>`:""}
   </div></div>`;
 }
 const slug = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,24) || "pessoa";
@@ -1427,21 +1435,23 @@ function evolutionSheet(aid){
         <div class="label" style="margin-top:22px">${viewingPast(g.id)?"Classificação final":"Classificação atual"}</div>${(()=>{ const was=expanded.has(aid); expanded.add(aid); const html=awardBlock(g,{id:aid,...a},false); if(!was) expanded.delete(aid); return html; })()}`; }});
 }
 function newChatSheet(){
-  const g=curGroup(); const me=ME(); const st={type:"direct",sel:new Set(),name:""};
+  const g=curGroup(); const me=ME(); const st={type:"direct",sel:new Set(),name:"",all:false};
   const others=g.members.filter(k=>k!==me).sort((a,b)=>nm(a).localeCompare(nm(b)));
   const ok=()=>st.sel.size>0;
   const L=openSheet({title:"Nova conversa",right:"Começar",rightDisabled:true,
     body:()=>`<div class="seg" role="tablist"><button data-type="direct" class="${st.type==="direct"?"on":""}">Privada</button><button data-type="group" class="${st.type==="group"?"on":""}">Grupo</button></div>
       ${st.type==="group"?`<div class="field" style="margin-top:16px"><label for="cname">Nome da conversa (opcional)</label><input id="cname" class="input" maxlength="40" placeholder="Ex.: Jantar de sábado" value="${esc(st.name)}" autocomplete="off"></div>`:""}
+      ${st.type==="group"?`<button class="row card" data-all style="margin-top:16px;width:100%"><span style="font-size:22px">👥</span><div class="grow" style="text-align:left"><div class="rowtitle">Todo o grupo</div><div class="rowsub">Inclui automaticamente quem entrar no grupo depois</div></div><span class="check ${st.all?"on":""}">${st.all?ic("check"):""}</span></button>`:""}
       <div class="label" style="margin-top:18px">${st.type==="direct"?"Escolhe uma pessoa":"Escolhe os participantes"}</div>
       <div class="card list">${others.map(k=>`<button class="row" data-m="${k}">${avatar(k,36)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${st.sel.has(k)?"on":""}">${st.sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>`,
     onMount:L=>{ L.body.addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return;
-        if(t.dataset.type){ st.type=t.dataset.type; st.sel.clear(); L.render(); setRight(L,false); bindName(); return; }
-        if(t.dataset.m){ const k=t.dataset.m; if(st.type==="direct"){ st.sel.clear(); st.sel.add(k); } else st.sel.has(k)?st.sel.delete(k):st.sel.add(k); L.render(); bindName(); setRight(L,ok()); } });
+        if(t.dataset.type){ st.type=t.dataset.type; st.sel.clear(); st.all=false; L.render(); setRight(L,false); bindName(); return; }
+        if(t.hasAttribute("data-all")){ st.all=!st.all; if(st.all) others.forEach(k=>st.sel.add(k)); else st.sel.clear(); L.render(); bindName(); setRight(L,ok()); return; }
+        if(t.dataset.m){ const k=t.dataset.m; if(st.type==="direct"){ st.sel.clear(); st.sel.add(k); } else { st.sel.has(k)?st.sel.delete(k):st.sel.add(k); st.all=st.all&&st.sel.size===others.length; } L.render(); bindName(); setRight(L,ok()); } });
       const bindName=()=>{ const i=L.body.querySelector("#cname"); if(i) i.oninput=()=>st.name=i.value; }; },
     onRight:async L=>{ setRight(L,false); const members=[me,...st.sel];
       if(st.type==="direct"){ const ex=chatsOf(g.id).find(c=>c.type==="direct"&&c.members.length===2&&c.members.includes([...st.sel][0])); if(ex){ popLayer(L); go("chat",ex.id); return; } }
-      const id="c-"+uidGen(); const okw=await write(()=>D("chats/"+id).set({groupId:g.id,type:st.type,name:st.type==="group"?st.name.trim():"",members,createdBy:me,createdAt:Date.now(),lastAt:null,lastText:"",lastFrom:null}));
+      const id="c-"+uidGen(); const okw=await write(()=>D("chats/"+id).set({groupId:g.id,type:st.type,name:st.type==="group"?st.name.trim():"",members,allGroup:st.type==="group"&&st.all,createdBy:me,createdAt:Date.now(),lastAt:null,lastText:"",lastFrom:null}));
       if(okw){ popLayer(L); go("chat",id); } else setRight(L,true); }});
 }
 
@@ -1475,11 +1485,16 @@ const A = {
     const g=curGroup(); toast("A enviar daqui a 5 segundos…");
     setTimeout(()=>{ reg.showNotification(g?`Nova mensagem em ${g.name}`:"Pês",{body:"Isto é uma notificação de teste. Toca para abrir o GAP.",icon:"icons/icon-192.png",badge:"icons/icon-192.png",tag:"teste",data:{url:g?`./?g=${g.id}&t=gap`:"./"}}).catch(()=>toast("O telemóvel não deixou mostrar a notificação")); },5000); },
   pushPref:async k=>{ const me=myRealMember(); const cur=S.reads[me]?.push?.prefs?.[k]!==false; await write(()=>D("reads/"+me).update({push:{prefs:{[k]:!cur}}})); },
+  chatAdd:cid=>{ const c=S.chats[cid]; const g=S.groups[c?.groupId]; if(!c||!g) return; const sel=new Set();
+    const cand=g.members.filter(k=>!c.members.includes(k)).sort((a,b)=>nm(a).localeCompare(nm(b)));
+    openSheet({title:"Adicionar pessoas",right:"Adicionar",rightDisabled:true,body:()=>`<div class="card list">${cand.map(k=>`<button class="row" data-m="${k}">${avatar(k,36)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${sel.has(k)?"on":""}">${sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>`,
+      onMount:L=>L.body.addEventListener("click",e=>{ const t=e.target.closest("[data-m]"); if(!t) return; const k=t.dataset.m; sel.has(k)?sel.delete(k):sel.add(k); L.render(); setRight(L,sel.size>0); }),
+      onRight:async L=>{ setRight(L,false); if(await write(()=>S.raw?S.raw.doc("chats/"+cid).update({members:firebase.firestore.FieldValue.arrayUnion(...sel)}):D("chats/"+cid).update({members:[...c.members,...sel]}),"Pessoas adicionadas")) popLayer(L); else setRight(L,true); }}); },
   chatInfo:cid=>{ const c=S.chats[cid]; if(!c) return; const me=ME(); const g=S.groups[c.groupId];
     openSheet({title:chatTitle({id:cid,...c}),left:"Fechar",live:true,body:()=>{ const cc=S.chats[cid]||c;
       const mem=[...(cc.members||[])].sort((a,b)=>(b===me)-(a===me)||nm(a).localeCompare(nm(b)));
       return `<p class="muted small" style="text-align:center;margin:-4px 0 14px">${cc.type==="direct"?"Conversa privada":"Conversa de grupo"} · ${esc(g?.name||"")}${cc.createdBy?` · criada por ${esc(cc.createdBy===me?"ti":nm(cc.createdBy))}`:""}</p>
-        <div class="label">${mem.length} participantes</div>
+        <div class="label">${mem.length} participantes${cc.type==="group"&&(g?.members||[]).some(k=>!(cc.members||[]).includes(k))?`<button data-act="chatAdd" data-arg="${cid}">Adicionar</button>`:""}</div>
         <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>`; }}); },
   toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
   allSeasonAvg:()=>{ const g=curGroup(); const me=ME(); if(rankLocked(g.id)) return;
@@ -1878,9 +1893,10 @@ function fbSubscribe(){
   const timer=setTimeout(()=>{ S.stale=true; scheduleRender(); },10000);
   base.forEach(c=>fbSubs.push(S.db.collection(c).onSnapshot(snap=>{
     S[c]=Object.fromEntries(snap.docs.map(d=>[d.id,d.data()]));
+    if(c==="people"&&!snap.metadata?.fromCache) S.peopleOk=true;
     if(pending.delete(c)&&!pending.size){ clearTimeout(timer); S.stale=false; }
     if(!pending.size) fbScope(); scheduleRender();
-  }, err=>{ console.warn(c,err); pending.delete(c); if(!pending.size){ clearTimeout(timer); fbScope(); } scheduleRender(); })));
+  }, err=>{ console.warn(c,err); if(c==="people") S.stale=true; pending.delete(c); if(!pending.size){ clearTimeout(timer); fbScope(); } scheduleRender(); })));
 }
 /* Group-scoped data: only what the current person may see (security rules check membership per group). */
 function fbScope(){
@@ -1891,7 +1907,7 @@ function fbScope(){
   if(me){
     ["events","awards"].forEach(c=>{ const per={};
       gids.forEach(gid=>scopeSubs.push(S.db.collection(c).where("groupId","==",gid).onSnapshot(s=>{ per[gid]=Object.fromEntries(s.docs.map(d=>[d.id,d.data()])); S[c]=Object.assign({},...Object.values(per)); scheduleRender(); }, e=>console.warn(c,gid,e)))); });
-    scopeSubs.push(S.db.collection("chats").where("members","array-contains",me).onSnapshot(s=>{ S.chats=Object.fromEntries(s.docs.map(d=>[d.id,d.data()])); scheduleRender(); }, e=>console.warn("chats",e)));
+    scopeSubs.push(S.db.collection("chats").where("members","array-contains",me).onSnapshot(s=>{ S.chats=Object.fromEntries(s.docs.map(d=>[d.id,d.data()])); scheduleRender(); syncAllGroupChats(); }, e=>console.warn("chats",e)));
     scopeSubs.push(S.db.doc("reads/"+me).onSnapshot(d=>{ S.reads=d.exists?{[me]:d.data()}:{}; scheduleRender(); }, ()=>{}));
   }
   S.loaded.add("ready");
@@ -1901,17 +1917,22 @@ async function fbBoot(){
   try{ await loadScript(base+"firebase-app-compat.js"); await Promise.all([loadScript(base+"firebase-auth-compat.js"),loadScript(base+"firebase-firestore-compat.js")]); }
   catch{ app.querySelector(".screen").innerHTML=`<div class="center"><h2>Sem ligação</h2><p class="muted">Não foi possível carregar a app. Verifica a internet e recarrega a página.</p></div>`; return; }
   try{ navigator.serviceWorker?.register("sw.js").catch(()=>{}); }catch{}
-  firebase.initializeApp(FBCFG); const fdb=firebase.firestore(); S.raw=fdb; S.db=fbAdapter(fdb); S.fb=true;
+  firebase.initializeApp(FBCFG); const fdb=firebase.firestore();
+  try{ await fdb.enablePersistence({synchronizeTabs:true}); }catch{} // show cached data immediately; live updates follow
+  S.raw=fdb; S.db=fbAdapter(fdb); S.fb=true;
   S.auth=firebase.auth(); S.auth.languageCode="pt";
   if(lsGet("keepSignedIn",true)) S.auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
   S.auth.onAuthStateChanged(async u=>{
-    fbUnsubAll(); S.loaded.clear(); COLS.forEach(c=>S[c]={}); S.route=[]; S.localVotes={};
+    fbUnsubAll(); S.loaded.clear(); COLS.forEach(c=>S[c]={}); S.route=[]; S.localVotes={}; S.myKey=null; S.uidChecked=false; S.peopleOk=false;
     S.authKnown=true;
     if(!u){ S.uid=null; S.isOwner=false; render(); return; }
     S.uid=u.uid; S.email=u.email; render();
     try{ const ref=fdb.doc("config/app"); let c=await ref.get(); if(!c.exists){ try{ await ref.set({ownerUid:u.uid,createdAt:Date.now()}); c=await ref.get(); }catch{} }
       S.isOwner=!!(c.exists&&c.data().ownerUid===u.uid); }catch{ S.isOwner=false; }
     if(!S.isOwner){ S.actingAs=null; }
+    // Who am I? Read the account → profile link first, so a logged-in person never lands on "create profile" by mistake
+    S.myKey=null; try{ const m=await fdb.doc("uids/"+u.uid).get(); if(m.exists&&m.data().key) S.myKey=m.data().key; }catch{ try{ const m=await fdb.doc("uids/"+u.uid).get({source:"cache"}); if(m.exists) S.myKey=m.data().key; }catch{} }
+    S.uidChecked=true;
     fbSubscribe();
   });
 }
