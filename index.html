@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794778787">
+<meta name="pes-version" content="1794779439">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -705,7 +705,9 @@ function eventStats(gid,k){
   return {created, attended, invited:past.length, rate:pct(attended,past.length)};
 }
 /* Average friendship ranking: each ranker's most recent ranking up to week w, averaged per person */
-function averages(gid, uptoWeek=curWeek(), s=viewSeason(gid)){
+/* Rankings only count once their week has closed (Sunday→Monday 00:00). Stats always stop at the last closed week. */
+function lastClosedWeek(){ return weeksBack(2)[0]; }
+function averages(gid, uptoWeek=lastClosedWeek(), s=viewSeason(gid)){
   const g=S.groups[gid]; if(!g) return [];
   const sums={};
   (g.members||[]).forEach(r=>{
@@ -716,7 +718,7 @@ function averages(gid, uptoWeek=curWeek(), s=viewSeason(gid)){
   return Object.entries(sums).map(([k,v])=>({k,avg:v.s/v.n,n:v.n})).sort((a,b)=>a.avg-b.avg);
 }
 /* Average position over every weekly ranking of the season (stable; the evolution chart shows it week by week) */
-function seasonAverages(gid, uptoWeek=curWeek(), s=viewSeason(gid)){
+function seasonAverages(gid, uptoWeek=lastClosedWeek(), s=viewSeason(gid)){
   const g=S.groups[gid]; if(!g) return []; const sums={}; const mem=g.members||[];
   mem.forEach(r=>{ const weeks=S.rankings[r]?.weeks||{};
     Object.keys(weeks).forEach(w=>{ if(w>uptoWeek||!inSeasonW(s,w)||!weeks[w]?.[gid]) return;
@@ -734,7 +736,9 @@ function myRankingThisWeek(gid){ return S.rankings[ME()]?.weeks?.[curWeek()]?.[g
 /* First week of a season (no history yet): rankings are only revealed when the week closes, at midnight Sunday→Monday */
 function firstWeekReveal(gid){ if(viewingPast(gid)) return false; const s=currentSeason(gid); return !!(s.startW && curWeek()<=s.startW); }
 function rankLocked(gid){ const g=S.groups[gid]; if(!g||!ME()||(g.members||[]).length<2) return false;
-  if(viewingPast(gid)||votingClosed(gid)||seasonPending(gid)) return false; return !myRankingThisWeek(gid); }
+  if(viewingPast(gid)||votingClosed(gid)||seasonPending(gid)) return false;
+  // Access this week = you submitted the ranking of the week that just closed
+  return !S.rankings[ME()]?.weeks?.[lastClosedWeek()]?.[gid]; }
 function scoreWeeks(gid){ const s=viewSeason(gid); const cw=curWeek(); const end=s.endW&&s.endW<cw?s.endW:cw; return weeksBack(8,end).filter(w=>inSeasonW(s,w)); }
 function rankingWeeksDone(k,gid){ const ws=scoreWeeks(gid); return ws.filter(w=>S.rankings[k]?.weeks?.[w]?.[gid]).length; }
 function voteWeeksDone(k,gid){ const aw=groupAwards(gid).map(a=>a.id); const ws=scoreWeeks(gid); return ws.filter(w=>{ const v=S.votes[k]?.weeks?.[w]||{}; return aw.some(a=>v[a]); }).length; }
@@ -1099,7 +1103,7 @@ function dashScreen(){
   const sav=seasonAverages(g.id); const mySIdx=sav.findIndex(a=>a.k===me); const reveal=firstWeekReveal(g.id); const locked=reveal||rankLocked(g.id);
   const done=!!myRankingThisWeek(g.id); const score=activityScore(g.id,me);
   const awards=groupAwards(g.id);
-  const sw=seasonWeeks(g.id); const to=sw[sw.length-1]||curWeek(); const past=viewingPast(g.id);
+  const sw=seasonWeeks(g.id).filter(w=>w<curWeek()); const to=sw[sw.length-1]||lastClosedWeek(); const past=viewingPast(g.id);
   const opts=RANGES.filter(([v])=>!v||v<sw.length); let rg=chartRange("dash",0); if(!opts.some(o=>o[0]===rg)) rg=0;
   const wks=rg?sw.slice(-rg):sw; const from=wks[0];
   const hist=wks.length?rankingHistory(g.id,wks):[]; const first0=hist.length>0;
@@ -1110,7 +1114,7 @@ function dashScreen(){
     const series=top3.map((k,i)=>({key:k,name:first(nm(k))+(k===me?" (tu)":""),color:SERIES[i]}));
     const maxR=Math.max(3,(g.members.length-1));
     const stp=Math.max(1,Math.ceil((maxR-1)/4)); const tk=[]; for(let v=1;v<=maxR;v+=stp) tk.push(v); if(tk[tk.length-1]!==maxR) tk.push(maxR);
-    chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
+    chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Cada semana só entra nas contas quando fecha, à meia-noite de domingo para segunda. Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?pastSeasonBanner(g):seasonBanner(g)}
@@ -1119,7 +1123,7 @@ function dashScreen(){
         ${stat(st.created,"Eventos criados","nesta época")}
         ${stat(st.attended,"Presenças",`em ${st.invited} ${st.invited===1?"evento":"eventos"}`)}
         ${stat(st.invited?st.rate+"%":"—","Taxa de presença",st.invited?"eventos passados":"sem eventos ainda")}
-        ${locked?stat("🔒","Posição média",reveal?"à meia-noite":"faz o ranking")+stat("🔒","Posição atual",reveal?"à meia-noite":"faz o ranking"):""}
+        ${locked?stat("🔒","Posição média",reveal?"à meia-noite":"bloqueado esta semana")+stat("🔒","Posição atual",reveal?"à meia-noite":"bloqueado esta semana"):""}
         ${locked?"":stat(mySIdx>=0?"#"+(mySIdx+1):"—","Posição média",mySIdx>=0?`média ${sav[mySIdx].avg.toFixed(1)} na época`:"sem rankings ainda")}
         ${locked?"":stat(myIdx>=0?"#"+(myIdx+1):"—",past?"Posição final":"Posição atual",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)} ${past?"no fim":"agora"}`:"sem rankings ainda")}
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
@@ -1127,7 +1131,7 @@ function dashScreen(){
       </div></div>
     ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}${reveal
         ?`<b>Rankings revelados à meia-noite 🕛</b><span>É a primeira semana da época. Os rankings aparecem de domingo para segunda, às 00:00, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
-        :`<b>Rankings bloqueados</b><span>Faz o teu ranking de amizade desta semana para veres o Ranking atual, o Rating médio da época e a evolução.</span><span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}</button></div>`:`
+        :`<b>Rankings bloqueados</b><span>Não fizeste o ranking da semana passada, por isso esta semana não vês os rankings.${myRankingThisWeek(g.id)?" O ranking desta semana já está feito ✔︎: voltas a ver a partir de segunda, às 00:00.":" Faz o ranking desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`}</button></div>`:`
     <div class="section"><div class="label">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
       <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
         : `<div class="empty"><p>${seasonPending(g.id)?"Época nova: o ranking recomeça na próxima semana.":"Ainda ninguém submeteu o ranking nesta época."}</p></div>`}</div></div>
@@ -1766,7 +1770,7 @@ function galaData(gid,s=currentSeason(gid)){
   let votes=0; members.forEach(k=>Object.entries(S.votes[k]?.weeks||{}).forEach(([w,v])=>{ if(wset.has(w)) awards.forEach(a=>{ if(v[a.id]) votes++; }); }));
   let ranks=0; members.forEach(k=>Object.entries(S.rankings[k]?.weeks||{}).forEach(([w,v])=>{ if(wset.has(w)&&v[gid]) ranks++; }));
   const best=[...pres].sort((a,b)=>b.p.length-a.p.length)[0];
-  const upto=weeks[weeks.length-1]||curWeek(); const final=averages(gid,upto,s);
+  const upto=[weeks[weeks.length-1]||curWeek(),lastClosedWeek()].sort()[0]; const final=averages(gid,upto,s);
   const st=(aid)=>standings(gid,aid,upto,s);
   return {s,weeks,st,g,year,evs,pres,attendance,organizers,loyalty,climb,awards,votes,ranks,best,final,
     groupEvents:pres.filter(x=>x.p.length>=4).length, presences:pres.reduce((s,x)=>s+x.p.length,0), weeksActive:hist.length};
