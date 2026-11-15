@@ -1320,7 +1320,7 @@ function joinGroupSheet(){
 }
 function eventSheet(eid){
   const g=curGroup(); const me=ME(); const ev=eid?S.events[eid]:null;
-  const st={title:ev?.title||"", date:ev?.date||lisbonYMD(), time:ev?.time||"", place:ev?.place||"", desc:ev?.desc||"", sel:new Set(ev?Object.keys(ev.att||{}).filter(k=>k!==me):[])};
+  const st={title:ev?.title||"", date:ev?.date||lisbonYMD(), time:ev?.time||"", place:ev?.place||"", desc:ev?.desc||"", sel:new Set(ev?Object.keys(ev.att||{}).filter(k=>k!==me):(g.members||[]).filter(k=>k!==me))}; // new events invite the whole group by default
   const others=g.members.filter(k=>k!==me).sort((a,b)=>nm(a).localeCompare(nm(b)));
   const valid=()=>st.title.trim()&&/^\d{4}-\d{2}-\d{2}$/.test(st.date);
   const countTxt=()=>{ const n=st.sel.size+1; return n>=4?`<span style="color:var(--green)">${n} pessoas contigo · pode ser evento de grupo (4+ presenças)</span>`:`${n} ${n===1?"pessoa":"pessoas"} contigo · são precisas 4+ presenças para evento de grupo`; };
