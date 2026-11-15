@@ -740,7 +740,8 @@ function groupGalas(g){ return [...new Set((g?.galas||[]).filter(x=>/^\d{4}-\d{2
 function seasonsOf(gid){
   const g=S.groups[gid]; if(!g) return [];
   const first=g.seasonStart||(g.createdAt?lisbonYMD(new Date(g.createdAt)):null);
-  const out=[]; let startD=first, startW=first?weekOf(first):null;
+  // The first season has no start date for events (events added after creating the group, with earlier dates, still count)
+  const out=[]; let startD=null, startW=first?weekOf(first):null;
   groupGalas(g).forEach((d,i)=>{ out.push({gid,i,startD,startW,endD:d,endW:weekOf(d),gala:d,year:d.slice(0,4)}); startD=addDays(d,1); startW=nextWeekKey(weekOf(d)); });
   out.push({gid,i:out.length,startD,startW,endD:null,endW:null,gala:null,year:null,open:true});
   return out;
