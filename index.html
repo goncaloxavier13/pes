@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794750071">
+<meta name="pes-version" content="1794754319">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -667,7 +667,7 @@ const S = {
 };
 const COLS=["people","groups","awards","events","votes","rankings","chats","reads"];
 
-function myRealMember(){ if (S.fb && S.myKey) return S.myKey; for (const [k,v] of Object.entries(S.people)) if (v.uid && v.uid===S.uid) return k; return null; }
+function myRealMember(){ if (S.fb && S.myKey && (!S.peopleOk || S.people[S.myKey]?.uid===S.uid)) return S.myKey; for (const [k,v] of Object.entries(S.people)) if (v.uid && v.uid===S.uid) return k; return null; }
 function myMember(){ if (S.isOwner && S.actingAs && S.people[S.actingAs]) return S.actingAs; return myRealMember(); }
 const ME = () => myMember();
 const myGroups = () => Object.entries(S.groups).filter(([,g])=>(g.members||[]).includes(ME())).map(([id,g])=>({id,...g})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
@@ -1934,6 +1934,8 @@ async function fbBoot(){
     S.myKey=null; try{ const m=await fdb.doc("uids/"+u.uid).get(); if(m.exists&&m.data().key) S.myKey=m.data().key; }catch{ try{ const m=await fdb.doc("uids/"+u.uid).get({source:"cache"}); if(m.exists) S.myKey=m.data().key; }catch{} }
     S.uidChecked=true;
     fbSubscribe();
+    // keep the account → profile link live (if it is ever corrected, the app follows immediately)
+    fbSubs.push(fdb.doc("uids/"+u.uid).onSnapshot(d=>{ const k=d.exists?d.data().key:null; if(k&&k!==S.myKey){ S.myKey=k; fbScopeKey=null; fbScope(); scheduleRender(); } },()=>{}));
   });
 }
 function authScreen(){
