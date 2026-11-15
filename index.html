@@ -2,6 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
+<meta name="pes-version" content="1794749766">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1269,7 +1270,13 @@ async function markRead(cid){ const me=ME(); const c=S.chats[cid]; if(!me||!c) r
   try{ await D("reads/"+me).update({chats:{[cid]:v}}); }catch{ try{ await D("reads/"+me).set({chats:{[cid]:v}}); }catch{} } }
 /* Remove this conversation's notifications from the phone's notification centre */
 async function clearChatNotifs(cid){ try{ const reg=await navigator.serviceWorker?.getRegistration(); const ns=await reg?.getNotifications?.({tag:"chat-"+cid}); (ns||[]).forEach(n=>n.close()); }catch{} }
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ const cid=openChatId(); if(cid) markRead(cid); scheduleRender(); } });
+/* Auto-update: when the app comes to the foreground, check if a newer version was published and reload */
+const MYVER=document.querySelector('meta[name="pes-version"]')?.content||"dev"; let lastVerCheck=0;
+async function checkUpdate(){ if(MYVER==="dev"||!/^https?:/.test(location.protocol)) return; if(Date.now()-lastVerCheck<30000) return; lastVerCheck=Date.now();
+  try{ const t=await (await fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"})).text(); const m=t.match(/name="pes-version" content="([^"]+)"/);
+    if(m&&m[1]!==MYVER){ if(layers.length){ lastVerCheck=0; return; } location.reload(); } }catch{} }
+setTimeout(checkUpdate,3000);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ checkUpdate(); const cid=openChatId(); if(cid) markRead(cid); scheduleRender(); } });
 
 /* ───────────────────────── settings ───────────────────────── */
 function settingsScreen(){
