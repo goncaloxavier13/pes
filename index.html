@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794758542">
+<meta name="pes-version" content="1794778787">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -731,6 +731,8 @@ function rankingHistory(gid,weeks=weeksBack(52),s=viewSeason(gid)){
 }
 function myRankingThisWeek(gid){ return S.rankings[ME()]?.weeks?.[curWeek()]?.[gid] || null; }
 /* Rankings are only visible to whoever has submitted this week's friendship ranking (current season only) */
+/* First week of a season (no history yet): rankings are only revealed when the week closes, at midnight Sunday→Monday */
+function firstWeekReveal(gid){ if(viewingPast(gid)) return false; const s=currentSeason(gid); return !!(s.startW && curWeek()<=s.startW); }
 function rankLocked(gid){ const g=S.groups[gid]; if(!g||!ME()||(g.members||[]).length<2) return false;
   if(viewingPast(gid)||votingClosed(gid)||seasonPending(gid)) return false; return !myRankingThisWeek(gid); }
 function scoreWeeks(gid){ const s=viewSeason(gid); const cw=curWeek(); const end=s.endW&&s.endW<cw?s.endW:cw; return weeksBack(8,end).filter(w=>inSeasonW(s,w)); }
@@ -1094,7 +1096,7 @@ function dashScreen(){
   const head=`<div class="tabhead"><div class="titles"><h1>Dashboard</h1>${groupPill(true)}</div></div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="dash">${head}${noGroup()}</div>`;
   const st=eventStats(g.id,me); const av=averages(g.id); const myIdx=av.findIndex(a=>a.k===me);
-  const sav=seasonAverages(g.id); const mySIdx=sav.findIndex(a=>a.k===me); const locked=rankLocked(g.id);
+  const sav=seasonAverages(g.id); const mySIdx=sav.findIndex(a=>a.k===me); const reveal=firstWeekReveal(g.id); const locked=reveal||rankLocked(g.id);
   const done=!!myRankingThisWeek(g.id); const score=activityScore(g.id,me);
   const awards=groupAwards(g.id);
   const sw=seasonWeeks(g.id); const to=sw[sw.length-1]||curWeek(); const past=viewingPast(g.id);
@@ -1117,13 +1119,15 @@ function dashScreen(){
         ${stat(st.created,"Eventos criados","nesta época")}
         ${stat(st.attended,"Presenças",`em ${st.invited} ${st.invited===1?"evento":"eventos"}`)}
         ${stat(st.invited?st.rate+"%":"—","Taxa de presença",st.invited?"eventos passados":"sem eventos ainda")}
-        ${locked?stat("🔒","Posição média","faz o ranking")+stat("🔒","Posição atual","faz o ranking"):""}
+        ${locked?stat("🔒","Posição média",reveal?"à meia-noite":"faz o ranking")+stat("🔒","Posição atual",reveal?"à meia-noite":"faz o ranking"):""}
         ${locked?"":stat(mySIdx>=0?"#"+(mySIdx+1):"—","Posição média",mySIdx>=0?`média ${sav[mySIdx].avg.toFixed(1)} na época`:"sem rankings ainda")}
         ${locked?"":stat(myIdx>=0?"#"+(myIdx+1):"—",past?"Posição final":"Posição atual",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)} ${past?"no fim":"agora"}`:"sem rankings ainda")}
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span></button>`}
       </div></div>
-    ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}<b>Rankings bloqueados</b><span>Faz o teu ranking de amizade desta semana para veres o Ranking atual, o Rating médio da época e a evolução.</span><span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span></button></div>`:`
+    ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}${reveal
+        ?`<b>Rankings revelados à meia-noite 🕛</b><span>É a primeira semana da época. Os rankings aparecem de domingo para segunda, às 00:00, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
+        :`<b>Rankings bloqueados</b><span>Faz o teu ranking de amizade desta semana para veres o Ranking atual, o Rating médio da época e a evolução.</span><span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}</button></div>`:`
     <div class="section"><div class="label">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
       <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
         : `<div class="empty"><p>${seasonPending(g.id)?"Época nova: o ranking recomeça na próxima semana.":"Ainda ninguém submeteu o ranking nesta época."}</p></div>`}</div></div>
@@ -1498,9 +1502,9 @@ const A = {
         <div class="label">${mem.length} participantes${cc.type==="group"&&(g?.members||[]).some(k=>!(cc.members||[]).includes(k))?`<button data-act="chatAdd" data-arg="${cid}">Adicionar</button>`:""}</div>
         <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>`; }}); },
   toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
-  allSeasonAvg:()=>{ const g=curGroup(); const me=ME(); if(rankLocked(g.id)) return;
+  allSeasonAvg:()=>{ const g=curGroup(); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
     openSheet({title:"Rating médio da época",left:"Fechar",live:true,body:()=>`<div class="card list">${seasonAverages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">em ${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média de todas as posições recebidas nos rankings semanais da época. Quanto mais baixo, melhor.</p>`}); },
-  allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME(); if(rankLocked(g.id)) return;
+  allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
     openSheet({title:"Ranking atual",left:"Fechar",live:true,body:()=>`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
   scoreInfo:()=>{ const g=curGroup(); const me=ME(); const st=eventStats(g.id,me);
     alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}) e 30% semanas com votos no Journey (${voteWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}), nas últimas 8 semanas desta época.`); },
