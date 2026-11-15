@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794779439">
+<meta name="pes-version" content="1794781389">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -325,6 +325,10 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .keepin .kbox svg{width:15px;height:15px}
 .keepin input:checked+.kbox{background:var(--accent);border-color:var(--accent);color:#fff}
 .keepin input:focus-visible+.kbox{outline:2px solid var(--accent);outline-offset:2px}
+.chatwrap{display:flex;align-items:center}
+.chatwrap .chatrow{flex:1;min-width:0}
+.chatdel{flex:none;width:30px;height:30px;margin-left:14px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center}
+.chatdel svg{width:16px;height:16px}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -798,7 +802,9 @@ async function syncAllGroupChats(){ if(chatSyncBusy||!S.fb||!ME()) return; chatS
       const miss=(g.members||[]).filter(k=>!(c.members||[]).includes(k)); if(!miss.length) continue;
       try{ await S.raw.doc("chats/"+cid).update({members:firebase.firestore.FieldValue.arrayUnion(...miss)}); }catch(e){ console.warn("chat sync",e); } } }
   finally{ chatSyncBusy=false; } }
-function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([,c])=>c.groupId===gid && (c.members||[]).includes(me)).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
+/* "Delete" a conversation = hide it for me and clear its history for me. A new message brings it back. */
+const hiddenAt = cid => S.reads[ME()]?.hidden?.[cid] || 0;
+function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>c.groupId===gid && (c.members||[]).includes(me) && (!hiddenAt(id) || (c.lastAt||0)>hiddenAt(id))).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
 const openChatId = () => { const r=topRoute(); return r?.name==="chat"&&document.visibilityState!=="hidden" ? r.arg : null; };
 function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false; if(c.id===openChatId()) return false; return c.lastAt > (S.reads[me]?.chats?.[c.id]||0); }
 function unreadCount(){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>(c.members||[]).includes(me)&&S.groups[c.groupId]?.members?.includes(me)&&isUnread({id,...c})).length; }
@@ -1224,20 +1230,20 @@ function journeyScreen(){
 /* ───────────────────────── screens: GAP ───────────────────────── */
 function gapScreen(){
   const g=curGroup();
-  const head=`<div class="tabhead"><div class="titles"><h1>GAP</h1>${groupPill()}</div>${g?`<button class="roundbtn fill" data-act="newChat" aria-label="Nova conversa">${ic("compose")}</button>`:""}</div>`;
+  const head=`<div class="tabhead"><div class="titles"><h1>GAP</h1>${groupPill()}</div>${g?`<div style="display:flex;gap:8px;align-items:center">${g&&chatsOf(g.id).length?`<button class="linkbtn" data-act="gapEdit" style="font-weight:600;padding:8px 4px">${S.gapEdit?"OK":"Editar"}</button>`:""}<button class="roundbtn fill" data-act="newChat" aria-label="Nova conversa">${ic("compose")}</button></div>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="gap">${head}${noGroup()}</div>`;
   const cs=chatsOf(g.id); const me=ME();
   return `<div class="scroll pad-tabs" data-key="gap">${head}${previewBanner()}<div class="section" style="margin-top:12px">
     ${cs.length?`<div class="card list">${cs.map(c=>{ const u=isUnread(c); const other=c.type==="direct"?(c.members||[]).find(k=>k!==me):null;
-      return `<button class="row chatrow" data-act="openChat" data-arg="${c.id}">${other?avatar(other,48):`<span class="gphoto" style="width:48px;height:48px;border-radius:50%">${ic("users")}</span>`}
+      return `<div class="chatwrap">${S.gapEdit?`<button class="chatdel" data-act="deleteChat" data-arg="${c.id}" aria-label="Apagar conversa ${esc(chatTitle(c))}">${ic("trash")}</button>`:""}<button class="row chatrow" data-act="${S.gapEdit?"deleteChat":"openChat"}" data-arg="${c.id}">${other?avatar(other,48):`<span class="gphoto" style="width:48px;height:48px;border-radius:50%">${ic("users")}</span>`}
         <div class="grow"><div style="display:flex;gap:8px;align-items:baseline"><span class="rowtitle" style="flex:1;${u?"font-weight:700":""}">${esc(chatTitle(c))}</span><span class="small ${u?"":"muted"}" style="${u?"color:var(--accent);font-weight:600":""}">${esc(ago(c.lastAt))}</span></div>
-        <div class="rowsub" style="${u?"color:var(--text)":""}">${c.lastText?`${c.lastFrom===me?"Tu":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:"Sem mensagens"}</div></div>${u?'<span class="dotu" aria-label="Por ler"></span>':""}</button>`; }).join("")}</div>`
+        <div class="rowsub" style="${u?"color:var(--text)":""}">${c.lastText?`${c.lastFrom===me?"Tu":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:"Sem mensagens"}</div></div>${u?'<span class="dotu" aria-label="Por ler"></span>':""}</button></div>`; }).join("")}</div>`
     : `<div class="card"><div class="empty"><div class="ico">${ic("chat")}</div><h3>Ainda sem conversas</h3><p>Começa uma conversa privada ou de grupo.</p><button class="btn" style="margin-top:8px" data-act="newChat">${ic("compose")}Nova conversa</button></div></div>`}
-    <p class="info">Só os participantes veem cada conversa.</p></div></div>`;
+    <p class="info">Só os participantes veem cada conversa. Apagar uma conversa só a apaga para ti: se chegar uma mensagem nova, volta a aparecer.</p></div></div>`;
 }
 
 /* ───────────────────────── chat screen ───────────────────────── */
-let chatSub=null, chatMsgs=[], chatId=null, chatLoaded=false;
+let chatSub=null, chatMsgs=[], chatId=null, chatLoaded=false; const chatMsgsAll=()=>chatMsgs;
 function chatShell(cid){
   const c=S.chats[cid]; if(!c) return navhead("Conversa")+`<div class="center muted">Esta conversa já não existe.</div>`;
   const sub=c.type==="direct"?"Conversa privada":`${(c.members||[]).length} participantes`;
@@ -1263,7 +1269,7 @@ function updateChat(cid){
   const box=document.getElementById("msgs"); if(!box) return; const sc=document.getElementById("msgScroll");
   const atBottom=sc.scrollHeight-sc.scrollTop-sc.clientHeight<80;
   if(!chatLoaded){ return; }
-  const me=ME(); const c=S.chats[cid]||{};
+  const me=ME(); const c=S.chats[cid]||{}; const hid=hiddenAt(cid); const chatMsgs=hid?chatMsgsAll().filter(m=>(m.at||0)>hid):chatMsgsAll();
   if(!chatMsgs.length){ box.innerHTML=`<div class="empty" style="margin-top:40px"><div class="ico">${ic("chat")}</div><h3>Sem mensagens</h3><p>Diz olá 👋</p></div>`; return; }
   let html="", lastDay="";
   chatMsgs.forEach((m,i)=>{
@@ -1499,12 +1505,21 @@ const A = {
     openSheet({title:"Adicionar pessoas",right:"Adicionar",rightDisabled:true,body:()=>`<div class="card list">${cand.map(k=>`<button class="row" data-m="${k}">${avatar(k,36)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${sel.has(k)?"on":""}">${sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>`,
       onMount:L=>L.body.addEventListener("click",e=>{ const t=e.target.closest("[data-m]"); if(!t) return; const k=t.dataset.m; sel.has(k)?sel.delete(k):sel.add(k); L.render(); setRight(L,sel.size>0); }),
       onRight:async L=>{ setRight(L,false); if(await write(()=>S.raw?S.raw.doc("chats/"+cid).update({members:firebase.firestore.FieldValue.arrayUnion(...sel)}):D("chats/"+cid).update({members:[...c.members,...sel]}),"Pessoas adicionadas")) popLayer(L); else setRight(L,true); }}); },
+  gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
+  deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
+    if(!await confirmD("Apagar conversa?",`"${chatTitle({id:cid,...c})}" desaparece da tua lista e as mensagens deixam de aparecer para ti. Os outros continuam a ver a conversa. Se chegar uma mensagem nova, volta a aparecer.`,"Apagar")) return;
+    const me=ME(); const now=Math.max(Date.now(),(c.lastAt||0)+1);
+    S.reads={...S.reads,[me]:{...(S.reads[me]||{}),hidden:{...(S.reads[me]?.hidden||{}),[cid]:now}}};
+    while(layers.length) popLayer(); if(topRoute()?.name==="chat") back(); else render();
+    await write(()=>D("reads/"+me).update({hidden:{[cid]:now},chats:{[cid]:now}}),"Conversa apagada");
+    if(!chatsOf(curGroup()?.id).length) S.gapEdit=false; render(); },
   chatInfo:cid=>{ const c=S.chats[cid]; if(!c) return; const me=ME(); const g=S.groups[c.groupId];
     openSheet({title:chatTitle({id:cid,...c}),left:"Fechar",live:true,body:()=>{ const cc=S.chats[cid]||c;
       const mem=[...(cc.members||[])].sort((a,b)=>(b===me)-(a===me)||nm(a).localeCompare(nm(b)));
       return `<p class="muted small" style="text-align:center;margin:-4px 0 14px">${cc.type==="direct"?"Conversa privada":"Conversa de grupo"} · ${esc(g?.name||"")}${cc.createdBy?` · criada por ${esc(cc.createdBy===me?"ti":nm(cc.createdBy))}`:""}</p>
         <div class="label">${mem.length} participantes${cc.type==="group"&&(g?.members||[]).some(k=>!(cc.members||[]).includes(k))?`<button data-act="chatAdd" data-arg="${cid}">Adicionar</button>`:""}</div>
-        <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>`; }}); },
+        <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>
+        <button class="btn ghost block danger" style="margin-top:22px" data-act="deleteChat" data-arg="${cid}">${ic("trash")}Apagar conversa</button>`; }}); },
   toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
   allSeasonAvg:()=>{ const g=curGroup(); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
     openSheet({title:"Rating médio da época",left:"Fechar",live:true,body:()=>`<div class="card list">${seasonAverages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">em ${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média de todas as posições recebidas nos rankings semanais da época. Quanto mais baixo, melhor.</p>`}); },
