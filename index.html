@@ -759,7 +759,7 @@ function seasonChoices(gid){ const t=lisbonYMD(); const cur=currentSeason(gid); 
 const seasonPending = gid => { if(viewingPast(gid)) return false; const s=currentSeason(gid); return !!(s.startW&&s.startW>curWeek()); };
 /* Results stay hidden during the 4 weeks before the gala (and on the day itself) */
 const HIDE_DAYS=28;
-function resultsHidden(gid){ if(viewingPast(gid)) return null; const s=currentSeason(gid); if(!s.gala) return null; const t=lisbonYMD(); return t>=addDays(s.gala,-HIDE_DAYS)&&t<=s.gala ? s : null; }
+function resultsHidden(gid){ if(viewingPast(gid)) return null; const s=currentSeason(gid); if(galaOpen(gid,s)) return null; return s; }
 function daysUntil(ymd){ return Math.round((ymdToUTC(ymd)-ymdToUTC(lisbonYMD()))/864e5); }
 const shortDate = ymd => { const d=ymdToUTC(ymd); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; };
 function firstDataWeek(gid){ const g=S.groups[gid]; const aw=new Set(groupAwards(gid).map(a=>a.id)); let f=firstRankingWeek(gid);
@@ -1122,7 +1122,7 @@ function dashScreen(){
 }
 function stat(v,k,s,extra=""){ return `<${extra?"button":"div"} class="stat" ${extra}><span class="v num">${esc(v)}</span><span class="k">${esc(k)}</span><span class="s">${esc(s)}</span></${extra?"button":"div"}>`; }
 const expanded=new Set();
-function hiddenCard(s,dash,a){ return `<div class="card">${dash?`<div style="padding:14px 16px 6px" class="award"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3></div>`:""}<div class="hiddenres">${ic("lock")}<div><b>Resultados escondidos até à Gala</b><span>Revelados na Gala ${esc(s.year)}, ${esc(fmtDate(s.gala))}. Podes continuar a votar.</span></div></div></div>`; }
+function hiddenCard(s,dash,a){ return `<div class="card">${dash?`<div style="padding:14px 16px 6px" class="award"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3></div>`:""}<div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Só vão ser revelados no jantar de Natal${s.gala?`, na Gala ${esc(s.year)} (${esc(fmtDate(s.gala))})`:""}. Podes continuar a votar.</span></div></div></div>`; }
 function awardBlock(g,a,dash){
   const hid=resultsHidden(g.id); if(hid) return hiddenCard(hid,dash,a);
   const {list,total}=standings(g.id,a.id); const me=ME(); const open=expanded.has(a.id);
@@ -1678,7 +1678,7 @@ function galaBanner(g){
   if(s.gala===t) return galaOpen(g.id,s) ? b("openGala",`${g.id}|${s.i}`,"🏆",`A Gala ${esc(s.year)} começou!`,"Toca para ver a revelação dos vencedores.")
     : admin ? b("startGala",`${g.id}|${s.gala}`,"🏆",`A Gala ${esc(s.year)} é hoje!`,"No jantar, toca aqui para começar a Gala para todos.")
     : b("galaInfo",g.id,"🏆",`A Gala ${esc(s.year)} é hoje!`,"Começa no jantar, quando um admin a abrir.");
-  if(s.gala){ const n=daysUntil(s.gala); return b("galaInfo",g.id,"🏆",`Gala ${esc(s.year)} · ${esc(shortDate(s.gala))}`,`${n===1?"Falta 1 dia":`Faltam ${n} dias`}${resultsHidden(g.id)?" · resultados escondidos até lá":""}`); }
+  if(s.gala){ const n=daysUntil(s.gala); return b("galaInfo",g.id,"🏆",`Gala ${esc(s.year)} · ${esc(shortDate(s.gala))}`,`${n===1?"Falta 1 dia":`Faltam ${n} dias`} · prémios revelados no jantar`); }
   if(last&&daysUntil(last.gala)>=-30) return b("openGala",`${g.id}|${last.i}`,"🎞️",`Rever a Gala ${esc(last.year)}`,"Já começou uma época nova.");
   return b("galaInfo",g.id,"🏆","Próxima gala",admin?"Data por definir. Toca para escolher o dia.":"Data por definir pelos admins do grupo.");
 }
@@ -1690,7 +1690,7 @@ function galaInfoSheet(gid){
         <p class="gi-count num">${s.gala===t?"É hoje!":daysUntil(s.gala)===1?"Falta 1 dia":`Faltam ${daysUntil(s.gala)} dias`}</p>
         ${s.gala===t?(galaOpen(gid,s)?`<button class="btn block" data-act="openGala" data-arg="${gid}|${s.i}">${ic("trophy")}Abrir a Gala</button>`:admin?`<button class="btn block" data-act="startGala" data-arg="${gid}|${s.gala}">${ic("trophy")}Começar a Gala</button><p class="small muted" style="margin:6px 0 0">Carrega só no jantar: abre a Gala para todos.</p>`:`<p class="small muted" style="margin:0">A Gala começa no jantar, quando um admin a abrir.</p>`):""}
         ${admin&&s.gala>t?`<button class="btn ghost block" data-act="galaDate" data-arg="${gid}">${ic("cal")}Alterar data</button>`:""}</div>
-      <p class="info">A Gala fecha a época. Os resultados dos prémios ficam escondidos a partir de ${esc(fmtDate(hideFrom))} e só são revelados na Gala. No dia seguinte começa uma época nova, com tudo a zero.</p>`
+      <p class="info">A Gala fecha a época. Os resultados dos prémios ficam secretos durante toda a época e só são revelados no jantar, quando um admin começa a Gala. No dia seguinte começa uma época nova, com tudo a zero.</p>`
     : `<div class="card pad galainfo"><div class="gi-emo">🗓️</div><h2>Próxima gala</h2><p class="gi-date">Data por definir</p>
         ${admin?`<button class="btn block" data-act="galaDate" data-arg="${gid}">${ic("cal")}Definir data da gala</button>`:`<p class="small muted">Os admins do grupo escolhem o dia da gala.</p>`}</div>
       <p class="info">A Gala fecha a época: revela os prémios e o ranking de amizade. No dia seguinte começa uma época nova, com tudo a zero.</p>`;
@@ -1703,7 +1703,7 @@ function galaDateSheet(gid){
   const min=[addDays(t,1), last?addDays(last.gala,1):""].sort().pop(); let val=s.gala&&s.gala>t?s.gala:"";
   openSheet({title:"Data da gala",right:"Guardar",rightDisabled:!val,short:true,
     body:()=>`<div class="field"><label for="gdate">Dia da gala</label><input id="gdate" type="date" min="${min}" value="${esc(val)}"></div>
-      <p class="hint">A época termina neste dia. Os resultados ficam escondidos durante as 4 semanas antes, e no dia seguinte começa uma época nova.</p>
+      <p class="hint">A época termina neste dia. Os resultados dos prémios ficam secretos até à Gala, e no dia seguinte começa uma época nova.</p>
       ${s.gala&&s.gala>t?`<button class="btn ghost block danger" style="margin-top:14px" data-rm>Remover data</button>`:""}`,
     onMount:L=>{ const i=L.body.querySelector("#gdate"); i.addEventListener("input",()=>{ val=i.value; setRight(L,!!val&&val>=min); });
       L.body.querySelector("[data-rm]")?.addEventListener("click",async()=>{ const keep=groupGalas(S.groups[gid]).filter(d=>d<=t); if(await write(()=>D("groups/"+gid).update({galas:keep}),"Data removida")) popLayer(L); }); },
