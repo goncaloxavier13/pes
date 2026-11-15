@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794754319">
+<meta name="pes-version" content="1794758542">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1329,9 +1329,10 @@ function joinGroupSheet(){
     onMount:L=>{ const i=L.body.querySelector("#jcode"); i.focus(); i.oninput=()=>{ i.value=i.value.toUpperCase().replace(/[^A-Z0-9]/g,""); code=i.value; setRight(L,code.length===6); L.body.querySelector("#jmsg").textContent=""; }; i.onkeydown=e=>{ if(e.key==="Enter"&&code.length===6) L.right.click(); }; },
     onRight:async L=>{ const me=ME(); const hit=Object.entries(S.groups).find(([,g])=>g.code===code); const msg=L.body.querySelector("#jmsg");
       if(!hit){ msg.textContent="Não existe nenhum grupo com este código. Confirma as letras."; msg.style.color="var(--red)"; return; }
-      const [id,g]=hit; if(g.members.includes(me)){ popLayer(L); S.groupId=id; lsSet("group",id); go("group",id); return; }
-      setRight(L,false); const ok=await write(()=>D("groups/"+id).update({members:[...g.members,me]}),`Entraste em ${g.name}`);
-      if(ok){ popLayer(L); S.groupId=id; lsSet("group",id); go("group",id); } else setRight(L,true); }});
+      const [id,g]=hit; if(g.members.includes(me)){ popLayer(L); enterGroup(id,"dash"); return; }
+      // arrayUnion: several friends can join at the same moment without overwriting each other
+      setRight(L,false); const ok=await write(()=>S.fb?S.raw.doc("groups/"+id).update({members:firebase.firestore.FieldValue.arrayUnion(me)}):D("groups/"+id).update({members:[...g.members,me]}),`Entraste em ${g.name} 🎉`);
+      if(ok){ popLayer(L); S.groupId=id; lsSet("group",id); const wait=Date.now(); const t=setInterval(()=>{ if(myGroups().some(x=>x.id===id)||Date.now()-wait>5000){ clearInterval(t); enterGroup(id,"dash"); } },150); } else setRight(L,true); }});
 }
 function eventSheet(eid){
   const g=curGroup(); const me=ME(); const ev=eid?S.events[eid]:null;
