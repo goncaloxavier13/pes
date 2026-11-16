@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794824648">
+<meta name="pes-version" content="1794827857">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -367,6 +367,15 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .rowbtn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;text-align:left}
 .rowbtn .grow{min-width:0}
 .rowbtn .rowsub{white-space:normal}
+.ws-tease{position:relative}
+.ws-blur{filter:blur(7px);opacity:.75;pointer-events:none;user-select:none}
+.ws-tease .ws-grid{min-height:300px;grid-auto-rows:1fr}
+.ws-joke{position:absolute;inset:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px;gap:6px;border-radius:20px;background:color-mix(in srgb,var(--card) 82%,transparent);box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.ws-joke .ws-jemo{font-size:34px;line-height:1}
+.ws-joke b{font-size:20px;font-weight:800}
+.ws-joke p{font-size:15px;max-width:300px;margin:0}
+.ws-joke .btn{height:44px;padding:0 18px}
+.ws-joke small{color:var(--muted);font-size:12px;margin-top:4px}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -796,7 +805,19 @@ function weeklySummarySheet(gid,w=lastClosedWeek()){
   const part=`<div class="ws-part"><div class="ws-bar"><i style="width:${Math.round(100*d.submitted.length/Math.max(1,n))}%"></i></div><span><b>${d.submitted.length}/${n}</b> submeteram o ranking ${d.submitted.length===n?"🙌 toda a gente!":""}</span></div>`;
   let body;
   if(locked){
-    body=`<div class="card lockcard">${ic("lock")}<b>Não fizeste o ranking desta semana</b><span>Por isso esta semana não vês as posições. Faz o ranking da semana nova para voltares a ver na próxima segunda.</span><span class="btn" style="margin-top:6px" data-act="rank">${ic("edit")}Fazer o ranking</span></div>`;
+    // Teaser that looks like the real thing… and then a cheeky message
+    const jokes=[["Ups… 🙈","Estavas mesmo à espera de ver alguma coisa? Quem não faz o ranking fica a ver navios."],
+      ["Bela tentativa 😏","Sem ranking não há resumo. Os teus amigos já sabem onde estás… tu é que não."],
+      ["Querias saber se subiste? 🤔","Nós também gostávamos de saber se ias votar. Ficamos os dois na dúvida."],
+      ["Spoiler: não há spoiler 🍿","Este resumo foi visto por toda a gente que votou. Adivinha quem ficou de fora? 👀"],
+      ["Acesso negado 🚫","Os números estão aqui, mesmo atrás desta mensagem. Pena não os poderes ver."]];
+    const jk=jokes[[...(d.w+me)].reduce((a,c)=>a+c.charCodeAt(0),0)%jokes.length];
+    const fake=(b,l)=>`<div class="ws-tile"><b class="num">${b}</b><span>${l}</span><small>████████</small></div>`;
+    body=`<div class="ws-tease"><div class="ws-grid ws-blur" aria-hidden="true">${fake("#?","A tua posição")}${fake("#?","Na época")}${fake("?🔥","Sequência")}${fake("?/?","Eventos")}</div>
+      <div class="ws-joke"><div class="ws-jemo">🔒</div><b>${jk[0]}</b><p>${jk[1]}</p>
+        <small>Faz o ranking desta semana e na próxima segunda o resumo é todo teu.</small>
+        ${myRankingThisWeek(gid)?`<span class="chip" style="margin-top:8px">Ranking desta semana feito ✔︎</span>`:`<span class="btn" style="margin-top:10px" data-act="rank">${ic("edit")}Fazer o ranking</span>`}</div></div>
+      <div class="label" style="margin-top:20px">Top 3 da semana</div><div class="card list ws-blur" aria-hidden="true">${[1,2,3].map(i=>`<div class="row"><span class="rank">${["🥇","🥈","🥉"][i-1]}</span><span class="av" style="width:36px;height:36px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">██████ ████</div></div><span class="num" style="font-weight:700;color:var(--accent)">?.?</span></div>`).join("")}</div>`;
   } else {
     const me1=tile(d.myPos?`#${d.myPos}`:"—","A tua posição",d.myAvg!=null?`média ${d.myAvg.toFixed(1)}`:"",d.first?"":arrow(d.myPos,d.myPrev));
     const me2=tile(d.seasonPos?`#${d.seasonPos.p}`:"—","Na época",d.seasonPos?`média ${d.seasonPos.avg.toFixed(1)}`:"");
@@ -1214,7 +1235,7 @@ function dashScreen(){
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?pastSeasonBanner(g):seasonBanner(g)}
-    ${!past&&!firstWeekReveal(g.id)&&!rankLocked(g.id)?`<div class="section" style="margin-top:14px"><button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Resumo da semana</b><small>${esc(weekRange(lastClosedWeek()))} · vê como correu</small></span>${ic("right")}</button></div>`:""}
+    ${!past&&!firstWeekReveal(g.id)?`<div class="section" style="margin-top:14px"><button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Resumo da semana</b><small>${esc(weekRange(lastClosedWeek()))} · vê como correu</small></span>${ic("right")}</button></div>`:""}
     <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
       <div class="stats">
         ${stat(st.created,"Eventos criados","nesta época")}
