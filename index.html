@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794824471">
+<meta name="pes-version" content="1794824648">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -356,6 +356,17 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ws-move small{color:var(--muted);font-size:12px}
 .ws-future .row{opacity:.85}
 .ws-fe{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);display:grid;place-items:center;font-size:17px;flex:none}
+.wsbanner{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:18px;text-align:left;color:#fff;
+  background:linear-gradient(135deg,#5b5bf0 0%,#007AFF 55%,#14b8d4 100%);box-shadow:0 6px 18px color-mix(in srgb,#007AFF 30%,transparent)}
+.wsbanner:active{transform:scale(.99)}
+.wsb-ico{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:24px;flex:none}
+.wsb-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.wsb-txt b{font-size:17px;font-weight:700}
+.wsb-txt small{font-size:13px;opacity:.85;margin-top:1px}
+.wsbanner>svg{width:20px;height:20px;opacity:.85;flex:none}
+.rowbtn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;text-align:left}
+.rowbtn .grow{min-width:0}
+.rowbtn .rowsub{white-space:normal}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -1203,7 +1214,7 @@ function dashScreen(){
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?pastSeasonBanner(g):seasonBanner(g)}
-    ${!past&&!firstWeekReveal(g.id)&&!rankLocked(g.id)?`<div class="section" style="margin-top:14px"><button class="row card" data-act="weekSummary" style="width:100%"><span style="font-size:24px">📊</span><div class="grow" style="text-align:left"><div class="rowtitle">Resumo da semana</div><div class="rowsub">${esc(weekRange(lastClosedWeek()))}</div></div><span class="muted">${ic("right",'style="width:18px;height:18px"')}</span></button></div>`:""}
+    ${!past&&!firstWeekReveal(g.id)&&!rankLocked(g.id)?`<div class="section" style="margin-top:14px"><button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Resumo da semana</b><small>${esc(weekRange(lastClosedWeek()))} · vê como correu</small></span>${ic("right")}</button></div>`:""}
     <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
       <div class="stats">
         ${stat(st.created,"Eventos criados","nesta época")}
@@ -1536,7 +1547,7 @@ function newChatSheet(){
   const L=openSheet({title:"Nova conversa",right:"Começar",rightDisabled:true,
     body:()=>`<div class="seg" role="tablist"><button data-type="direct" class="${st.type==="direct"?"on":""}">Privada</button><button data-type="group" class="${st.type==="group"?"on":""}">Grupo</button></div>
       ${st.type==="group"?`<div class="field" style="margin-top:16px"><label for="cname">Nome da conversa (opcional)</label><input id="cname" class="input" maxlength="40" placeholder="Ex.: Jantar de sábado" value="${esc(st.name)}" autocomplete="off"></div>`:""}
-      ${st.type==="group"?`<button class="row card" data-all style="margin-top:16px;width:100%"><span style="font-size:22px">👥</span><div class="grow" style="text-align:left"><div class="rowtitle">Todo o grupo</div><div class="rowsub">Inclui automaticamente quem entrar no grupo depois</div></div><span class="check ${st.all?"on":""}">${st.all?ic("check"):""}</span></button>`:""}
+      ${st.type==="group"?`<button class="rowbtn card" data-all style="margin-top:16px"><span style="font-size:22px">👥</span><div class="grow" style="text-align:left"><div class="rowtitle">Todo o grupo</div><div class="rowsub">Inclui automaticamente quem entrar no grupo depois</div></div><span class="check ${st.all?"on":""}">${st.all?ic("check"):""}</span></button>`:""}
       <div class="label" style="margin-top:18px">${st.type==="direct"?"Escolhe uma pessoa":"Escolhe os participantes"}</div>
       <div class="card list">${others.map(k=>`<button class="row" data-m="${k}">${avatar(k,36)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${st.sel.has(k)?"on":""}">${st.sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>`,
     onMount:L=>{ L.body.addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return;
