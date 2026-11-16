@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794782713">
+<meta name="pes-version" content="1794824471">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -332,6 +332,30 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .rcount{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;flex:none}
 .rcount b{font-size:20px;font-weight:700}
 .rcount small{font-size:11px;opacity:.75}
+.ws-head{text-align:center;margin:-6px 0 14px}
+.ws-head .ws-emo{font-size:40px;line-height:1}
+.ws-head h2{font-size:24px;font-weight:800;margin:6px 0 2px}
+.ws-head p{color:var(--muted);margin:0;font-size:14px}
+.ws-part{margin:0 2px 16px;font-size:14px;color:var(--muted)}
+.ws-part b{color:var(--text)}
+.ws-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;margin-bottom:6px}
+.ws-bar i{display:block;height:100%;background:var(--green);border-radius:4px}
+.ws-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ws-tile{background:var(--card);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:2px;position:relative}
+.ws-tile b{font-size:28px;font-weight:800;line-height:1.1}
+.ws-tile span{font-weight:600;font-size:14px}
+.ws-tile small{color:var(--muted);font-size:12px}
+.ws-tile .ws-up,.ws-tile .ws-down,.ws-tile .ws-eq{position:absolute;top:12px;right:12px;font-size:13px}
+.ws-up{color:var(--green);font-weight:700}
+.ws-down{color:var(--red);font-weight:700}
+.ws-eq{color:var(--muted);font-weight:700}
+.ws-moves{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ws-move{background:var(--card);border-radius:16px;padding:12px;display:flex;gap:10px;align-items:center}
+.ws-move div{display:flex;flex-direction:column;min-width:0}
+.ws-move b{font-size:15px}
+.ws-move small{color:var(--muted);font-size:12px}
+.ws-future .row{opacity:.85}
+.ws-fe{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);display:grid;place-items:center;font-size:17px;flex:none}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -732,6 +756,57 @@ function seasonAverages(gid, uptoWeek=lastClosedWeek(), s=viewSeason(gid)){
       Object.entries(weeks[w][gid]).forEach(([t,v])=>{ if(!mem.includes(t)) return; (sums[t]=sums[t]||{s:0,n:0}); sums[t].s+=v; sums[t].n++; }); }); });
   return Object.entries(sums).map(([k,v])=>({k,avg:v.s/v.n,n:v.n})).sort((a,b)=>a.avg-b.avg);
 }
+/* ───────── Weekly summary (shown on the first app open after each week closes) ───────── */
+function prevWeekKey(w){ const m=weekMonday(w); m.setUTCDate(m.getUTCDate()-7); return weekOf(utcToYmd(m)); }
+function weekAvgReceived(gid,w){ const g=S.groups[gid]; const sums={};
+  (g?.members||[]).forEach(r=>{ const rk=S.rankings[r]?.weeks?.[w]?.[gid]; if(!rk) return; Object.entries(rk).forEach(([t,v])=>{ (sums[t]=sums[t]||{s:0,n:0}); sums[t].s+=v; sums[t].n++; }); });
+  return Object.entries(sums).map(([k,v])=>({k,avg:v.s/v.n,n:v.n})).sort((a,b)=>a.avg-b.avg); }
+function rankStreak(gid,k,w){ let n=0, x=w; const s=currentSeason(gid); while(S.rankings[k]?.weeks?.[x]?.[gid] && inSeasonW(s,x)){ n++; x=prevWeekKey(x); } return n; }
+function weeklySummaryData(gid,w=lastClosedWeek()){
+  const g=S.groups[gid]; const me=ME(); const s=currentSeason(gid); const pw=prevWeekKey(w);
+  const first=!s.startW || pw<s.startW || !weekAvgReceived(gid,pw).length;
+  const now=averages(gid,w,s), before=first?[]:averages(gid,pw,s);
+  const pos=k=>{ const i=now.findIndex(a=>a.k===k); return i<0?null:i+1; }, posB=k=>{ const i=before.findIndex(a=>a.k===k); return i<0?null:i+1; };
+  const moves=first?[]:now.map(a=>({k:a.k,d:(posB(a.k)??pos(a.k))-pos(a.k)})).filter(x=>x.d!==0).sort((a,b)=>b.d-a.d);
+  const submitted=(g.members||[]).filter(k=>S.rankings[k]?.weeks?.[w]?.[gid]);
+  const mon=weekMonday(w), sun=new Date(mon); sun.setUTCDate(mon.getUTCDate()+6); const d0=utcToYmd(mon), d1=utcToYmd(sun);
+  const evs=groupEvents(gid).filter(e=>e.date>=d0&&e.date<=d1);
+  return {g,me,w,first,now,top:now.slice(0,3),myPos:pos(me),myPrev:first?null:posB(me),myAvg:now.find(a=>a.k===me)?.avg??null,
+    seasonPos:(()=>{ const sa=seasonAverages(gid,w,s); const i=sa.findIndex(a=>a.k===me); return i<0?null:{p:i+1,avg:sa[i].avg}; })(),
+    up:moves.find(x=>x.d>0)||null, down:[...moves].reverse().find(x=>x.d<0)||null,
+    submitted, iSubmitted:submitted.includes(me), streak:rankStreak(gid,me,w), evs, myEvs:evs.filter(e=>e.att?.[me]==="yes").length, label:weekRange(w)};
+}
+function weeklySummarySheet(gid,w=lastClosedWeek()){
+  const d=weeklySummaryData(gid,w); const g=d.g; const me=d.me; const n=(g.members||[]).length;
+  const arrow=(a,b)=>a==null||b==null||a===b?`<span class="ws-eq">=</span>`:a<b?`<span class="ws-up">▲ ${b-a}</span>`:`<span class="ws-down">▼ ${a-b}</span>`;
+  const tile=(big,label,sub,extra="")=>`<div class="ws-tile"><b class="num">${big}</b><span>${label}</span>${sub?`<small>${sub}</small>`:""}${extra}</div>`;
+  const locked=!d.iSubmitted;
+  const head=`<div class="ws-head"><div class="ws-emo">📊</div><h2>Resumo da semana</h2><p>${esc(g.name)} · ${esc(d.label)}</p></div>`;
+  const part=`<div class="ws-part"><div class="ws-bar"><i style="width:${Math.round(100*d.submitted.length/Math.max(1,n))}%"></i></div><span><b>${d.submitted.length}/${n}</b> submeteram o ranking ${d.submitted.length===n?"🙌 toda a gente!":""}</span></div>`;
+  let body;
+  if(locked){
+    body=`<div class="card lockcard">${ic("lock")}<b>Não fizeste o ranking desta semana</b><span>Por isso esta semana não vês as posições. Faz o ranking da semana nova para voltares a ver na próxima segunda.</span><span class="btn" style="margin-top:6px" data-act="rank">${ic("edit")}Fazer o ranking</span></div>`;
+  } else {
+    const me1=tile(d.myPos?`#${d.myPos}`:"—","A tua posição",d.myAvg!=null?`média ${d.myAvg.toFixed(1)}`:"",d.first?"":arrow(d.myPos,d.myPrev));
+    const me2=tile(d.seasonPos?`#${d.seasonPos.p}`:"—","Na época",d.seasonPos?`média ${d.seasonPos.avg.toFixed(1)}`:"");
+    const me3=tile(`${d.streak}🔥`,"Sequência",d.streak===1?"semana seguida":"semanas seguidas");
+    const me4=tile(d.evs.length?`${d.myEvs}/${d.evs.length}`:"0","Eventos",d.evs.length?"em que estiveste":"nesta semana");
+    const top=`<div class="label" style="margin-top:20px">Top 3 da semana</div><div class="card list">${d.top.map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,36)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div>`;
+    const mv=d.first?"":`<div class="label" style="margin-top:20px">Movimentos</div><div class="ws-moves">
+      ${d.up?`<div class="ws-move">${avatar(d.up.k,40)}<div><b>${esc(first(nm(d.up.k)))}</b><span class="ws-up">▲ ${d.up.d} ${d.up.d===1?"lugar":"lugares"}</span><small>quem mais subiu</small></div></div>`:""}
+      ${d.down?`<div class="ws-move">${avatar(d.down.k,40)}<div><b>${esc(first(nm(d.down.k)))}</b><span class="ws-down">▼ ${-d.down.d} ${d.down.d===-1?"lugar":"lugares"}</span><small>quem mais desceu</small></div></div>`:""}
+      ${!d.up&&!d.down?`<p class="muted small" style="margin:0">Ninguém mudou de lugar esta semana.</p>`:""}</div>`;
+    const future=d.first?`<div class="label" style="margin-top:20px">A partir da próxima segunda 🔮</div>
+      <div class="card list ws-future">${[["▲▼","Se subiste ou desceste de lugar","comparado com a semana anterior"],["🚀","Quem mais subiu e quem mais caiu","os movimentos da semana no grupo"],["🔥","A tua sequência","semanas seguidas com ranking feito"],["📈","A tua evolução","a média desta semana vs. a anterior"]].map(([e,t,sub])=>`<div class="row"><span class="ws-fe">${e}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub">${sub}</div></div></div>`).join("")}</div>
+      <p class="info">Esta foi a primeira semana da época, por isso ainda não há comparações. Todas as segundas, à meia-noite, chega um resumo novo.</p>`:"";
+    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${top}${mv}${future}`;
+  }
+  openSheet({title:"",left:"Fechar",body:()=>`${head}${part}${body}<p class="info" style="text-align:center">Os prémios continuam secretos até à Gala 🤫</p>`});
+}
+/* Show it once per group per closed week, the first time the app is opened after the week closes */
+function maybeWeeklySummary(){ const g=curGroup(); if(!g||!ME()||layers.length) return;
+  if(viewingPast(g.id)||firstWeekReveal(g.id)||seasonPending(g.id)) return; const w=lastClosedWeek(); const s=currentSeason(g.id);
+  if(s.startW&&w<s.startW) return; const key="wsum:"+g.id; if(lsGet(key,"")===w) return; lsSet(key,w); weeklySummarySheet(g.id,w); }
 function firstRankingWeek(gid){ const g=S.groups[gid]; let f=null; (g?.members||[]).forEach(k=>Object.entries(S.rankings[k]?.weeks||{}).forEach(([w,v])=>{ if(v?.[gid]&&(!f||w<f)) f=w; })); return f; }
 function rankingHistory(gid,weeks=weeksBack(52),s=viewSeason(gid)){
   const out=[];
@@ -976,6 +1051,7 @@ function applyTheme(){
 function render(){ if(S.swiping){ S.renderPending=true; return; } chartSpecs=new Map(); chartSeq=0; renderInner(); }
 function renderInner(){
   applyLink();
+  if(!S.wsChecked && ME() && curGroup() && (!S.fb || (S.peopleOk && S.loaded.has("ready")))){ S.wsChecked=true; setTimeout(()=>{ try{ maybeWeeklySummary(); }catch(e){ console.warn(e); } },900); }
   const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
   const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
   if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); markRead(r.arg); return; }
@@ -1127,6 +1203,7 @@ function dashScreen(){
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?pastSeasonBanner(g):seasonBanner(g)}
+    ${!past&&!firstWeekReveal(g.id)&&!rankLocked(g.id)?`<div class="section" style="margin-top:14px"><button class="row card" data-act="weekSummary" style="width:100%"><span style="font-size:24px">📊</span><div class="grow" style="text-align:left"><div class="rowtitle">Resumo da semana</div><div class="rowsub">${esc(weekRange(lastClosedWeek()))}</div></div><span class="muted">${ic("right",'style="width:18px;height:18px"')}</span></button></div>`:""}
     <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
       <div class="stats">
         ${stat(st.created,"Eventos criados","nesta época")}
@@ -1301,7 +1378,7 @@ async function checkUpdate(){ if(MYVER==="dev"||!/^https?:/.test(location.protoc
   try{ const t=await (await fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"})).text(); const m=t.match(/name="pes-version" content="([^"]+)"/);
     if(m&&m[1]!==MYVER){ location.reload(); } }catch{} }
 setTimeout(checkUpdate,3000); setInterval(()=>{ if(document.visibilityState==="visible") checkUpdate(); },60000);
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ checkUpdate(); const cid=openChatId(); if(cid) markRead(cid); scheduleRender(); } });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ S.wsChecked=false; checkUpdate(); const cid=openChatId(); if(cid) markRead(cid); scheduleRender(); } });
 
 /* ───────────────────────── settings ───────────────────────── */
 function settingsScreen(){
@@ -1508,6 +1585,7 @@ const A = {
     openSheet({title:"Adicionar pessoas",right:"Adicionar",rightDisabled:true,body:()=>`<div class="card list">${cand.map(k=>`<button class="row" data-m="${k}">${avatar(k,36)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${sel.has(k)?"on":""}">${sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>`,
       onMount:L=>L.body.addEventListener("click",e=>{ const t=e.target.closest("[data-m]"); if(!t) return; const k=t.dataset.m; sel.has(k)?sel.delete(k):sel.add(k); L.render(); setRight(L,sel.size>0); }),
       onRight:async L=>{ setRight(L,false); if(await write(()=>S.raw?S.raw.doc("chats/"+cid).update({members:firebase.firestore.FieldValue.arrayUnion(...sel)}):D("chats/"+cid).update({members:[...c.members,...sel]}),"Pessoas adicionadas")) popLayer(L); else setRight(L,true); }}); },
+  weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
     if(!await confirmD("Apagar conversa?",`"${chatTitle({id:cid,...c})}" desaparece da tua lista e as mensagens deixam de aparecer para ti. Os outros continuam a ver a conversa. Se chegar uma mensagem nova, volta a aparecer.`,"Apagar")) return;
