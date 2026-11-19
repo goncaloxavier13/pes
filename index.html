@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795115909">
+<meta name="pes-version" content="1795116739">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -249,6 +249,29 @@ p{margin:0}
 .m.me .bub{background:var(--accent);color:var(--on-accent)}
 .m .t{font-size:11px;color:var(--muted);margin:3px 8px 6px}
 .m .avs{width:28px;flex:none}
+.bub{cursor:pointer;-webkit-user-select:none;user-select:none;transition:box-shadow .3s}
+.bub.flash{box-shadow:0 0 0 3px var(--gold)}
+.rq{display:flex;flex-direction:column;align-items:flex-start;text-align:left;max-width:100%;margin:2px 0 -6px;padding:6px 12px 12px;border-radius:14px 14px 4px 4px;background:color-mix(in srgb,var(--card) 60%,transparent);border-left:3px solid var(--accent);font-size:13px;color:var(--muted)}
+.m.me .rq{align-items:flex-end;text-align:right;border-left:0;border-right:3px solid var(--accent)}
+.rq b{color:var(--accent);font-weight:600;font-size:12px}
+.rq .rqt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:240px}
+.rx{display:flex;gap:4px;flex-wrap:wrap;margin:-6px 6px 0;position:relative;z-index:1}
+.m.me .rx{justify-content:flex-end}
+.rxc{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 7px;border-radius:12px;background:var(--card);border:1.5px solid var(--bg);font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.rxc small{font-size:11px;color:var(--muted);font-weight:600}
+.rxc.mine{border-color:var(--accent);background:var(--accent-soft)}
+.msgmenu .rxpick{display:flex;justify-content:space-around;padding:8px 6px}
+.msgmenu .rxpick button{font-size:28px;width:46px;height:46px;border-radius:50%;padding:0;justify-content:center;border:0}
+.msgmenu .rxpick button.sel{background:var(--accent-soft)}
+.msgmenu .grp button{display:flex;align-items:center;gap:10px}
+.msgmenu .grp button svg{width:20px;height:20px}
+.replybar[hidden]{display:none}
+.replybar{display:flex;align-items:center;gap:10px;margin:0 12px;padding:8px 10px 8px 12px;border-radius:14px 14px 0 0;background:var(--card);border-left:3px solid var(--accent)}
+.replybar .rbt{flex:1;min-width:0;display:flex;flex-direction:column;font-size:13px}
+.replybar .rbt b{color:var(--accent);font-weight:600}
+.replybar .rbt span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.replybar button{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}
+.replybar button svg{width:16px;height:16px}
 .composer{flex:none;display:flex;align-items:flex-end;gap:10px;padding:8px calc(14px + var(--sr)) calc(var(--sb) + 8px) calc(14px + var(--sl));background:var(--bg);border-top:.5px solid var(--border)}
 .composer textarea{flex:1;resize:none;border:1px solid var(--border);background:var(--card);border-radius:20px;padding:9px 14px;min-height:40px;max-height:120px;line-height:1.35;font-size:16px;outline:none}
 .composer .send{width:40px;height:40px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
@@ -376,6 +399,25 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ws-joke p{font-size:15px;max-width:300px;margin:0}
 .ws-joke .btn{height:44px;padding:0 18px}
 .ws-joke small{color:var(--muted);font-size:12px;margin-top:4px}
+.achrow{display:flex;flex-direction:column;gap:12px;width:100%;padding:14px 16px;text-align:left}
+.ach-badges{display:flex;gap:8px;flex-wrap:wrap}
+.ach-b{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 35%,transparent),color-mix(in srgb,var(--accent) 18%,transparent))}
+.ach-b.off{background:var(--card2);filter:grayscale(1);opacity:.6}
+.ach-next{display:flex;flex-direction:column;gap:4px}
+.ach-next small{color:var(--muted);font-size:12px}
+.ach-next b{font-size:15px}
+.ach-bar{height:6px;border-radius:3px;background:var(--border);overflow:hidden}
+.ach-bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ach{background:var(--card);border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px}
+.ach .ach-emo{font-size:34px;line-height:1.1;filter:grayscale(1);opacity:.45}
+.ach.on .ach-emo{filter:none;opacity:1}
+.ach b{font-size:15px}
+.ach small{color:var(--muted);font-size:12px;min-height:30px}
+.ach .ach-bar{width:100%;margin-top:4px}
+.ach .ach-p{font-size:12px;color:var(--muted)}
+.ach-ok{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-size:12px;font-weight:600;margin-top:4px}
+.ach-ok svg{width:14px;height:14px}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -513,6 +555,7 @@ const P = {
   right:'<path d="m9 18 6-6-6-6"/>',
   check:'<path d="M20 6 9 17l-5-5"/>',
   x:'<path d="M18 6 6 18M6 6l12 12"/>',
+  reply:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
   link:'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
   users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
   user:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
@@ -844,6 +887,40 @@ function maybeNotifAnnouncement(force){ if(!force){ if(!S.fb||!ME()||layers.leng
     ${inApp?`<button class="btn block" style="margin-top:18px" data-act="annPushOn">${ic("bell")}Ativar notificações</button><p class="info" style="text-align:center">Também podes ativar mais tarde em Definições › Notificações.</p>`
       :`<div class="banner" style="margin-top:16px">${ic("info")}<span>No iPhone, as notificações só funcionam com a app aberta pelo ícone. Toca em <b>Partilhar › Adicionar ao ecrã principal</b>, abre a Pês pelo ícone e ativa em Definições › Notificações.</span></div>`}`});
   return true; }
+/* ───────── Achievements (per person, per group; only closed weeks count) ───────── */
+function achievements(gid,k=ME()){
+  const g=S.groups[gid]; if(!g||!k) return []; const lc=lastClosedWeek();
+  const myWeeks=Object.keys(S.rankings[k]?.weeks||{}).filter(w=>w<=lc&&S.rankings[k].weeks[w]?.[gid]).sort();
+  let best=0,run=0,prev=null; myWeeks.forEach(w=>{ run=(prev&&prevWeekKey(w)===prev)?run+1:1; best=Math.max(best,run); prev=w; });
+  const evs=groupEvents(gid).filter(e=>!isFuture(e)); const att=evs.filter(e=>e.att?.[k]==="yes").length; const created=groupEvents(gid).filter(e=>e.createdBy===k).length;
+  const groupEv=evs.filter(e=>Object.values(e.att||{}).filter(v=>v==="yes").length>=4&&e.att?.[k]==="yes").length;
+  // weekly ranking positions (from rankings submitted in each closed week)
+  const allW=[...new Set((g.members||[]).flatMap(r=>Object.keys(S.rankings[r]?.weeks||{}).filter(w=>w<=lc&&S.rankings[r].weeks[w]?.[gid])))].sort();
+  let tops=0,podiums=0,rocket=0,lastPos=null;
+  allW.forEach(w=>{ const l=weekAvgReceived(gid,w); const i=l.findIndex(a=>a.k===k); if(i<0){ lastPos=null; return; } const p=i+1;
+    if(p===1) tops++; if(p<=3) podiums++; if(lastPos!=null) rocket=Math.max(rocket,lastPos-p); lastPos=p; });
+  const past=seasonsOf(gid).filter(x=>x.gala&&x.gala<lisbonYMD());
+  let titles=0; past.forEach(x=>groupAwards(gid).forEach(a=>{ const st=standings(gid,a.id,x.endW,x); if(st.list[0]?.k===k&&st.total>0) titles++; }));
+  const A=(id,emo,name,desc,val,goal)=>({id,emo,name,desc,val:Math.min(val,goal),goal,done:val>=goal});
+  return [
+    A("first","🗳️","Estreia","Faz o teu primeiro ranking",myWeeks.length,1),
+    A("streak4","🔥","Em chamas","4 semanas seguidas com ranking",best,4),
+    A("streak10","☄️","Imparável","10 semanas seguidas com ranking",best,10),
+    A("att5","🎉","Sempre lá","Presente em 5 eventos",att,5),
+    A("att15","🏟️","Habitué","Presente em 15 eventos",att,15),
+    A("group3","👥","Malta toda","3 eventos de grupo (4+ pessoas)",groupEv,3),
+    A("org3","📅","Organizador","Cria 3 eventos",created,3),
+    A("top1","🥇","Número 1","Fica em 1.º no ranking de uma semana",tops,1),
+    A("podium5","🏅","Pódio","5 semanas no top 3",podiums,5),
+    A("rocket","🚀","Foguete","Sobe 3 lugares de uma semana para a outra",rocket,3),
+    A("title","🏆","Campeão","Ganha um prémio numa Gala",titles,1),
+    A("legend","👑","Lenda","Ganha 3 prémios nas Galas",titles,3),
+  ];
+}
+function achievementsSheet(gid){ const list=achievements(gid); const done=list.filter(a=>a.done).length;
+  openSheet({title:"Conquistas",left:"Fechar",live:true,body:()=>`<p class="info" style="margin-top:0;text-align:center">${done} de ${list.length} desbloqueadas neste grupo</p>
+    <div class="ach-grid">${achievements(gid).map(a=>`<div class="ach ${a.done?"on":""}"><div class="ach-emo">${a.emo}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>${a.done?`<span class="ach-ok">${ic("check")}Desbloqueada</span>`:`<div class="ach-bar"><i style="width:${Math.round(100*a.val/a.goal)}%"></i></div><span class="ach-p num">${a.val}/${a.goal}</span>`}</div>`).join("")}</div>
+    <p class="info">As semanas só contam depois de fecharem, à meia-noite de domingo.</p>`}); }
 /* Show it once per group per closed week, the first time the app is opened after the week closes */
 function maybeWeeklySummary(){ const g=curGroup(); if(!g||!ME()||layers.length) return;
   if(viewingPast(g.id)||firstWeekReveal(g.id)||seasonPending(g.id)) return; const w=lastClosedWeek(); const s=currentSeason(g.id);
@@ -1256,6 +1333,10 @@ function dashScreen(){
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span><span class="rcount num" aria-label="${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length} de ${g.members.length} membros já submeteram esta semana"><b>${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length}/${g.members.length}</b><small>submeteram</small></span></button>`}
       </div></div>
+    ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const nextA=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal)[0];
+      return `<div class="section"><div class="label">Conquistas · ${got.length}/${ach.length}<button data-act="achievements">Ver todas</button></div>
+      <button class="card achrow" data-act="achievements">${got.length?`<div class="ach-badges">${got.slice(-6).map(a=>`<span class="ach-b" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>`:`<div class="ach-badges"><span class="ach-b off">🔒</span></div>`}
+        ${nextA?`<div class="ach-next"><small>Próxima</small><b>${nextA.emo} ${esc(nextA.name)}</b><div class="ach-bar"><i style="width:${Math.round(100*nextA.val/nextA.goal)}%"></i></div><small class="num">${nextA.val}/${nextA.goal} · ${esc(nextA.desc)}</small></div>`:`<div class="ach-next"><b>Todas desbloqueadas 👑</b></div>`}</button></div>`; })()}
     ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}${reveal
         ?`<b>Rankings revelados à meia-noite 🕛</b><span>É a primeira semana da época. Os rankings aparecem de domingo para segunda, às 00:00, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
         :`<b>Rankings bloqueados</b><span>Não fizeste o ranking da semana passada, por isso esta semana não vês os rankings.${myRankingThisWeek(g.id)?" O ranking desta semana já está feito ✔︎: voltas a ver a partir de segunda, às 00:00.":" Faz o ranking desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`}</button></div>`:`
@@ -1369,6 +1450,7 @@ function chatShell(cid){
   const c=S.chats[cid]; if(!c) return navhead("Conversa")+`<div class="center muted">Esta conversa já não existe.</div>`;
   const sub=c.type==="direct"?"Conversa privada":`${(c.members||[]).length} participantes`;
   return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes","",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
+    <div class="replybar" id="replyBar" hidden><div class="rbt"><b></b><span></span></div><button type="button" id="replyX" aria-label="Cancelar resposta">${ic("x")}</button></div>
     <form class="composer" id="composer"><textarea id="msgInput" rows="1" placeholder="Mensagem" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`;
 }
 function mountChat(cid,scr){
@@ -1380,12 +1462,39 @@ function mountChat(cid,scr){
   const fit=()=>{ ta.style.height="auto"; ta.style.height=Math.min(120,ta.scrollHeight)+"px"; };
   ta.addEventListener("input",()=>{ btn.disabled=!ta.value.trim(); fit(); lsSet("draft:"+cid,ta.value); });
   ta.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){ e.preventDefault(); form.requestSubmit(); } });
+  replyTo=null;
+  scr.querySelector("#replyX").onclick=()=>setReply(cid,null);
+  const box=scr.querySelector("#msgs");
+  box.addEventListener("click",e=>{ const rc=e.target.closest(".rxc"); if(rc){ setReaction(cid,rc.dataset.mid,rc.dataset.rx); return; }
+    const q=e.target.closest(".rq"); if(q){ const t=box.querySelector(`.bub[data-mid="${CSS.escape(q.dataset.jump)}"]`); if(t){ t.scrollIntoView({behavior:"smooth",block:"center"}); t.classList.add("flash"); setTimeout(()=>t.classList.remove("flash"),1200); } else toast("Mensagem antiga"); return; }
+    const b=e.target.closest(".bub[data-mid]"); if(b) msgMenu(cid,b.dataset.mid,b); });
+  box.addEventListener("keydown",e=>{ const b=e.target.closest(".bub[data-mid]"); if(b&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); msgMenu(cid,b.dataset.mid,b); } });
   form.addEventListener("submit",async e=>{ e.preventDefault(); const text=ta.value.trim(); if(!text) return; ta.value=""; lsSet("draft:"+cid,""); btn.disabled=true; fit();
-    const me=ME(); const at=Date.now();
-    const ok=await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add({from:me,text,at}); await D("chats/"+cid).update({lastAt:at,lastText:text.slice(0,140),lastFrom:me}); });
-    if(!ok){ ta.value=text; btn.disabled=false; } ta.focus(); });
+    const me=ME(); const at=Date.now(); const rt=replyTo; setReply(cid,null);
+    const ok=await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add(rt?{from:me,text,at,replyTo:rt}:{from:me,text,at}); await D("chats/"+cid).update({lastAt:at,lastText:text.slice(0,140),lastFrom:me}); });
+    if(!ok){ ta.value=text; btn.disabled=false; if(rt) setReply(cid,{id:rt.id,from:rt.from,text:rt.text}); } ta.focus(); });
   fit();
 }
+/* Reactions (one per person) and replies */
+const RX=["😂","❤️","👍","😮","😢","🔥"];
+function rxHtml(m,me){ const r=m.reactions||{}; const cnt={}; Object.values(r).forEach(e=>{ cnt[e]=(cnt[e]||0)+1; }); const ks=Object.keys(cnt); if(!ks.length) return "";
+  return `<div class="rx">${ks.map(e=>`<button class="rxc ${r[me]===e?"mine":""}" data-rx="${e}" data-mid="${esc(m.id)}" aria-label="${e} ${cnt[e]}${r[me]===e?", a tua reação":""}">${e}${cnt[e]>1?`<small>${cnt[e]}</small>`:""}</button>`).join("")}</div>`; }
+async function setReaction(cid,mid,emoji){ const me=ME(); const m=chatMsgs.find(x=>x.id===mid); if(!m||!me) return;
+  const cur=m.reactions?.[me]; const next=cur===emoji?null:emoji;
+  m.reactions={...(m.reactions||{})}; if(next) m.reactions[me]=next; else delete m.reactions[me]; updateChat(cid); // instant
+  try{ if(S.fb) await S.raw.doc(`chats/${cid}/msgs/${mid}`).update({["reactions."+me]: next?next:firebase.firestore.FieldValue.delete()});
+       else await D(`chats/${cid}/msgs/${mid}`).update({reactions:m.reactions}); }
+  catch(e){ console.warn(e); toast("Não foi possível reagir"); } }
+let replyTo=null;
+function setReply(cid,m){ replyTo=m?{id:m.id,from:m.from,text:(m.text||"").slice(0,140)}:null; const bar=document.getElementById("replyBar"); if(!bar) return;
+  if(!replyTo){ bar.hidden=true; return; } bar.hidden=false; bar.querySelector("b").textContent=replyTo.from===ME()?"A responder a ti":`A responder a ${first(nm(replyTo.from)||"")}`; bar.querySelector("span").textContent=replyTo.text; document.getElementById("msgInput")?.focus(); }
+function msgMenu(cid,mid,anchor){ const m=chatMsgs.find(x=>x.id===mid); if(!m) return; const me=ME();
+  const L=pushLayer(`<div class="overlay" data-x></div><div class="actions msgmenu" role="dialog" aria-modal="true"><div class="grp rxpick">${RX.map(e=>`<button data-e="${e}" class="${m.reactions?.[me]===e?"sel":""}" aria-label="Reagir com ${e}">${e}</button>`).join("")}</div>
+    <div class="grp"><button data-a="reply">${ic("reply")}<span>Responder</span></button><button data-a="copy">${ic("copy")}<span>Copiar</span></button></div><div class="grp"><button data-x>Cancelar</button></div></div>`);
+  L.el.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{ popLayer(L); setReaction(cid,mid,b.dataset.e); });
+  L.el.querySelector('[data-a="reply"]').onclick=()=>{ popLayer(L); setReply(cid,m); };
+  L.el.querySelector('[data-a="copy"]').onclick=async()=>{ popLayer(L); try{ await navigator.clipboard.writeText(m.text||""); toast("Copiado"); }catch{} };
+  L.el.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>popLayer(L)); }
 function updateChat(cid){
   const box=document.getElementById("msgs"); if(!box) return; const sc=document.getElementById("msgScroll");
   const atBottom=sc.scrollHeight-sc.scrollTop-sc.clientHeight<80;
@@ -1398,9 +1507,11 @@ function updateChat(cid){
     const prev=chatMsgs[i-1], next=chatMsgs[i+1]; const mine=m.from===me;
     const firstOf=!prev||prev.from!==m.from||lisbonYMD(new Date(prev.at))!==day||m.at-prev.at>5*6e4;
     const lastOf=!next||next.from!==m.from||lisbonYMD(new Date(next.at))!==day||next.at-m.at>5*6e4;
-    html+=`<div class="m ${mine?"me":""}">${!mine&&c.type!=="direct"?`<span class="avs">${lastOf?avatar(m.from,28):""}</span>`:""}<div class="col">${!mine&&firstOf&&c.type!=="direct"?`<span class="who">${esc(nm(m.from)||"")}</span>`:""}<div class="bub"></div>${lastOf?`<span class="t">${hhmm(m.at)}</span>`:""}</div></div>`;
+    html+=`<div class="m ${mine?"me":""}">${!mine&&c.type!=="direct"?`<span class="avs">${lastOf?avatar(m.from,28):""}</span>`:""}<div class="col">${!mine&&firstOf&&c.type!=="direct"?`<span class="who">${esc(nm(m.from)||"")}</span>`:""}${m.replyTo?`<button class="rq" data-jump="${esc(m.replyTo.id)}"><b>${esc(m.replyTo.from===me?"Tu":first(nm(m.replyTo.from)||""))}</b><span class="rqt"></span></button>`:""}<div class="bub" data-mid="${esc(m.id)}" role="button" tabindex="0" aria-label="Mensagem. Toca para reagir ou responder"></div>${rxHtml(m,me)}${lastOf?`<span class="t">${hhmm(m.at)}</span>`:""}</div></div>`;
   });
   box.innerHTML=html; box.querySelectorAll(".bub").forEach((b,i)=>b.textContent=chatMsgs[i].text);
+  const byId=Object.fromEntries(chatMsgs.map(m=>[m.id,m]));
+  let ri=0; chatMsgs.forEach(m=>{ if(m.replyTo){ const q=box.querySelectorAll(".rq")[ri++]; if(q) q.querySelector(".rqt").textContent=(byId[m.replyTo.id]?.text??m.replyTo.text??"").slice(0,120); } });
   if(atBottom||!box.dataset.init){ sc.scrollTop=sc.scrollHeight; box.dataset.init="1"; }
 }
 /* Mark a conversation as read up to its newest message. Called when it opens, when new messages arrive,
@@ -1631,6 +1742,7 @@ const A = {
   previewAnn:()=>{ while(layers.length) popLayer(); maybeNotifAnnouncement(true); },
   previewLockedSummary:()=>{ const g=curGroup(); if(!g){ toast("Abre primeiro um grupo"); return; } while(layers.length) popLayer(); weeklySummarySheet(g.id,lastClosedWeek(),true); },
   annPushOn:async()=>{ while(layers.length) popLayer(); await enablePush(); },
+  achievements:()=>{ const g=curGroup(); if(g) achievementsSheet(g.id); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
