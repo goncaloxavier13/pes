@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795116868">
+<meta name="pes-version" content="1795123857">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -418,6 +418,17 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ach .ach-p{font-size:12px;color:var(--muted)}
 .ach-ok{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-size:12px;font-weight:600;margin-top:4px}
 .ach-ok svg{width:14px;height:14px}
+.bdbanner{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:18px;text-align:left;color:#fff;background:linear-gradient(135deg,#ff375f,#ff9f0a 60%,#ffd60a);box-shadow:0 6px 18px rgba(255,80,60,.3)}
+.bd-emo{font-size:30px;flex:none}
+.bd-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.bd-txt b{font-size:16px;font-weight:700}
+.bd-txt small{font-size:13px;opacity:.9}
+.bd-btn{flex:none;background:#fff;color:#d6304f;font-weight:700;font-size:13px;padding:8px 12px;border-radius:12px}
+.bdpop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,88vw);background:var(--card);border-radius:28px;padding:30px 22px 22px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:2;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden}
+.bdpop .bdcv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.bdpop .bd-cake{font-size:46px;line-height:1;margin-bottom:-6px}
+.bdpop h2{font-size:22px;font-weight:800;margin:6px 0 0}
+.bdpop p{color:var(--muted);margin:0 0 10px}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -887,6 +898,43 @@ function maybeNotifAnnouncement(force){ if(!force){ if(!S.fb||!ME()||layers.leng
     ${inApp?`<button class="btn block" style="margin-top:18px" data-act="annPushOn">${ic("bell")}Ativar notificações</button><p class="info" style="text-align:center">Também podes ativar mais tarde em Definições › Notificações.</p>`
       :`<div class="banner" style="margin-top:16px">${ic("info")}<span>No iPhone, as notificações só funcionam com a app aberta pelo ícone. Toca em <b>Partilhar › Adicionar ao ecrã principal</b>, abre a Pês pelo ícone e ativa em Definições › Notificações.</span></div>`}`});
   return true; }
+/* ───────── Birthdays (people/{key}.birthday = "MM-DD") ───────── */
+const bdayOf = k => S.people[k]?.birthday || null;
+const todayMD = () => lisbonYMD().slice(5);
+function bdaysToday(gid){ const t=todayMD(); return (S.groups[gid]?.members||[]).filter(k=>bdayOf(k)===t); }
+function daysToBday(md){ const t=lisbonYMD(); const y=+t.slice(0,4); let d=`${y}-${md}`; if(d<t) d=`${y+1}-${md}`; if(md==="02-29"&&!/^\d{4}-02-29$/.test(utcToYmd(ymdToUTC(d)))) d=d.replace("02-29","02-28"); return {days:daysUntil(d),date:d}; }
+function nextBdays(gid,n=3){ return (S.groups[gid]?.members||[]).filter(bdayOf).map(k=>({k,...daysToBday(bdayOf(k))})).filter(x=>x.days>0).sort((a,b)=>a.days-b.days).slice(0,n); }
+const bdayLabel = md => { const [m,d]=md.split("-").map(Number); return `${d} ${MONTHS[m-1]}`; };
+function bdayBanner(g){ const ks=bdaysToday(g.id); if(!ks.length) return ""; const me=ME();
+  return ks.map(k=>k===me
+    ?`<div class="section" style="margin-top:12px"><button class="bdbanner" data-act="bdayCelebrate" data-arg="${g.id}|${k}"><span class="bd-emo">🎉</span><span class="bd-txt"><b>Parabéns, ${esc(first(nm(k)))}!</b><small>Hoje o dia é teu. O ${esc(g.name)} está a celebrar contigo 🥳</small></span></button></div>`
+    :`<div class="section" style="margin-top:12px"><div class="bdbanner"><span class="bd-emo">🎂</span><span class="bd-txt"><b>Hoje é o aniversário do ${esc(first(nm(k)))}!</b><small>Não te esqueças de lhe dar os parabéns</small></span><button class="bd-btn" data-act="bdayWish" data-arg="${k}">Dar os parabéns</button></div></div>`).join(""); }
+function bdayCelebration(gid,k){ const me=ME(); const mine=k===me; const g=S.groups[gid];
+  const L=pushLayer(`<div class="overlay" data-x></div><div class="bdpop" role="dialog" aria-modal="true"><canvas class="bdcv"></canvas>
+    <div class="bd-cake">🎂</div>${avatar(k,84)}<h2>${mine?`Parabéns, ${esc(first(nm(k)))}! 🎉`:`Hoje faz anos o ${esc(first(nm(k)))}!`}</h2>
+    <p>${mine?`Todo o ${esc(g?.name||"grupo")} te deseja um dia incrível. Aproveita!`:`Dá-lhe os parabéns e faz-lhe o dia 🥳`}</p>
+    ${mine?`<button class="btn block" data-x>Obrigado! 🥳</button>`:`<button class="btn block" data-wish>${ic("chat")}Dar os parabéns</button><button class="linkbtn" data-x style="margin-top:6px">Mais tarde</button>`}</div>`);
+  L.el.querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>popLayer(L));
+  L.el.querySelector("[data-wish]")?.addEventListener("click",()=>{ popLayer(L); wishBirthday(k); });
+  setTimeout(()=>{ const cv=L.el.querySelector(".bdcv"); if(cv) confetti(cv,160); },120); }
+/* Open (or create) the direct chat with the birthday person, with a ready message */
+async function wishBirthday(k){ const g=curGroup(); const me=ME(); if(!g||!me||k===me) return;
+  let cid=Object.entries(S.chats).find(([,c])=>c.groupId===g.id&&c.type==="direct"&&c.members.length===2&&c.members.includes(me)&&c.members.includes(k))?.[0];
+  if(!cid){ cid="c-"+uidGen(); const ok=await write(()=>D("chats/"+cid).set({groupId:g.id,type:"direct",name:"",members:[me,k],createdBy:me,createdAt:Date.now(),lastAt:null,lastText:"",lastFrom:null})); if(!ok) return; }
+  if(!lsGet("draft:"+cid,"")) lsSet("draft:"+cid,`Parabéns, ${first(nm(k))}! 🎉🎂`);
+  const sel={...(S.seasonSel||{})}; S.tab="gap"; S.route=[]; render(); go("chat",cid); }
+/* Once per day per birthday, the first time the app opens */
+function maybeBirthday(){ const g=curGroup(); if(!g||!ME()||layers.length) return false; const t=lisbonYMD();
+  for(const k of bdaysToday(g.id)){ const key=`bday:${g.id}:${k}:${t}`; if(lsGet(key,false)) continue; lsSet(key,true); bdayCelebration(g.id,k); return true; } return false; }
+function bdaySheet(){ const me=ME(); const cur=bdayOf(me); let d=cur?+cur.slice(3):0, m=cur?+cur.slice(0,2):0;
+  openSheet({title:"Aniversário",right:"Guardar",rightDisabled:!cur,short:true,body:()=>`<p class="hint" style="margin-top:0">O grupo recebe uma notificação no dia dos teus anos. O ano não é pedido.</p>
+    <div style="display:flex;gap:10px"><div class="field" style="flex:1"><label for="bdd">Dia</label><select id="bdd" class="input"><option value="">—</option>${Array.from({length:31},(_,i)=>`<option ${d===i+1?"selected":""}>${i+1}</option>`).join("")}</select></div>
+    <div class="field" style="flex:2"><label for="bdm">Mês</label><select id="bdm" class="input"><option value="">—</option>${["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"].map((x,i)=>`<option value="${i+1}" ${m===i+1?"selected":""}>${x}</option>`).join("")}</select></div></div>
+    ${cur?`<button class="btn ghost block danger" style="margin-top:14px" data-rm>Remover</button>`:""}`,
+    onMount:L=>{ const upd=()=>{ d=+L.body.querySelector("#bdd").value||0; m=+L.body.querySelector("#bdm").value||0; setRight(L,!!(d&&m)); }; L.body.querySelectorAll("select").forEach(x=>x.onchange=upd);
+      L.body.querySelector("[data-rm]")?.addEventListener("click",async()=>{ if(await write(()=>S.fb?S.raw.doc("people/"+me).update({birthday:firebase.firestore.FieldValue.delete()}):D("people/"+me).update({birthday:null}),"Aniversário removido")) popLayer(L); }); },
+    onRight:async L=>{ if(!d||!m) return; const md=`${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`; if(isNaN(ymdToUTC("2024-"+md))){ toast("Data inválida"); return; }
+      if(await write(()=>D("people/"+me).update({birthday:md}),"Aniversário guardado 🎂")) popLayer(L); }}); }
 /* ───────── Achievements (per person, per group; only closed weeks count) ───────── */
 function achievements(gid,k=ME()){
   const g=S.groups[gid]; if(!g||!k) return []; const lc=lastClosedWeek();
@@ -1169,7 +1217,7 @@ function applyTheme(){
 function render(){ if(S.swiping){ S.renderPending=true; return; } chartSpecs=new Map(); chartSeq=0; renderInner(); }
 function renderInner(){
   applyLink();
-  if(!S.wsChecked && ME() && curGroup() && (!S.fb || (S.peopleOk && S.loaded.has("ready")))){ S.wsChecked=true; setTimeout(()=>{ try{ if(!maybeNotifAnnouncement()) maybeWeeklySummary(); }catch(e){ console.warn(e); } },900); }
+  if(!S.wsChecked && ME() && curGroup() && (!S.fb || (S.peopleOk && S.loaded.has("ready")))){ S.wsChecked=true; setTimeout(()=>{ try{ if(!maybeBirthday() && !maybeNotifAnnouncement()) maybeWeeklySummary(); }catch(e){ console.warn(e); } },900); }
   const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
   const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
   if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); markRead(r.arg); return; }
@@ -1255,7 +1303,7 @@ function homeScreen(){
         const det=[n.msgs?`${n.msgs} ${n.msgs===1?"mensagem":"mensagens"}`:"",n.evs?`${n.evs} ${n.evs===1?"evento novo":"eventos novos"}`:"",n.vote?"votação fecha domingo":""].filter(Boolean).join(" · ");
         return `<div class="gcard" role="button" tabindex="0" data-act="enterGroup" data-arg="${g.id}" aria-label="Abrir ${esc(g.name)}">
         <div class="gtop"><div class="gphoto">${g.photo?`<img src="${esc(g.photo)}" alt="">`:ic("users")}</div>
-          <div style="flex:1;min-width:0"><div class="rowtitle" style="font-size:17px;font-weight:600">${esc(g.name)}</div><div class="rowsub">${g.members.length} ${g.members.length===1?"membro":"membros"}${isAdmin(g)?" · és admin":""}</div></div>
+          <div style="flex:1;min-width:0"><div class="rowtitle" style="font-size:17px;font-weight:600">${esc(g.name)}${bdaysToday(g.id).length?` <span title="Há aniversário hoje">🎂</span>`:""}</div><div class="rowsub">${g.members.length} ${g.members.length===1?"membro":"membros"}${isAdmin(g)?" · és admin":""}</div></div>
           <div class="gside">${n.total?`<span class="gcount num" aria-label="${n.total} avisos">${n.total}</span>`:""}<button class="ginfo" data-act="openGroup" data-arg="${g.id}" aria-label="Informação do grupo ${esc(g.name)}">${ic("info")}</button></div></div>
         ${det?`<div class="gnotes">${esc(det)}</div>`:""}
         <div class="gfoot">${stack(g.members,34,9)}<span class="muted">${ic("right",'style="width:18px;height:18px"')}</span></div></div>`; }).join("")
@@ -1320,7 +1368,7 @@ function dashScreen(){
     chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Cada semana só entra nas contas quando fecha, à meia-noite de domingo para segunda. Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
-  return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?pastSeasonBanner(g):seasonBanner(g)}
+  return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?"":bdayBanner(g)}${past?pastSeasonBanner(g):seasonBanner(g)}
     ${!past&&!firstWeekReveal(g.id)?`<div class="section" style="margin-top:14px"><button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Resumo da semana</b><small>${esc(weekRange(lastClosedWeek()))} · vê como correu</small></span>${ic("right")}</button></div>`:""}
     <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
       <div class="stats">
@@ -1333,6 +1381,8 @@ function dashScreen(){
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span><span class="rcount num" aria-label="${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length} de ${g.members.length} membros já submeteram esta semana"><b>${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length}/${g.members.length}</b><small>submeteram</small></span></button>`}
       </div></div>
+    ${(()=>{ if(past) return ""; const nb=nextBdays(g.id,3); if(!nb.length) return "";
+      return `<div class="section"><div class="label">Próximos aniversários</div><div class="card list">${nb.map(x=>`<div class="row">${avatar(x.k,36)}<div class="grow"><div class="rowtitle">${esc(nm(x.k))}${x.k===me?" (tu)":""}</div><div class="rowsub">${esc(bdayLabel(bdayOf(x.k)))}</div></div><span class="chip ${x.days<=7?"":"grey"}">${x.days===1?"amanhã":`daqui a ${x.days} dias`}</span></div>`).join("")}</div></div>`; })()}
     ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const nextA=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal)[0];
       return `<div class="section"><div class="label">Conquistas · ${got.length}/${ach.length}<button data-act="achievements">Ver todas</button></div>
       <button class="card achrow" data-act="achievements">${got.length?`<div class="ach-badges">${got.slice(-6).map(a=>`<span class="ach-b" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>`:`<div class="ach-badges"><span class="ach-b off">🔒</span></div>`}
@@ -1540,7 +1590,8 @@ function settingsScreen(){
   const me=ME(); const th=S.theme;
   return navhead("Definições")+`<div class="scroll pad-bottom" data-key="settings">
     <div class="section"><div class="card list"><label class="row" style="cursor:pointer">${avatar(me,58)}<div class="grow"><div class="rowtitle" style="font-size:18px;font-weight:600">${esc(nm(me))}</div><div class="rowsub">Toca para mudar a foto</div></div><span class="roundbtn" style="background:var(--accent-soft)">${ic("camera")}</span><input type="file" accept="image/*" hidden data-file="myPhoto"></label>
-      ${photo(me)?`<button class="row" data-act="removePhoto"><span class="grow" style="color:var(--red)">Remover foto</span></button>`:""}</div></div>
+      ${photo(me)?`<button class="row" data-act="removePhoto"><span class="grow" style="color:var(--red)">Remover foto</span></button>`:""}
+      <button class="row" data-act="editBday"><span style="font-size:20px">🎂</span><span class="grow">Aniversário</span><span class="muted">${bdayOf(me)?esc(bdayLabel(bdayOf(me))):"Adicionar"}</span>${ic("right",'style="width:16px;height:16px;color:var(--muted)"')}</button></div></div>
     <div class="section"><div class="label">Aparência</div><div class="card list">
       ${[["system","Igual ao dispositivo"],["light","Claro"],["dark","Escuro"]].map(([v,l])=>`<button class="row" data-act="theme" data-arg="${v}"><span class="grow">${l}</span>${th===v?`<span style="color:var(--accent)">${ic("check",'style="width:20px;height:20px"')}</span>`:""}</button>`).join("")}</div></div>
     ${notifSection()}
@@ -1745,6 +1796,9 @@ const A = {
   previewAnn:()=>{ while(layers.length) popLayer(); maybeNotifAnnouncement(true); },
   previewLockedSummary:()=>{ const g=curGroup(); if(!g){ toast("Abre primeiro um grupo"); return; } while(layers.length) popLayer(); weeklySummarySheet(g.id,lastClosedWeek(),true); },
   annPushOn:async()=>{ while(layers.length) popLayer(); await enablePush(); },
+  bdayWish:k=>wishBirthday(k),
+  bdayCelebrate:a=>{ const [gid,k]=a.split("|"); bdayCelebration(gid,k); },
+  editBday:()=>bdaySheet(),
   achievements:()=>{ const g=curGroup(); if(g) achievementsSheet(g.id); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
@@ -2102,7 +2156,7 @@ function confetti(cv,n){
 
 /* ───────────────────────── push notifications (standalone mode) ───────────────────────── */
 const VAPID_PUBLIC="BKVV4FGmIviV08QQxwpstFJB01wVpB9bs2zICxXeGPo2b4TTn3hY9CUaE2v1PFeERjsp4rUwJAoRUDtgK23nNI8";
-const PUSH_PREFS=[["events","Eventos novos","Quando alguém te adiciona a um evento"],["messages","Mensagens","Novas mensagens no GAP"],["reminders","Lembrete na véspera","No dia antes de um evento a que vais"],["votes","Votação de domingo","Se ainda não votaste nem fizeste o ranking"]];
+const PUSH_PREFS=[["events","Eventos novos","Quando alguém te adiciona a um evento"],["messages","Mensagens","Novas mensagens no GAP"],["reminders","Lembrete na véspera","No dia antes de um evento a que vais"],["votes","Votação de domingo","Se ainda não votaste nem fizeste o ranking"],["birthdays","Aniversários","Quando alguém do grupo faz anos"]];
 const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
 const isStandalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 const pushSupported=()=>"serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;

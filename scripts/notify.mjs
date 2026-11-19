@@ -102,6 +102,23 @@ if (weekdayLx() === "Sun" && hourLx() >= 18 && st.weekly !== wk) {
   st.weekly = wk;
 }
 
-await stRef.set({ lastRun: now, weekly: st.weekly || null }, { merge: true });
+// 5) aniversários (a partir das 9h; uma vez por dia)
+const today = ymd(), md = today.slice(5);
+if (hourLx() >= 9 && st.bday !== today) {
+  const told = new Set(); // one notification per (recipient, birthday person), even if they share several groups
+  for (const [gid, g] of Object.entries(groups)) {
+    for (const b of (g.members || []).filter(k => people[k]?.birthday === md)) {
+      for (const k of g.members || []) {
+        const id = k + "|" + b; if (told.has(id)) continue; told.add(id);
+        await send(k, "birthdays", k === b
+          ? { title: `Parabéns, ${first(b)}! 🎉`, body: `Hoje o dia é teu. Todo o ${g.name} está a celebrar contigo 🥳`, tag: "bday-" + b, url: `./?g=${gid}&t=dash` }
+          : { title: `🎂 Hoje é o aniversário do ${first(b)}!`, body: `Dá-lhe os parabéns no GAP 🥳`, tag: "bday-" + b, url: `./?g=${gid}&t=dash` });
+      }
+    }
+  }
+  st.bday = today;
+}
+
+await stRef.set({ lastRun: now, weekly: st.weekly || null, bday: st.bday || null }, { merge: true });
 console.log(`Feito: ${sent} notificações enviadas.`);
 process.exit(0);
