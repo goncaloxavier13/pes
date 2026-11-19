@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795116739">
+<meta name="pes-version" content="1795116868">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1477,19 +1477,22 @@ function mountChat(cid,scr){
 }
 /* Reactions (one per person) and replies */
 const RX=["😂","❤️","👍","😮","😢","🔥"];
-function rxHtml(m,me){ const r=m.reactions||{}; const cnt={}; Object.values(r).forEach(e=>{ cnt[e]=(cnt[e]||0)+1; }); const ks=Object.keys(cnt); if(!ks.length) return "";
+const rxOf=(cid,m)=>S.chats[cid]?.rx?.[m.id]||{};
+function rxHtml(m,me){ const r=rxOf(chatId,m); const cnt={}; Object.values(r).forEach(e=>{ cnt[e]=(cnt[e]||0)+1; }); const ks=Object.keys(cnt); if(!ks.length) return "";
   return `<div class="rx">${ks.map(e=>`<button class="rxc ${r[me]===e?"mine":""}" data-rx="${e}" data-mid="${esc(m.id)}" aria-label="${e} ${cnt[e]}${r[me]===e?", a tua reação":""}">${e}${cnt[e]>1?`<small>${cnt[e]}</small>`:""}</button>`).join("")}</div>`; }
-async function setReaction(cid,mid,emoji){ const me=ME(); const m=chatMsgs.find(x=>x.id===mid); if(!m||!me) return;
-  const cur=m.reactions?.[me]; const next=cur===emoji?null:emoji;
-  m.reactions={...(m.reactions||{})}; if(next) m.reactions[me]=next; else delete m.reactions[me]; updateChat(cid); // instant
-  try{ if(S.fb) await S.raw.doc(`chats/${cid}/msgs/${mid}`).update({["reactions."+me]: next?next:firebase.firestore.FieldValue.delete()});
-       else await D(`chats/${cid}/msgs/${mid}`).update({reactions:m.reactions}); }
+/* Reactions live on the conversation document (rx.{messageId}.{personKey} = emoji), which every participant may update */
+async function setReaction(cid,mid,emoji){ const me=ME(); const c=S.chats[cid]; if(!c||!me) return;
+  const cur=c.rx?.[mid]?.[me]; const next=cur===emoji?null:emoji;
+  const rx={...(c.rx||{})}; const one={...(rx[mid]||{})}; if(next) one[me]=next; else delete one[me]; rx[mid]=one;
+  S.chats={...S.chats,[cid]:{...c,rx}}; updateChat(cid); // instant
+  try{ if(S.fb) await S.raw.doc("chats/"+cid).update({[`rx.${mid}.${me}`]: next?next:firebase.firestore.FieldValue.delete()});
+       else await D("chats/"+cid).update({rx}); }
   catch(e){ console.warn(e); toast("Não foi possível reagir"); } }
 let replyTo=null;
 function setReply(cid,m){ replyTo=m?{id:m.id,from:m.from,text:(m.text||"").slice(0,140)}:null; const bar=document.getElementById("replyBar"); if(!bar) return;
   if(!replyTo){ bar.hidden=true; return; } bar.hidden=false; bar.querySelector("b").textContent=replyTo.from===ME()?"A responder a ti":`A responder a ${first(nm(replyTo.from)||"")}`; bar.querySelector("span").textContent=replyTo.text; document.getElementById("msgInput")?.focus(); }
 function msgMenu(cid,mid,anchor){ const m=chatMsgs.find(x=>x.id===mid); if(!m) return; const me=ME();
-  const L=pushLayer(`<div class="overlay" data-x></div><div class="actions msgmenu" role="dialog" aria-modal="true"><div class="grp rxpick">${RX.map(e=>`<button data-e="${e}" class="${m.reactions?.[me]===e?"sel":""}" aria-label="Reagir com ${e}">${e}</button>`).join("")}</div>
+  const L=pushLayer(`<div class="overlay" data-x></div><div class="actions msgmenu" role="dialog" aria-modal="true"><div class="grp rxpick">${RX.map(e=>`<button data-e="${e}" class="${rxOf(cid,m)[me]===e?"sel":""}" aria-label="Reagir com ${e}">${e}</button>`).join("")}</div>
     <div class="grp"><button data-a="reply">${ic("reply")}<span>Responder</span></button><button data-a="copy">${ic("copy")}<span>Copiar</span></button></div><div class="grp"><button data-x>Cancelar</button></div></div>`);
   L.el.querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{ popLayer(L); setReaction(cid,mid,b.dataset.e); });
   L.el.querySelector('[data-a="reply"]').onclick=()=>{ popLayer(L); setReply(cid,m); };

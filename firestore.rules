@@ -77,10 +77,6 @@ service cloud.firestore {
         allow read: if isOwner() || (hasKey() && myKey() in get(/databases/$(db)/documents/chats/$(cid)).data.members);
         allow create: if isOwner() || (hasKey() && request.resource.data.from == myKey()
           && myKey() in get(/databases/$(db)/documents/chats/$(cid)).data.members);
-        // reactions: any participant may change only their own reaction
-        allow update: if isOwner() || (hasKey() && myKey() in get(/databases/$(db)/documents/chats/$(cid)).data.members
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reactions'])
-          && request.resource.data.get('reactions', {}).diff(resource.data.get('reactions', {})).affectedKeys().hasOnly([myKey()]));
         allow delete: if isOwner();
       }
     }
