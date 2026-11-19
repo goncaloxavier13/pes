@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1794827857">
+<meta name="pes-version" content="1795114232">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -835,6 +835,15 @@ function weeklySummarySheet(gid,w=lastClosedWeek()){
   }
   openSheet({title:"",left:"Fechar",body:()=>`${head}${part}${body}<p class="info" style="text-align:center">Os prémios continuam secretos até à Gala 🤫</p>`});
 }
+/* One-time announcement: notifications are now available (shown once per device, unless already enabled) */
+function maybeNotifAnnouncement(){ if(!S.fb||!ME()||layers.length) return false; if(lsGet("ann:notif1",false)) return false;
+  lsSet("ann:notif1",true); if(pushState().on) return false;
+  const inApp=isStandalone()||!isIOS;
+  openSheet({title:"",left:"Fechar",short:true,body:()=>`<div class="ws-head"><div class="ws-emo">🔔</div><h2>Já há notificações!</h2><p>A Pês passa a avisar-te no telemóvel</p></div>
+    <div class="card list">${[["📅","Eventos novos","quando alguém cria um evento"],["💬","Mensagens no GAP","das tuas conversas"],["⏰","Lembrete na véspera","dos eventos a que vais"],["🗳️","Domingo","se ainda não fizeste o ranking"]].map(([e,t,sub])=>`<div class="row"><span class="ws-fe">${e}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub">${sub}</div></div></div>`).join("")}</div>
+    ${inApp?`<button class="btn block" style="margin-top:18px" data-act="annPushOn">${ic("bell")}Ativar notificações</button><p class="info" style="text-align:center">Também podes ativar mais tarde em Definições › Notificações.</p>`
+      :`<div class="banner" style="margin-top:16px">${ic("info")}<span>No iPhone, as notificações só funcionam com a app aberta pelo ícone. Toca em <b>Partilhar › Adicionar ao ecrã principal</b>, abre a Pês pelo ícone e ativa em Definições › Notificações.</span></div>`}`});
+  return true; }
 /* Show it once per group per closed week, the first time the app is opened after the week closes */
 function maybeWeeklySummary(){ const g=curGroup(); if(!g||!ME()||layers.length) return;
   if(viewingPast(g.id)||firstWeekReveal(g.id)||seasonPending(g.id)) return; const w=lastClosedWeek(); const s=currentSeason(g.id);
@@ -1083,7 +1092,7 @@ function applyTheme(){
 function render(){ if(S.swiping){ S.renderPending=true; return; } chartSpecs=new Map(); chartSeq=0; renderInner(); }
 function renderInner(){
   applyLink();
-  if(!S.wsChecked && ME() && curGroup() && (!S.fb || (S.peopleOk && S.loaded.has("ready")))){ S.wsChecked=true; setTimeout(()=>{ try{ maybeWeeklySummary(); }catch(e){ console.warn(e); } },900); }
+  if(!S.wsChecked && ME() && curGroup() && (!S.fb || (S.peopleOk && S.loaded.has("ready")))){ S.wsChecked=true; setTimeout(()=>{ try{ if(!maybeNotifAnnouncement()) maybeWeeklySummary(); }catch(e){ console.warn(e); } },900); }
   const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
   const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
   if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); markRead(r.arg); return; }
@@ -1617,6 +1626,7 @@ const A = {
     openSheet({title:"Adicionar pessoas",right:"Adicionar",rightDisabled:true,body:()=>`<div class="card list">${cand.map(k=>`<button class="row" data-m="${k}">${avatar(k,36)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${sel.has(k)?"on":""}">${sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>`,
       onMount:L=>L.body.addEventListener("click",e=>{ const t=e.target.closest("[data-m]"); if(!t) return; const k=t.dataset.m; sel.has(k)?sel.delete(k):sel.add(k); L.render(); setRight(L,sel.size>0); }),
       onRight:async L=>{ setRight(L,false); if(await write(()=>S.raw?S.raw.doc("chats/"+cid).update({members:firebase.firestore.FieldValue.arrayUnion(...sel)}):D("chats/"+cid).update({members:[...c.members,...sel]}),"Pessoas adicionadas")) popLayer(L); else setRight(L,true); }}); },
+  annPushOn:async()=>{ while(layers.length) popLayer(); await enablePush(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
