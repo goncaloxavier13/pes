@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795114537">
+<meta name="pes-version" content="1795114604">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2082,7 +2082,7 @@ async function fbBoot(){
     S.uidChecked=true;
     fbSubscribe();
     // Confirm the people list with the server (the live listener may only report cached data when nothing changed)
-    S.peopleOk=false; const confirmPeople=(n=0)=>fdb.collection("people").get({source:"server"}).then(q=>{ S.people=Object.fromEntries(q.docs.map(d=>[d.id,d.data()])); S.peopleOk=true; scheduleRender(); })
+    S.peopleOk=false; const confirmPeople=(n=0)=>fdb.collection("people").get({source:"server"}).then(q=>{ S.people=Object.fromEntries(q.docs.map(d=>[d.id,d.data()])); S.peopleOk=true; render(); })
       .catch(()=>{ if(n<5) setTimeout(()=>confirmPeople(n+1),2000*(n+1)); else { S.stale=true; scheduleRender(); } });
     confirmPeople();
     // keep the account → profile link live (if it is ever corrected, the app follows immediately)
