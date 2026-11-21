@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795265413">
+<meta name="pes-version" content="1795266795">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -399,7 +399,24 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ws-joke p{font-size:15px;max-width:300px;margin:0}
 .ws-joke .btn{height:44px;padding:0 18px}
 .ws-joke small{color:var(--muted);font-size:12px;margin-top:4px}
-.achrow{display:flex;flex-direction:column;gap:12px;width:100%;padding:14px 16px;text-align:left}
+.achcard{display:flex;flex-direction:column;gap:14px;width:100%;padding:16px;text-align:left}
+.achtop{display:flex;gap:16px;align-items:center}
+.achinfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.achinfo small{color:var(--muted);font-size:12px}
+.achinfo b{font-size:17px;font-weight:700}
+.achinfo span{font-size:13px;color:var(--muted)}
+.achinfo .ach-bar{margin-top:4px}
+.ach-ring{position:relative;flex:none;display:grid;place-items:center}
+.ach-ring svg{position:absolute;inset:0}
+.ach-ring span{font-size:20px;font-weight:800;position:relative}
+.ach-ring small{font-size:12px;color:var(--muted);font-weight:600}
+.achstrip{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:2px}
+.achstrip::-webkit-scrollbar{display:none}
+.achdot{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:var(--card2);filter:grayscale(1);opacity:.45}
+.achdot.on{filter:none;opacity:1;background:linear-gradient(135deg,color-mix(in srgb,#FFD60A 40%,transparent),color-mix(in srgb,#FF9F0A 25%,transparent));box-shadow:0 0 0 2px color-mix(in srgb,#FFD60A 70%,transparent)}
+.ach-head{display:flex;align-items:center;gap:16px;justify-content:center}
+.ach-head b{font-size:20px;display:block}
+.ach-head span{color:var(--muted);font-size:14px}
 .ach-badges{display:flex;gap:8px;flex-wrap:wrap}
 .ach-b{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 35%,transparent),color-mix(in srgb,var(--accent) 18%,transparent))}
 .ach-b.off{background:var(--card2);filter:grayscale(1);opacity:.6}
@@ -959,38 +976,61 @@ function bdaySheet(){ const me=ME(); const cur=bdayOf(me); let d=cur?+cur.slice(
       if(await write(()=>D("people/"+me).update({birthday:md}),"Aniversário guardado 🎂")) popLayer(L); }}); }
 /* ───────── Achievements (per person, per group; only closed weeks count) ───────── */
 function achievements(gid,k=ME()){
-  const g=S.groups[gid]; if(!g||!k) return []; const lc=lastClosedWeek();
+  const g=S.groups[gid]; if(!g||!k) return []; const lc=lastClosedWeek(); const mem=g.members||[]; const aw=groupAwards(gid).map(a=>a.id);
   const myWeeks=Object.keys(S.rankings[k]?.weeks||{}).filter(w=>w<=lc&&S.rankings[k].weeks[w]?.[gid]).sort();
   let best=0,run=0,prev=null; myWeeks.forEach(w=>{ run=(prev&&prevWeekKey(w)===prev)?run+1:1; best=Math.max(best,run); prev=w; });
-  const evs=groupEvents(gid).filter(e=>!isFuture(e)); const att=evs.filter(e=>e.att?.[k]==="yes").length; const created=groupEvents(gid).filter(e=>e.createdBy===k).length;
-  const groupEv=evs.filter(e=>Object.values(e.att||{}).filter(v=>v==="yes").length>=4&&e.att?.[k]==="yes").length;
-  // weekly ranking positions (from rankings submitted in each closed week)
-  const allW=[...new Set((g.members||[]).flatMap(r=>Object.keys(S.rankings[r]?.weeks||{}).filter(w=>w<=lc&&S.rankings[r].weeks[w]?.[gid])))].sort();
-  let tops=0,podiums=0,rocket=0,lastPos=null;
-  allW.forEach(w=>{ const l=weekAvgReceived(gid,w); const i=l.findIndex(a=>a.k===k); if(i<0){ lastPos=null; return; } const p=i+1;
-    if(p===1) tops++; if(p<=3) podiums++; if(lastPos!=null) rocket=Math.max(rocket,lastPos-p); lastPos=p; });
+  const fullVoteWeeks=Object.keys(S.votes[k]?.weeks||{}).filter(w=>w<=lc&&aw.length&&aw.every(a=>S.votes[k].weeks[w]?.[a])).sort();
+  let vBest=0,vRun=0,vPrev=null; fullVoteWeeks.forEach(w=>{ vRun=(vPrev&&prevWeekKey(w)===vPrev)?vRun+1:1; vBest=Math.max(vBest,vRun); vPrev=w; });
+  const evs=groupEvents(gid).filter(e=>!isFuture(e)); const yes=e=>Object.values(e.att||{}).filter(v=>v==="yes").length;
+  const att=evs.filter(e=>e.att?.[k]==="yes").length; const created=groupEvents(gid).filter(e=>e.createdBy===k).length;
+  const groupEv=evs.filter(e=>yes(e)>=4&&e.att?.[k]==="yes").length; const bigHost=evs.filter(e=>e.createdBy===k&&yes(e)>=8).length;
+  const full=evs.filter(e=>e.att?.[k]==="yes"&&mem.length>2&&mem.every(m=>e.att?.[m]==="yes")).length;
+  const allW=[...new Set(mem.flatMap(r=>Object.keys(S.rankings[r]?.weeks||{}).filter(w=>w<=lc&&S.rankings[r].weeks[w]?.[gid])))].sort();
+  let tops=0,podiums=0,rocket=0,lastPos=null,steady=0,stRun=0,unanimous=0;
+  allW.forEach(w=>{ const l=weekAvgReceived(gid,w); const i=l.findIndex(a=>a.k===k); if(i<0){ lastPos=null; stRun=0; return; } const p=i+1;
+    if(p===1) tops++; if(p<=3) podiums++; if(lastPos!=null) rocket=Math.max(rocket,lastPos-p);
+    stRun=(lastPos===p)?stRun+1:1; steady=Math.max(steady,stRun); lastPos=p;
+    const rankers=mem.filter(r=>r!==k&&S.rankings[r]?.weeks?.[w]?.[gid]); if(rankers.length>=3&&rankers.every(r=>S.rankings[r].weeks[w][gid][k]===1)) unanimous++; });
+  let rx=0; Object.values(S.chats).filter(c=>c.groupId===gid).forEach(c=>Object.values(c.rx||{}).forEach(m=>{ if(m[k]) rx++; }));
+  const hasPhoto=!!S.people[k]?.photo, hasBday=!!S.people[k]?.birthday;
   const past=seasonsOf(gid).filter(x=>x.gala&&x.gala<lisbonYMD());
-  let titles=0; past.forEach(x=>groupAwards(gid).forEach(a=>{ const st=standings(gid,a.id,x.endW,x); if(st.list[0]?.k===k&&st.total>0) titles++; }));
-  const A=(id,emo,name,desc,val,goal)=>({id,emo,name,desc,val:Math.min(val,goal),goal,done:val>=goal});
+  let titles=0, veteran=0; past.forEach(x=>{ groupAwards(gid).forEach(a=>{ const st=standings(gid,a.id,x.endW,x); if(st.list[0]?.k===k&&st.total>0) titles++; });
+    if(myWeeks.some(w=>inSeasonW(x,w))) veteran++; });
+  const A=(id,cat,emo,name,desc,val,goal)=>({id,cat,emo,name,desc,val:Math.min(val,goal),goal,done:val>=goal});
   return [
-    A("first","🗳️","Estreia","Faz o teu primeiro ranking",myWeeks.length,1),
-    A("streak4","🔥","Em chamas","4 semanas seguidas com ranking",best,4),
-    A("streak10","☄️","Imparável","10 semanas seguidas com ranking",best,10),
-    A("att5","🎉","Sempre lá","Presente em 5 eventos",att,5),
-    A("att15","🏟️","Habitué","Presente em 15 eventos",att,15),
-    A("group3","👥","Malta toda","3 eventos de grupo (4+ pessoas)",groupEv,3),
-    A("org3","📅","Organizador","Cria 3 eventos",created,3),
-    A("top1","🥇","Número 1","Fica em 1.º no ranking de uma semana",tops,1),
-    A("podium5","🏅","Pódio","5 semanas no top 3",podiums,5),
-    A("rocket","🚀","Foguete","Sobe 3 lugares de uma semana para a outra",rocket,3),
-    A("title","🏆","Campeão","Ganha um prémio numa Gala",titles,1),
-    A("legend","👑","Lenda","Ganha 3 prémios nas Galas",titles,3),
+    A("first","Ranking","🗳️","Estreia","Faz o teu primeiro ranking",myWeeks.length,1),
+    A("streak4","Ranking","🔥","Em chamas","4 semanas seguidas com ranking",best,4),
+    A("streak10","Ranking","☄️","Imparável","10 semanas seguidas com ranking",best,10),
+    A("weeks25","Ranking","💯","Assíduo","Ranking feito em 25 semanas",myWeeks.length,25),
+    A("voter","Prémios","📮","Eleitor","Vota em todos os prémios numa semana",fullVoteWeeks.length,1),
+    A("voter4","Prémios","🗓️","Voto em dia","4 semanas seguidas a votar em todos os prémios",vBest,4),
+    A("top1","Posições","🥇","Número 1","Fica em 1.º no ranking de uma semana",tops,1),
+    A("podium5","Posições","🏅","Pódio","5 semanas no top 3",podiums,5),
+    A("rocket","Posições","🚀","Foguete","Sobe 3 lugares de uma semana para a outra",rocket,3),
+    A("steady","Posições","🧱","Rocha","Mesma posição 3 semanas seguidas",steady,3),
+    A("unanimous","Posições","💛","Unânime","1.º lugar para toda a gente numa semana",unanimous,1),
+    A("att5","Eventos","🎉","Sempre lá","Presente em 5 eventos",att,5),
+    A("att15","Eventos","🏟️","Habitué","Presente em 15 eventos",att,15),
+    A("group3","Eventos","👥","Malta toda","3 eventos com 4 ou mais pessoas",groupEv,3),
+    A("full","Eventos","🫂","Ninguém faltou","Um evento com o grupo inteiro",full,1),
+    A("org3","Eventos","📅","Organizador","Cria 3 eventos",created,3),
+    A("host","Eventos","🎪","Anfitrião","Cria um evento com 8 ou mais pessoas",bigHost,1),
+    A("rx10","Social","😂","Reações","Reage a 10 mensagens",rx,10),
+    A("photo","Social","📸","Cara conhecida","Põe uma foto de perfil",hasPhoto?1:0,1),
+    A("bday","Social","🎂","Festa marcada","Adiciona o teu aniversário",hasBday?1:0,1),
+    A("veteran","Gala","🎖️","Veterano","Participa numa época até à Gala",veteran,1),
+    A("title","Gala","🏆","Campeão","Ganha um prémio numa Gala",titles,1),
+    A("legend","Gala","👑","Lenda","Ganha 3 prémios nas Galas",titles,3),
   ];
 }
-function achievementsSheet(gid){ const list=achievements(gid); const done=list.filter(a=>a.done).length;
-  openSheet({title:"Conquistas",left:"Fechar",live:true,body:()=>`<p class="info" style="margin-top:0;text-align:center">${done} de ${list.length} desbloqueadas neste grupo</p>
-    <div class="ach-grid">${achievements(gid).map(a=>`<div class="ach ${a.done?"on":""}"><div class="ach-emo">${a.emo}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>${a.done?`<span class="ach-ok">${ic("check")}Desbloqueada</span>`:`<div class="ach-bar"><i style="width:${Math.round(100*a.val/a.goal)}%"></i></div><span class="ach-p num">${a.val}/${a.goal}</span>`}</div>`).join("")}</div>
-    <p class="info">As semanas só contam depois de fecharem, à meia-noite de domingo.</p>`}); }
+function achievementsSheet(gid){
+  openSheet({title:"Conquistas",left:"Fechar",live:true,body:()=>{ const list=achievements(gid); const done=list.filter(a=>a.done).length; const cats=[...new Set(list.map(a=>a.cat))];
+    return `<div class="ach-head">${achRing(done,list.length,72)}<div><b>${done} de ${list.length}</b><span>conquistas desbloqueadas</span></div></div>
+    ${cats.map(c=>`<div class="label" style="margin-top:18px">${esc(c)}</div><div class="ach-grid">${list.filter(a=>a.cat===c).map(a=>`<div class="ach ${a.done?"on":""}"><div class="ach-emo">${a.emo}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>${a.done?`<span class="ach-ok">${ic("check")}Desbloqueada</span>`:`<div class="ach-bar"><i style="width:${Math.round(100*a.val/a.goal)}%"></i></div><span class="ach-p num">${a.val}/${a.goal}</span>`}</div>`).join("")}</div>`).join("")}
+    <p class="info">As semanas só contam depois de fecharem, à meia-noite de domingo.</p>`; }}); }
+function achRing(n,total,size=60){ const r=size/2-5, c=2*Math.PI*r, f=total?n/total:0;
+  return `<div class="ach-ring" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="achg${size}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD60A"/><stop offset="1" stop-color="#FF9F0A"/></linearGradient></defs><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#achg${size})" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-f)).toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/></svg><span class="num">${n}<small>/${total}</small></span></div>`; }
+
 /* Show it once per group per closed week, the first time the app is opened after the week closes */
 function maybeWeeklySummary(){ const g=curGroup(); if(!g||!ME()||layers.length) return;
   if(viewingPast(g.id)||firstWeekReveal(g.id)||seasonPending(g.id)) return; const w=lastClosedWeek(); const s=currentSeason(g.id);
@@ -1404,10 +1444,15 @@ function dashScreen(){
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span><span class="rcount num" aria-label="${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length} de ${g.members.length} membros já submeteram esta semana"><b>${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length}/${g.members.length}</b><small>submeteram</small></span></button>`}
       </div></div>
     ${past?"":(()=>{ const nb=nudgeBlock(g); return nb?`<div class="section" style="margin-top:12px">${nb}</div>`:""; })()}
-    ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const nextA=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal)[0];
-      return `<div class="section"><div class="label">Conquistas · ${got.length}/${ach.length}<button data-act="achievements">Ver todas</button></div>
-      <button class="card achrow" data-act="achievements">${got.length?`<div class="ach-badges">${got.slice(-6).map(a=>`<span class="ach-b" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>`:`<div class="ach-badges"><span class="ach-b off">🔒</span></div>`}
-        ${nextA?`<div class="ach-next"><small>Próxima</small><b>${nextA.emo} ${esc(nextA.name)}</b><div class="ach-bar"><i style="width:${Math.round(100*nextA.val/nextA.goal)}%"></i></div><small class="num">${nextA.val}/${nextA.goal} · ${esc(nextA.desc)}</small></div>`:`<div class="ach-next"><b>Todas desbloqueadas 👑</b></div>`}</button></div>`; })()}
+    ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const near=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal);
+      const nextA=near[0]; const strip=[...got,...near].slice(0,12);
+      return `<div class="section"><div class="label">Conquistas<button data-act="achievements">Ver todas</button></div>
+      <button class="card achcard" data-act="achievements">
+        <div class="achtop">${achRing(got.length,ach.length,64)}
+          <div class="achinfo">${nextA?`<small>Próxima conquista</small><b>${nextA.emo} ${esc(nextA.name)}</b><span>${esc(nextA.desc)}</span><div class="ach-bar"><i style="width:${Math.max(4,Math.round(100*nextA.val/nextA.goal))}%"></i></div><small class="num">${nextA.val} de ${nextA.goal}</small>`:`<b>Todas desbloqueadas 👑</b><span>És uma lenda do grupo</span>`}</div></div>
+        <div class="achstrip">${strip.map(a=>`<span class="achdot ${a.done?"on":""}" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>
+      </button></div>`; })()}
+
     ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}${reveal
         ?`<b>Rankings revelados à meia-noite 🕛</b><span>É a primeira semana da época. Os rankings aparecem de domingo para segunda, às 00:00, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
         :`<b>Rankings bloqueados</b><span>Não fizeste o ranking da semana passada, por isso esta semana não vês os rankings.${myRankingThisWeek(g.id)?" O ranking desta semana já está feito ✔︎: voltas a ver a partir de segunda, às 00:00.":" Faz o ranking desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`}</button></div>`:`
