@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795265117">
+<meta name="pes-version" content="1795265413">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -429,6 +429,17 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .bdpop .bd-cake{font-size:46px;line-height:1;margin-bottom:-6px}
 .bdpop h2{font-size:22px;font-weight:800;margin:6px 0 0}
 .bdpop p{color:var(--muted);margin:0 0 10px}
+.nudgebtn,.nudgein{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;border-radius:16px;text-align:left;background:var(--card)}
+.nudgebtn .nb-emo,.nudgein .nb-emo{font-size:26px;flex:none}
+.nb-txt{flex:1;min-width:0;display:flex;flex-direction:column}
+.nb-txt b{font-size:15px;font-weight:600}
+.nb-txt small{font-size:12px;color:var(--muted)}
+.nudgebtn>svg,.nudgein>svg{width:18px;height:18px;color:var(--muted);flex:none}
+.nudgebtn.sent{opacity:.7}
+.nudgebtn.sent>svg{color:var(--green)}
+.nudgein{background:linear-gradient(135deg,#bf5af2,#5e5ce6);color:#fff}
+.nudgein .nb-txt small{color:rgba(255,255,255,.85)}
+.nudgein>svg{color:#fff}
 .hiddenres{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;color:var(--muted)}
 .hiddenres svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--gold)}
 .hiddenres b{display:block;color:var(--text);font-size:15px;font-weight:600}
@@ -898,6 +909,17 @@ function maybeNotifAnnouncement(force){ if(!force){ if(!S.fb||!ME()||layers.leng
     ${inApp?`<button class="btn block" style="margin-top:18px" data-act="annPushOn">${ic("bell")}Ativar notificações</button><p class="info" style="text-align:center">Também podes ativar mais tarde em Definições › Notificações.</p>`
       :`<div class="banner" style="margin-top:16px">${ic("info")}<span>No iPhone, as notificações só funcionam com a app aberta pelo ícone. Toca em <b>Partilhar › Adicionar ao ecrã principal</b>, abre a Pês pelo ícone e ativa em Definições › Notificações.</span></div>`}`});
   return true; }
+/* ───────── Friendly nudge: anonymous "you haven't voted yet 👀" to whoever is missing this week ───────── */
+function missingThisWeek(gid){ const g=S.groups[gid]; const w=curWeek(); const aw=groupAwards(gid).map(a=>a.id);
+  return (g?.members||[]).filter(k=>!S.rankings[k]?.weeks?.[w]?.[gid] || aw.some(a=>!S.votes[k]?.weeks?.[w]?.[a])); }
+const myNudge = gid => S.reads[ME()]?.nudges?.[gid] || null;
+const nudgedToday = gid => { const n=myNudge(gid); return !!(n && lisbonYMD(new Date(n.at))===lisbonYMD()); };
+function nudgeBlock(g){ const me=ME(); if(viewingPast(g.id)||votingClosed(g.id)||seasonPending(g.id)) return "";
+  const miss=missingThisWeek(g.id).filter(k=>k!==me); if(!miss.length) return "";
+  const sent=nudgedToday(g.id);
+  return `<button class="nudgebtn ${sent?"sent":""}" data-act="nudge" data-arg="${g.id}" ${sent?"disabled":""}><span class="nb-emo">👀</span><span class="nb-txt"><b>${sent?"Toque enviado hoje":"Dar um toque a quem falta"}</b><small>${sent?"Amanhã podes voltar a lembrar":`${miss.length} ${miss.length===1?"pessoa ainda não votou":"pessoas ainda não votaram"} esta semana · é anónimo`}</small></span>${sent?ic("check"):ic("right")}</button>`; }
+function nudgedBanner(g){ const me=ME(); const n=S.reads[me]?.nudged?.[g.id]; if(!n||n.wk!==curWeek()) return ""; if(!missingThisWeek(g.id).includes(me)) return "";
+  return `<div class="section" style="margin-top:12px"><button class="nudgein" data-act="nudgeAct"><span class="nb-emo">👀</span><span class="nb-txt"><b>Alguém do grupo deu-te um toque</b><small>Ainda não votaste esta semana. Vai lá, demora 1 minuto!</small></span>${ic("right")}</button></div>`; }
 /* ───────── Birthdays (people/{key}.birthday = "MM-DD") ───────── */
 const bdayOf = k => S.people[k]?.birthday || null;
 const todayMD = () => lisbonYMD().slice(5);
@@ -1368,7 +1390,7 @@ function dashScreen(){
     chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Cada semana só entra nas contas quando fecha, à meia-noite de domingo para segunda. Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
-  return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?"":bdayBanner(g)}${past?pastSeasonBanner(g):seasonBanner(g)}
+  return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?"":bdayBanner(g)+nudgedBanner(g)}${past?pastSeasonBanner(g):seasonBanner(g)}
     ${!past&&!firstWeekReveal(g.id)?`<div class="section" style="margin-top:14px"><button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Resumo da semana</b><small>${esc(weekRange(lastClosedWeek()))} · vê como correu</small></span>${ic("right")}</button></div>`:""}
     <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
       <div class="stats">
@@ -1381,6 +1403,7 @@ function dashScreen(){
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Ranking submetido":"Submeter ranking de amizade"}</span><span class="s" style="display:block">${done?"Toca para alterar":"Até domingo, 23:59"}</span></span><span class="rcount num" aria-label="${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length} de ${g.members.length} membros já submeteram esta semana"><b>${g.members.filter(k=>S.rankings[k]?.weeks?.[curWeek()]?.[g.id]).length}/${g.members.length}</b><small>submeteram</small></span></button>`}
       </div></div>
+    ${past?"":(()=>{ const nb=nudgeBlock(g); return nb?`<div class="section" style="margin-top:12px">${nb}</div>`:""; })()}
     ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const nextA=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal)[0];
       return `<div class="section"><div class="label">Conquistas · ${got.length}/${ach.length}<button data-act="achievements">Ver todas</button></div>
       <button class="card achrow" data-act="achievements">${got.length?`<div class="ach-badges">${got.slice(-6).map(a=>`<span class="ach-b" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>`:`<div class="ach-badges"><span class="ach-b off">🔒</span></div>`}
@@ -1810,6 +1833,11 @@ const A = {
   previewAnn:()=>{ while(layers.length) popLayer(); maybeNotifAnnouncement(true); },
   previewLockedSummary:()=>{ const g=curGroup(); if(!g){ toast("Abre primeiro um grupo"); return; } while(layers.length) popLayer(); weeklySummarySheet(g.id,lastClosedWeek(),true); },
   annPushOn:async()=>{ while(layers.length) popLayer(); await enablePush(); },
+  nudge:async gid=>{ if(nudgedToday(gid)) return; const n=missingThisWeek(gid).filter(k=>k!==ME()).length;
+    if(!await confirmD("Dar um toque?",`${n} ${n===1?"pessoa recebe":"pessoas recebem"} uma notificação a lembrar que ainda não votaram. Ninguém sabe que foste tu 🤫`,"Enviar 👀")) return;
+    const me=ME(); const now=Date.now(); S.reads={...S.reads,[me]:{...(S.reads[me]||{}),nudges:{...(S.reads[me]?.nudges||{}),[gid]:{at:now,wk:curWeek()}}}}; render();
+    await write(()=>D("reads/"+me).update({nudges:{[gid]:{at:now,wk:curWeek()}}}),"Toque enviado 👀"); },
+  nudgeAct:()=>{ const g=curGroup(); if(!g) return; const me=ME(); if(!myRankingThisWeek(g.id)) rankSheet(); else votesStepSheet(g.id); },
   bdayWish:k=>wishBirthday(k),
   bdayCelebrate:a=>{ const [gid,k]=a.split("|"); bdayCelebration(gid,k); },
   editBday:()=>bdaySheet(),

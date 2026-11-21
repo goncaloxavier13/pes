@@ -119,6 +119,28 @@ if (hourLx() >= 9 && st.bday !== today) {
   st.bday = today;
 }
 
-await stRef.set({ lastRun: now, weekly: st.weekly || null, bday: st.bday || null }, { merge: true });
+// 6) toques anónimos ("ainda não votaste 👀"): no máximo 1 por pessoa, por grupo, por dia
+const nudges = [];
+for (const [key, r] of Object.entries(reads)) for (const [gid, n] of Object.entries(r.nudges || {})) if (n?.at > since && n.wk === wk) nudges.push({ from: key, gid });
+if (nudges.length) {
+  const [awards, votes, rankings] = await Promise.all([all("awards"), all("votes"), all("rankings")]);
+  const done = st.nudged && st.nudged.day === today ? st.nudged.list || [] : [];
+  for (const { from, gid } of nudges) {
+    const g = groups[gid]; if (!g) continue;
+    if ((g.galas || []).some(d => d < today && weekOf(d) === wk)) continue;
+    const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id);
+    for (const k of g.members || []) {
+      if (k === from || done.includes(k + "|" + gid)) continue;
+      const missing = !rankings[k]?.weeks?.[wk]?.[gid] || aw.some(id => !votes[k]?.weeks?.[wk]?.[id]);
+      if (!missing) continue;
+      done.push(k + "|" + gid);
+      await db.doc("reads/" + k).set({ nudged: { [gid]: { at: now, wk } } }, { merge: true });
+      await send(k, "votes", { title: `👀 Alguém do ${g.name} deu-te um toque`, body: "Ainda não votaste esta semana. Vai lá, demora 1 minuto!", tag: "nudge-" + gid, url: `./?g=${gid}&t=dash` });
+    }
+  }
+  st.nudged = { day: today, list: done };
+}
+
+await stRef.set({ lastRun: now, weekly: st.weekly || null, bday: st.bday || null, nudged: st.nudged || null }, { merge: true });
 console.log(`Feito: ${sent} notificações enviadas.`);
 process.exit(0);
