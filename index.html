@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795278418">
+<meta name="pes-version" content="1795278982">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -579,6 +579,13 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .qweek{padding:14px 16px}.qweek+.qweek{border-top:1px solid var(--border)}.qwk{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px}
 .qrow+.qrow{margin-top:10px}.qtxt{font-size:14px;color:var(--muted);margin-bottom:6px}.qwin{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.qwin span{display:inline-flex;align-items:center;gap:6px}
 .qlock{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--muted)}.qlock svg{width:16px;height:16px;flex:none;margin-top:2px}
+.tease{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:10px 8px 20px}.tease b{font-size:20px}.tease p{margin:0;font-size:15px;line-height:1.4}.tease small{color:var(--muted);font-size:13px;margin-top:4px}
+.tease-emo{font-size:44px;line-height:1}
+.lockhero{width:100%;border:0;font:inherit;color:var(--text);cursor:pointer;border-radius:20px;padding:20px 18px;background:linear-gradient(135deg,rgba(255,159,10,.18),rgba(255,69,58,.14));display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}.lockhero b{font-size:19px}.lockhero p{margin:0;font-size:14.5px;line-height:1.4}.lockhero small{color:var(--muted)}
+.lockfake{position:relative;display:block;width:100%;border:0;padding:0;font:inherit;color:var(--text);text-align:left;cursor:pointer;overflow:hidden}
+.lockpin{position:absolute;inset:0;display:grid;place-items:center;color:var(--gold)}.lockpin svg{width:28px;height:28px}
+button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cursor:pointer;padding:0}
+.ws-tile[data-act]{cursor:pointer}
 </style>
 </head>
 <body>
@@ -915,12 +922,12 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
       ["Spoiler: não há spoiler 🍿","Este resumo foi visto por toda a gente que votou. Adivinha quem ficou de fora? 👀"],
       ["Acesso negado 🚫","Os números estão aqui, mesmo atrás desta mensagem. Pena não os poderes ver."]];
     const jk=jokes[[...(d.w+me)].reduce((a,c)=>a+c.charCodeAt(0),0)%jokes.length];
-    const fake=(b,l)=>`<div class="ws-tile"><b class="num">${b}</b><span>${l}</span><small>████████</small></div>`;
-    body=`<div class="ws-tease"><div class="ws-grid ws-blur" aria-hidden="true">${fake("#?","A tua posição")}${fake("#?","Na época")}${fake("?🔥","Sequência")}${fake("?/?","Eventos")}</div>
+    const fake=(b,l)=>`<div class="ws-tile" data-act="tease"><b class="num">${b}</b><span>${l}</span><small>████████</small></div>`;
+    body=`<div class="ws-tease" data-act="tease"><div class="ws-grid ws-blur" aria-hidden="true">${fake("#?","A tua posição")}${fake("#?","Na época")}${fake("?🔥","Sequência")}${fake("?/?","Eventos")}</div>
       <div class="ws-joke"><div class="ws-jemo">🔒</div><b>${jk[0]}</b><p>${jk[1]}</p>
         <small>Faz a votação desta semana e na próxima segunda o resumo é todo teu.</small>
         ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎</span>`:`<span class="btn" style="margin-top:10px" data-act="rank">${ic("edit")}Fazer a votação</span>`}</div></div>
-      <div class="label" style="margin-top:20px">Top 3 da semana</div><div class="card list ws-blur" aria-hidden="true">${[1,2,3].map(i=>`<div class="row"><span class="rank">${["🥇","🥈","🥉"][i-1]}</span><span class="av" style="width:36px;height:36px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">██████ ████</div></div><span class="num" style="font-weight:700;color:var(--accent)">?.?</span></div>`).join("")}</div>`;
+      <div class="label" style="margin-top:20px">Top 3 da semana</div><div data-act="tease" style="cursor:pointer"><div class="card list ws-blur" aria-hidden="true">${[1,2,3].map(i=>`<div class="row"><span class="rank">${["🥇","🥈","🥉"][i-1]}</span><span class="av" style="width:36px;height:36px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">██████ ████</div></div><span class="num" style="font-weight:700;color:var(--accent)">?.?</span></div>`).join("")}</div></div>`;
   } else {
     const me1=tile(d.myPos?`#${d.myPos}`:"—","A tua posição",d.myAvg!=null?`média ${d.myAvg.toFixed(1)}`:"",d.first?"":arrow(d.myPos,d.myPrev));
     const me2=tile(d.seasonPos?`#${d.seasonPos.p}`:"—","Na época",d.seasonPos?`média ${d.seasonPos.avg.toFixed(1)}`:"");
@@ -1453,6 +1460,23 @@ function dashScreen(){
     chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Cada semana só entra nas contas quando fecha, à meia-noite de domingo para segunda. Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
+  if(!past&&!reveal&&rankLocked(g.id)){
+    const fk=(l)=>`<button class="stat" data-act="tease"><span class="v num">🔒</span><span class="k">${l}</span><span class="s">██████</span></button>`;
+    const fsec=(label,h)=>`<div class="section"><div class="label">${label}</div><button class="card lockfake" data-act="tease" aria-label="${label} bloqueado"><div class="ws-blur" aria-hidden="true">${h}</div><span class="lockpin">${ic("lock")}</span></button></div>`;
+    const frows=n=>[...Array(n)].map((_,i)=>`<div class="row"><span class="rank">${i+1}</span><span style="width:34px;height:34px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">████████ ████</div></div><span class="num">█.█</span></div>`).join("");
+    const voteBtn=votingClosed(g.id)?"":`<div class="section" style="margin-top:14px"><div class="stats"><button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Voltas a ver tudo segunda às 00:00":"Ranking, prémios e perguntas · até domingo, 23:59"}</span></span></button></div></div>`;
+    return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${bdayBanner(g)}${seasonBanner(g)}
+      <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Dashboard trancado</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p><small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
+      ${voteBtn}
+      <div class="section"><div class="label">Resumo da época</div><div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div></div>
+      ${fsec("Resumo da semana",`<div style="padding:16px">${frows(2)}</div>`)}
+      ${fsec("Conquistas",`<div style="padding:18px;display:flex;gap:10px">${[...Array(6)].map(()=>`<span style="width:40px;height:40px;border-radius:50%;background:var(--border);display:inline-block"></span>`).join("")}</div>`)}
+      ${fsec("Ranking atual",frows(3))}
+      ${fsec("Rating médio da época",frows(3))}
+      ${fsec("Evolução do ranking",`<div style="height:150px"></div>`)}
+      ${fsec("Prémios",frows(2))}
+    </div>`;
+  }
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?"":bdayBanner(g)+nudgedBanner(g)}${past?pastSeasonBanner(g):seasonBanner(g)}
     ${!past&&!firstWeekReveal(g.id)?`<div class="section" style="margin-top:14px"><button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Resumo da semana</b><small>${esc(weekRange(lastClosedWeek()))} · vê como correu</small></span>${ic("right")}</button></div>`:""}
     <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
@@ -1574,9 +1598,10 @@ function questionsArchive(g){ const me=ME(); const s=viewSeason(g.id); const cw=
   const ws=seasonWeeks(g.id).filter(w=>w<cw&&w>=Q_START&&inSeasonW(s,w)).reverse();
   const cur=!viewingPast(g.id)&&cw>=Q_START&&inSeasonW(s,cw);
   if(!ws.length&&!cur) return "";
-  const body=ws.length?ws.map(w=>{ const ok=weekComplete(g.id,me,w); const rs=questionResults(g.id,w);
+  const blocked=!viewingPast(g.id)&&rankLocked(g.id);
+  const body=ws.length?ws.map(w=>{ const ok=!blocked&&weekComplete(g.id,me,w); const rs=questionResults(g.id,w);
       return `<div class="qweek"><div class="qwk">${esc(weekRange(w))}</div>${ok?rs.map(q=>`<div class="qrow"><div class="qtxt">${esc(q.text)}</div><div class="qwin">${q.winners.length?q.winners.map(k=>`<span>${avatar(k,24)}<b>${esc(first(nm(k)))}${k===me?" (tu)":""}</b></span>`).join("")+`<small class="muted">${q.max} ${q.max===1?"voto":"votos"}</small>`:`<small class="muted">Sem respostas</small>`}</div></div>`).join("")
-        :`<div class="qlock">${ic("lock")}<span>Não completaste a votação desta semana, por isso não vês estas respostas.</span></div>`}</div>`; }).join("")
+        :`<button class="qlock" data-act="tease">${ic("lock")}<span>Não completaste a votação desta semana, por isso não vês estas respostas.</span></button>`}</div>`; }).join("")
     :`<div class="empty" style="padding:18px 16px"><p>As respostas desta semana aparecem aqui na segunda-feira, às 00:00.</p></div>`;
   return `<div class="section"><div class="label">🎲 Perguntas da semana</div><div class="card">${body}</div><p class="info">Só aparecem os vencedores, nunca quem votou em quem.</p></div>`; }
 
@@ -1795,6 +1820,25 @@ function votePicker(aid){
     onMount:L=>{ L.body.addEventListener("click",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return; const saved=S.votes[me]?.weeks?.[curWeek()]?.[aid];
       if(saved===b.dataset.pick) delete S.localVotes[aid]; else S.localVotes[aid]=b.dataset.pick; popLayer(L); render(); layers.forEach(x=>x.live&&x.render&&x.render()); }); }});
 }
+/* ───────── Locked (didn't vote): every tap gets a cheeky message ───────── */
+const TEASES=[["Ups… 🙈","Estavas mesmo à espera de ver alguma coisa? Quem não vota fica a ver navios."],
+  ["Bela tentativa 😏","Carregar mais vezes não desbloqueia nada. Votar desbloqueia."],
+  ["Acesso negado 🚫","Os números estão aqui, mesmo atrás deste cadeado. Pena não os poderes ver."],
+  ["Spoiler: não há spoiler 🍿","Toda a gente que votou já viu isto. Adivinha quem ficou de fora? 👀"],
+  ["Curioso, hein? 🤔","A curiosidade não paga a entrada. O voto paga."],
+  ["Sem voto, sem fofoca 🤫","São as regras da casa. Não fomos nós que as fizemos… fomos, mas pronto."],
+  ["Este cadeado é teu 🔒","Foi oferecido por ti, no dia em que não votaste. Muito obrigado."],
+  ["Nem o GPS te encontra 🧭","No ranking desta semana não apareces. Não votaste, lembras-te?"],
+  ["Votar demora 1 minuto ⏱️","Ficar a olhar para cadeados demora a semana inteira. Tu é que sabes."],
+  ["Ser misterioso é giro 🕶️","Não votar não é. Vai lá, que o grupo está à tua espera."],
+  ["O ranking perguntou por ti 📞","Dissemos que estavas ocupado… a não votar."],
+  ["Bilhete, por favor 🎟️","Este espetáculo é só para quem votou. Para a semana há sessão nova."]];
+let lastTease=-1;
+function teaseSheet(){ const g=curGroup(); let i; do{ i=Math.floor(Math.random()*TEASES.length); }while(i===lastTease&&TEASES.length>1); lastTease=i; const [t,m]=TEASES[i];
+  const done=g&&weekDone(g.id);
+  openSheet({title:"",left:"Fechar",short:true,body:()=>`<div class="tease"><div class="tease-emo">🔒</div><b>${t}</b><p>${m}</p>
+    <small>Quem não completa a votação de uma semana não vê nada na semana seguinte.</small>
+    ${done?`<span class="chip" style="margin-top:10px">Votação desta semana feita ✔︎ · voltas a ver segunda às 00:00</span>`:`<button class="btn" style="margin-top:12px" data-act="teaseVote">${ic("edit")}Fazer a votação</button>`}</div>`}); }
 /* ───────── Weekly fun questions: 2 per week, the answer is always a group member ───────── */
 const QUESTIONS=[
 "Quem é o mais provável de se esquecer do próprio aniversário?","Bateste com o carro: a quem ligas primeiro?","Tens um cão e vais de férias: a quem o deixas?",
@@ -1992,6 +2036,7 @@ const A = {
   bdayCelebrate:a=>{ const [gid,k]=a.split("|"); bdayCelebration(gid,k); },
   editBday:()=>bdaySheet(),
   achievements:()=>{ const g=curGroup(); if(g) achievementsSheet(g.id); },
+  tease:()=>teaseSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
