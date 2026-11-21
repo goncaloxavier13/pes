@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795279934">
+<meta name="pes-version" content="1795280114">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1647,7 +1647,7 @@ function cantinhoSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(
     ${host?`<div class="cantwho"><span>O primeiro do cantinho é</span><span class="cw">${who}</span></div>`:""}</div>`;
   return `<div class="label" style="margin-top:20px">🛋️ Cantinho desta semana</div><div class="card pad cantsum">${host?`<div class="cantwho"><span>Quem se senta no cantinho esta semana é</span><span class="cw">${who}</span></div><p class="small muted" style="margin:10px 0 0">Vai ao GAP ler as respostas.</p>`:`<p style="margin:0">O sorteio do cantinho está quase a sair. Espreita o GAP daqui a pouco.</p>`}</div>`; }
 function cantinhoCard(g){ if(curWeek()<CANT_START||votingClosed(g.id)) return "";
-  if(rankLocked(g.id)) return `<div class="section" style="margin-top:12px"><button class="cantcard locked" data-act="tease"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>Só para quem completou a votação da semana passada 🔒</small></span>${ic("lock")}</button></div>`;
+  if(rankLocked(g.id)&&!cantinhoOf(g.id)) return `<div class="section" style="margin-top:12px"><button class="cantcard locked" data-act="tease"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>Só para quem completou a votação da semana passada 🔒</small></span>${ic("lock")}</button></div>`;
   const c=cantinhoOf(g.id); const me=ME();
   if(!c) return `<div class="section" style="margin-top:12px"><div class="cantcard wait"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>A sortear quem se senta no cantinho esta semana…</small></span></div></div>`;
   const u=isUnread(c); const host=c.host===me;
