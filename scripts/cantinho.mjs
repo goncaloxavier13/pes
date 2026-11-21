@@ -141,15 +141,15 @@ const MORNING = 10; // a partir das 10h há pergunta nova, se a de ontem já foi
 const pick = (arr, used) => { const free = arr.map((_, i) => i).filter(i => !used.includes(i)); const pool = free.length ? free : arr.map((_, i) => i); return pool[Math.floor(Math.random() * pool.length)]; };
 function nextQuestion(gs, nAsked) {
   // começa com 3 filosóficas; depois alterna rotina / filosófica
-  const philo = nAsked < 3 || nAsked % 2 === 1; const key = philo ? "usedP" : "usedR"; const arr = philo ? PHILO : ROUTINE;
+  const philo = nAsked < 3 || (nAsked - 3) % 2 === 1; const key = philo ? "usedP" : "usedR"; const arr = philo ? PHILO : ROUTINE;
   let used = gs[key] || []; if (used.length >= arr.length) used = [];
   const i = pick(arr, used); gs[key] = [...used, i]; return arr[i];
 }
 function reaction(gs) { const i = pick(REACTIONS, gs.usedRx || []); gs.usedRx = [...(gs.usedRx || []).slice(-10), i]; return REACTIONS[i]; }
-async function botSay(cid, text, q) {
+async function botSay(cid, text, q, end) {
   const at = Date.now();
   if (DRY) { console.log("[simulação] o Anfitrião diria:", text); return; }
-  await db.collection(`chats/${cid}/msgs`).add(q ? { from: BOT, text, at, q: true } : { from: BOT, text, at });
+  await db.collection(`chats/${cid}/msgs`).add({ from: BOT, text, at, ...(q ? { q: true } : {}), ...(end ? { end: true } : {}) });
   await db.doc("chats/" + cid).update({ lastAt: at, lastText: text.slice(0, 140), lastFrom: BOT });
 }
 
@@ -193,7 +193,8 @@ for (const [gid, g0] of Object.entries(groups)) {
   if (last.from === chat.host) {
     // a pessoa respondeu: reação curta + pergunta seguinte (até PER_DAY por dia)
     if (askedToday < PER_DAY) { const t = `${reaction(gs)} ${nextQuestion(gs, asked.length)}`; await botSay(cid, t, true); await tell(t); }
-    else { await botSay(cid, `${reaction(gs)} Por hoje ficamos por aqui 😌 Amanhã há mais perguntas no cantinho.`); }
+    else { const closed = msgs.some(m => m.from === BOT && m.end && ymd(new Date(m.at)) === today);
+      await botSay(cid, closed ? reaction(gs) : `${reaction(gs)} Por hoje ficamos por aqui 🛋️ Amanhã há mais perguntas no cantinho.`, false, !closed); }
   } else if (last.from === BOT && !last.q && ymd(new Date(last.at)) < today && hourLx() >= MORNING) {
     // dia novo e a última pergunta já foi respondida: pergunta do dia
     const t = `Bom dia, ${first(chat.host)} ☀️ Pergunta do dia: ${nextQuestion(gs, asked.length)}`; await botSay(cid, t, true); await tell(t);
