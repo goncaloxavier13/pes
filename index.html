@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795269027">
+<meta name="pes-version" content="1795269375">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -924,7 +924,9 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
     const future=d.first?`<div class="label" style="margin-top:20px">A partir da próxima segunda 🔮</div>
       <div class="card list ws-future">${[["▲▼","Se subiste ou desceste de lugar","comparado com a semana anterior"],["🚀","Quem mais subiu e quem mais caiu","os movimentos da semana no grupo"],["🔥","A tua sequência","semanas seguidas com ranking feito"],["📈","A tua evolução","a média desta semana vs. a anterior"]].map(([e,t,sub])=>`<div class="row"><span class="ws-fe">${e}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub">${sub}</div></div></div>`).join("")}</div>
       <p class="info">Esta foi a primeira semana da época, por isso ainda não há comparações. Todas as segundas, à meia-noite, chega um resumo novo.</p>`:"";
-    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${top}${mv}${future}`;
+    const qr=questionResults(gid,w).filter(q=>q.tot>0);
+    const qhtml=qr.length?`<div class="label" style="margin-top:20px">🎲 Perguntas da semana</div><div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="margin-bottom:6px;white-space:normal">${esc(q.text)}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${q.winners.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px">${avatar(k,28)}<b>${esc(nm(k))}${k===me?" (tu)":""}</b></span>`).join("")}<span class="muted small">${q.max} ${q.max===1?"voto":"votos"}${q.winners.length>1?" cada":""}</span></div></div></div>`).join("")}</div>`:"";
+    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${qhtml}${top}${mv}${future}`;
   }
   openSheet({title:"",left:"Fechar",body:()=>`${head}${part}${body}<p class="info" style="text-align:center">Os prémios continuam secretos até à Gala 🤫</p>`});
 }
@@ -938,7 +940,7 @@ function maybeNotifAnnouncement(force){ if(!force){ if(!S.fb||!ME()||layers.leng
       :`<div class="banner" style="margin-top:16px">${ic("info")}<span>No iPhone, as notificações só funcionam com a app aberta pelo ícone. Toca em <b>Partilhar › Adicionar ao ecrã principal</b>, abre a Pês pelo ícone e ativa em Definições › Notificações.</span></div>`}`});
   return true; }
 /* ───────── Friendly nudge: anonymous "you haven't voted yet 👀" to whoever is missing this week ───────── */
-function missingThisWeek(gid){ const g=S.groups[gid]; const w=curWeek(); const aw=groupAwards(gid).map(a=>a.id);
+function missingThisWeek(gid){ const g=S.groups[gid]; const w=curWeek(); const aw=weekItems(gid).map(a=>a.id);
   return (g?.members||[]).filter(k=>!S.rankings[k]?.weeks?.[w]?.[gid] || aw.some(a=>!S.votes[k]?.weeks?.[w]?.[a])); }
 const myNudge = gid => S.reads[ME()]?.nudges?.[gid] || null;
 const nudgedToday = gid => { const n=myNudge(gid); return !!(n && lisbonYMD(new Date(n.at))===lisbonYMD()); };
@@ -1771,10 +1773,60 @@ function votePicker(aid){
     onMount:L=>{ L.body.addEventListener("click",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return; const saved=S.votes[me]?.weeks?.[curWeek()]?.[aid];
       if(saved===b.dataset.pick) delete S.localVotes[aid]; else S.localVotes[aid]=b.dataset.pick; popLayer(L); render(); layers.forEach(x=>x.live&&x.render&&x.render()); }); }});
 }
+/* ───────── Weekly fun questions: 2 per week, the answer is always a group member ───────── */
+const QUESTIONS=[
+"Quem é o mais provável de se esquecer do próprio aniversário?","Bateste com o carro: a quem ligas primeiro?","Tens um cão e vais de férias: a quem o deixas?",
+"Quem é o mais provável de ficar famoso?","Quem sobreviveria mais tempo numa ilha deserta?","Ficaste fechado fora de casa às 3h: a quem ligas?",
+"Quem é o mais provável de chegar atrasado ao próprio casamento?","A quem confiarias o PIN do teu cartão?","Quem é o mais provável de ganhar o Euromilhões e perder o bilhete?",
+"Precisas de um álibi: quem escolhes?","Quem é o mais provável de adormecer num concerto?","Quem levarias para uma entrevista de emprego como teu advogado?",
+"Quem é o mais provável de se perder com o GPS ligado?","A quem pedias conselhos amorosos?","Quem é o mais provável de abrir um restaurante?",
+"Vais mudar de casa: quem ajuda de certeza?","Quem é o mais provável de chorar num filme da Disney?","A quem deixavas as chaves de casa durante um mês?",
+"Quem é o mais provável de ser presidente da Junta?","Quem é o mais provável de desaparecer de uma festa sem dizer nada?","Precisas de 500€ emprestados hoje: a quem pedes?",
+"Quem é o mais provável de fazer um tatuagem de que se arrepende?","Quem escolhias para fazer equipa num quiz?","Quem é o mais provável de se meter numa discussão com um árbitro?",
+"Quem cozinha o melhor jantar do grupo?","Quem é o mais provável de ir viver para o estrangeiro?","Ficaste sem bateria numa cidade desconhecida: quem queres ao teu lado?",
+"Quem é o mais provável de comer a última fatia sem perguntar?","A quem contarias um segredo que não podes contar a ninguém?","Quem é o mais provável de ser preso por algo ridículo?",
+"Quem levarias para uma viagem de mochila às costas?","Quem é o mais provável de se casar primeiro?","Quem é o mais provável de esquecer onde estacionou?",
+"Quem deveria ser o padrinho do teu casamento?","Quem é o mais provável de entrar num reality show?","Estás doente em casa: quem te leva canja?",
+"Quem é o mais provável de ganhar uma discussão sem ter razão?","Quem escolhias para conduzir numa fuga?","Quem é o mais provável de responder a uma mensagem só 3 dias depois?",
+"Quem é o mais provável de ter um segundo emprego secreto?","A quem confiavas a escolha do restaurante para o jantar de Natal?","Quem é o mais provável de cantar no karaoke sem ser preciso pedir?",
+"Quem é o mais provável de adotar 5 gatos?","Quem levavas para um apocalipse zombie?","Quem é o mais provável de mandar mensagem para a pessoa errada?",
+"Precisas de alguém que fale com o senhorio por ti: quem?","Quem é o mais provável de começar uma dieta e desistir no mesmo dia?","Quem é o mais provável de se tornar milionário?",
+"Quem é o melhor a contar histórias à mesa?","A quem pedias para escolher a tua roupa para um casamento?","Quem é o mais provável de ser o último a sair da festa?",
+"Quem é o mais provável de fazer uma maratona?","Ficaste preso num elevador durante 3 horas: com quem queres estar?","Quem é o mais provável de se esquecer de um jantar marcado?",
+"Quem tem o pior sentido de orientação?","Quem é o mais provável de abrir um podcast?","Quem escolhias para negociar a compra do teu carro?",
+"Quem é o mais provável de dizer 'só mais uma' e ficar até às 6h?","A quem pedias ajuda para montar um móvel do IKEA?","Quem é o mais provável de ter uma conta secreta no TikTok?",
+"Quem é o mais provável de ser apanhado a dormir no trabalho?","Quem levavas para ver um jogo decisivo do teu clube?","Quem é o mais provável de mudar de clube de futebol?",
+"Quem tem o melhor gosto musical?","Quem é o mais provável de fazer uma surpresa que corre mal?","Precisas de um discurso emocionante: quem o escreve?",
+"Quem é o mais provável de se esquecer do nome de alguém a meio da conversa?","Quem é o mais provável de ganhar um concurso de dança?","A quem ligavas para ir buscar-te ao aeroporto às 5h?",
+"Quem é o mais provável de ser influencer?","Quem é o mais provável de fazer as compras de Natal no dia 24?","Quem é o mais provável de perder o telemóvel numa noite de copos?",
+"Quem escolhias como colega de casa?","Quem é o mais provável de chorar no jantar de Natal?","Quem é o mais provável de mentir sobre a idade?",
+"Quem tem a gargalhada mais contagiante?","Quem é o mais provável de ser expulso de um bar?","A quem confiavas a organização da tua despedida de solteiro?",
+"Quem é o mais provável de ficar com a conta toda do jantar por engano?","Quem é o mais provável de saber a fofoca antes de toda a gente?","Quem levavas a um casino com 100€?",
+"Quem é o mais provável de ter um plano para tudo?","Quem é o mais provável de fazer amizade com um desconhecido no comboio?","A quem pedias para tomar conta de uma planta durante um ano?",
+"Quem é o mais provável de ganhar um prémio Nobel?","Quem é o mais provável de esquecer-se do aniversário da namorada?","Quem é o mais provável de aparecer de fato de treino num casamento?",
+"Quem escolhias para fazer contigo o Caminho de Santiago?","Quem é o mais provável de comprar algo inútil na Internet às 3h?","Quem é o mais provável de se atirar à piscina vestido?",
+"Precisas de alguém para te defender numa discussão: quem chamas?","Quem é o mais provável de ser o primeiro a ter filhos?","Quem é o mais provável de ter um blogue de culinária?",
+"Quem dá os melhores abraços?","Quem é o mais provável de esquecer-se da carteira no jantar?","A quem pedias para escolher o teu próximo carro?",
+"Quem é o mais provável de fazer bungee jumping?","Quem é o mais provável de ser o primeiro a desistir numa caminhada?","Quem é o mais provável de escrever um livro?",
+"Quem levavas para um fim de semana em Paris?","Quem é o mais provável de ainda estar a dormir ao meio-dia de sábado?","Quem é o mais provável de te ligar só para conversar?",
+"Quem seria o melhor professor?","Quem é o mais provável de fazer uma tatuagem com o nome do grupo?","Tens um problema às 4h da manhã: quem atende o telefone?",
+"Quem é o mais provável de ganhar um jogo de póquer a fazer bluff?","Quem é o mais provável de se candidatar a um programa de culinária?","Quem é o mais provável de ser o mais velho a jogar futebol de 5?",
+"Quem é o mais provável de organizar a próxima viagem do grupo?","Quem é o mais provável de inventar uma desculpa genial para faltar?","A quem deixavas escolher o filme de sexta à noite?",
+];
+function hashStr2(t){ let h=2166136261; for(const c of t){ h^=c.charCodeAt(0); h=Math.imul(h,16777619); } return h>>>0; }
+const Q_START="2026-W48"; // first week with questions (Mon 23 Nov 2026)
+function weekQuestions(gid,w=curWeek()){ if(!w||w<Q_START) return []; const y=+w.slice(0,4), n=+w.slice(6); const N=QUESTIONS.length;
+  // a fixed shuffle per group and year, walked 2 by 2 each week → no repeats within the year
+  const idx=[...Array(N).keys()]; let seed=hashStr2(gid+"|"+y); for(let i=N-1;i>0;i--){ seed=(Math.imul(seed,1664525)+1013904223)>>>0; const j=seed%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
+  return [0,1].map(o=>{ const i=idx[((n-1)*2+o)%N]; return {id:"q:"+i,text:QUESTIONS[i]}; }); }
+function questionResults(gid,w){ const g=S.groups[gid]; return weekQuestions(gid,w).map(q=>{ const c={}; let tot=0;
+  (g?.members||[]).forEach(k=>{ const v=S.votes[k]?.weeks?.[w]?.[q.id]; if(v){ c[v]=(c[v]||0)+1; tot++; } });
+  const max=Math.max(0,...Object.values(c)); return {...q,tot,winners:Object.keys(c).filter(k=>c[k]===max&&max>0),max}; }); }
 /* ───────── Weekly vote: friendship ranking + award votes in ONE place. Nothing is saved until everything is answered. ───────── */
-function weekDone(gid,k=ME()){ const w=curWeek(); return !!S.rankings[k]?.weeks?.[w]?.[gid] && groupAwards(gid).every(a=>S.votes[k]?.weeks?.[w]?.[a.id]); }
+function weekItems(gid){ return [...groupAwards(gid).map(a=>({id:a.id,label:a.label,emoji:a.emoji||"🏆",desc:a.desc,kind:"award"})),...weekQuestions(gid).map(q=>({id:q.id,label:q.text,emoji:"🎲",desc:"",kind:"q"}))]; }
+function weekDone(gid,k=ME()){ const w=curWeek(); return !!S.rankings[k]?.weeks?.[w]?.[gid] && weekItems(gid).every(a=>S.votes[k]?.weeks?.[w]?.[a.id]); }
 function rankSheet(startStep=1, focusAward=null){
-  const g=curGroup(); const me=ME(); const others=g.members.filter(k=>k!==me); const w=curWeek(); const aw=groupAwards(g.id);
+  const g=curGroup(); const me=ME(); const others=g.members.filter(k=>k!==me); const w=curWeek(); const aw=weekItems(g.id);
   if(votingClosed(g.id)){ toast("Época fechada. Volta segunda-feira."); return; }
   const prevWeeks=Object.keys(S.rankings[me]?.weeks||{}).filter(x=>S.rankings[me].weeks[x][g.id]).sort();
   const cur=myRankingThisWeek(g.id) || (prevWeeks.length? S.rankings[me].weeks[prevWeeks[prevWeeks.length-1]][g.id] : null);
@@ -1785,7 +1837,7 @@ function rankSheet(startStep=1, focusAward=null){
   let step=(startStep===2&&!unr.length&&aw.length)?2:1; let open=focusAward||(aw.find(a=>!votes[a.id])?.id)||null;
   const total=aw.length?2:1;
   const okNow=()=> step===1 ? !unr.length : aw.every(a=>votes[a.id]);
-  const stepper=()=>`<div class="vstep"><span class="${step===1?"on":"ok"}">${step===1?"1":ic("check")}</span><b>Ranking</b>${total>1?`<i></i><span class="${step===2?"on":""}">2</span><b>Prémios</b>`:""}</div>`;
+  const stepper=()=>`<div class="vstep"><span class="${step===1?"on":"ok"}">${step===1?"1":ic("check")}</span><b>Ranking</b>${total>1?`<i></i><span class="${step===2?"on":""}">2</span><b>Prémios e perguntas</b>`:""}</div>`;
   const step1=()=>`${stepper()}<div class="banner" style="margin:0 0 16px">${ic("lock")}<span>Semana de ${esc(weekRange(w))}. Podes alterar até domingo às 23:59. Só fica guardado quando responderes a tudo.</span></div>
       ${!done&&cur?`<p class="hint" style="margin:-6px 4px 12px">Começámos com o teu ranking da semana passada. Ajusta como quiseres.</p>`:""}
       <div class="label"><span>A tua ordem · 1 = mais amigo</span><span class="num" style="text-transform:none">${ranked.length}/${others.length}</span></div>
@@ -1794,15 +1846,19 @@ function rankSheet(startStep=1, focusAward=null){
         <button class="iconbtn" data-mv="${i}|-1" aria-label="Subir" ${i===0?"disabled":""}>${ic("up")}</button><button class="iconbtn" data-mv="${i}|1" aria-label="Descer" ${i===ranked.length-1?"disabled":""}>${ic("down")}</button><button class="iconbtn" data-rm="${i}" aria-label="Tirar">${ic("x")}</button></div>`).join("")}</div>`
         :`<div class="card"><div class="empty"><p>Toca nos nomes abaixo pela ordem que quiseres. O primeiro fica em 1.º.</p></div></div>`}
       ${unr.length?`<div class="label" style="margin-top:18px">Por ordenar · toca para pôr na posição ${ranked.length+1}</div><div class="chips">${unr.map(k=>`<button class="namechip" data-add="${k}">${avatar(k,26)}${esc(nm(k))}</button>`).join("")}</div>`:""}
-      <button class="btn block" style="margin-top:22px" data-next ${unr.length?"disabled":""}>${total>1?"Seguinte: prémios →":"Submeter"}</button>`;
+      <button class="btn block" style="margin-top:22px" data-next ${unr.length?"disabled":""}>${total>1?"Seguinte: prémios e perguntas →":"Submeter"}</button>`;
   const step2=()=>{ const n=aw.filter(a=>votes[a.id]).length;
-    return `${stepper()}<div class="label"><span>Vota em todos os prémios</span><span class="num" style="text-transform:none">${n}/${aw.length}</span></div>
+    const row=a=>{ const v=votes[a.id]; const isOpen=open===a.id;
+        return `<button class="row vaw ${isOpen?"open":""}" data-aw="${a.id}" aria-expanded="${isOpen}"><span style="font-size:24px;width:32px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle" ${a.kind==="q"?'style="white-space:normal;line-height:1.3"':""}>${esc(a.label)}</div><div class="rowsub">${v?`O teu voto: ${esc(nm(v))}`:esc(a.desc||"Escolhe uma pessoa")}</div></div>${v?`<span style="color:var(--green)">${ic("check",'style="width:20px;height:20px"')}</span>`:`<span class="vdot" aria-label="Por votar"></span>`}</button>
+        ${isOpen?`<div class="vpick">${others.slice().sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const f=first(nm(k)); const dup=others.filter(o=>first(nm(o))===f).length>1; return `<button class="namechip ${v===k?"sel":""}" data-pick="${a.id}|${k}">${avatar(k,26)}${esc(dup?nm(k):f)}</button>`; }).join("")}</div>`:""}`; };
+    const awards=aw.filter(a=>a.kind==="award"), qs=aw.filter(a=>a.kind==="q");
+    return `${stepper()}<div class="label"><span>Responde a tudo</span><span class="num" style="text-transform:none">${n}/${aw.length}</span></div>
       <div class="bar" style="margin:0 4px 10px"><i style="width:${pct(n,aw.length)}%"></i></div>
-      <div class="card list">${aw.map(a=>{ const v=votes[a.id]; const isOpen=open===a.id;
-        return `<button class="row vaw ${isOpen?"open":""}" data-aw="${a.id}" aria-expanded="${isOpen}"><span style="font-size:24px;width:32px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle">${esc(a.label)}</div><div class="rowsub">${v?`O teu voto: ${esc(nm(v))}`:esc(a.desc||"Escolhe uma pessoa")}</div></div>${v?`<span style="color:var(--green)">${ic("check",'style="width:20px;height:20px"')}</span>`:`<span class="vdot" aria-label="Por votar"></span>`}</button>
-        ${isOpen?`<div class="vpick">${others.slice().sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const f=first(nm(k)); const dup=others.filter(o=>first(nm(o))===f).length>1; return `<button class="namechip ${v===k?"sel":""}" data-pick="${a.id}|${k}">${avatar(k,26)}${esc(dup?nm(k):f)}</button>`; }).join("")}</div>`:""}`; }).join("")}</div>
-      <p class="info">🤫 Os teus votos são secretos. Os resultados só são revelados no jantar da Gala.</p>
-      <div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" data-back style="flex:none">← Ranking</button><button class="btn" style="flex:1" data-submit ${okNow()?"":"disabled"}>${n<aw.length?`Faltam ${aw.length-n} ${aw.length-n===1?"prémio":"prémios"}`:"Submeter tudo"}</button></div>`; };
+      ${awards.length?`<div class="label" style="margin-top:14px">🏆 Prémios</div><div class="card list">${awards.map(row).join("")}</div>
+      <p class="info">🤫 Os votos nos prémios são secretos e só são revelados no jantar da Gala.</p>`:""}
+      ${qs.length?`<div class="label" style="margin-top:16px">🎲 Perguntas da semana</div><div class="card list">${qs.map(row).join("")}</div>
+      <p class="info">Os resultados das perguntas aparecem no resumo de segunda-feira, sem se saber quem votou em quem.</p>`:""}
+      <div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" data-back style="flex:none">← Ranking</button><button class="btn" style="flex:1" data-submit ${okNow()?"":"disabled"}>${n<aw.length?`Faltam ${aw.length-n} ${aw.length-n===1?"resposta":"respostas"}`:"Submeter tudo"}</button></div>`; };
   const L=openSheet({title:"Votação da semana",right:step===1&&total>1?"Seguinte":"Submeter",rightDisabled:!okNow(),
     body:()=>step===1?step1():step2(),
     onMount:L=>{ L.body.addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return;
