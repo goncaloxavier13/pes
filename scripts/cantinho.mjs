@@ -1,12 +1,10 @@
-// Pês — o Cantinho: todas as semanas uma pessoa do grupo conversa com o Anfitrião (IA).
-// Corre no GitHub Actions. Segredos: FIREBASE_SERVICE_ACCOUNT, VAPID_PRIVATE_KEY e ANTHROPIC_API_KEY.
-// Sem ANTHROPIC_API_KEY o cantinho abre com uma pergunta preparada e o Anfitrião espera pela chave para responder.
+// Pês — o Cantinho: todas as semanas uma pessoa do grupo responde às perguntas do Anfitrião (perguntas preparadas, sem IA).
+// Corre no GitHub Actions. Segredos: FIREBASE_SERVICE_ACCOUNT e VAPID_PRIVATE_KEY.
 import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import webpush from "web-push";
 
 const SA = process.env.FIREBASE_SERVICE_ACCOUNT, VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY, VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
-const AI_KEY = process.env.ANTHROPIC_API_KEY || "", MODEL = process.env.CANTINHO_MODEL || "claude-sonnet-5-5";
 const DRY = !!process.env.DRY_WEEK; // test: simulate a week without writing anything
 if (!SA) { console.log("Falta FIREBASE_SERVICE_ACCOUNT."); process.exit(0); }
 initializeApp({ credential: cert(JSON.parse(SA)) });
@@ -95,49 +93,63 @@ async function send(key, payload) {
   }
 }
 
-const OPENERS = [
-  "Se pudesses saber a resposta a uma única pergunta sobre o universo, qual escolhias?",
-  "Achas que somos a mesma pessoa que éramos há dez anos? O que é que mudou de verdade?",
-  "O que é, para ti, uma vida bem vivida?",
-  "Se ninguém se lembrasse de nada do que fizeste, o que é que farias de diferente?",
-  "A felicidade procura-se ou acontece?",
+// ── Perguntas do Anfitrião (sem IA) ──
+const PHILO = [
+"Se pudesses saber a resposta a uma única pergunta sobre o universo, qual escolhias?","Achas que somos a mesma pessoa que éramos há dez anos? O que mudou de verdade?",
+"O que é, para ti, uma vida bem vivida?","Se ninguém se lembrasse de nada do que fizeste, o que farias de diferente?","A felicidade procura-se ou acontece?",
+"Preferias saber a data em que vais morrer ou a forma como vais morrer?","Se pudesses viver noutra época, qual escolhias e porquê?","O que é mais importante: ser respeitado ou ser querido?",
+"Achas que o destino existe ou fazemos tudo à nossa maneira?","Se pudesses mandar uma mensagem ao teu eu de 15 anos, o que dizias?","O que é que nunca farias, nem por um milhão de euros?",
+"Achas que as pessoas mudam mesmo, ou só aprendem a esconder melhor?","Qual é a diferença entre estar sozinho e sentir-se sozinho?","Se o dinheiro não existisse, o que farias da vida?",
+"O que te dá mais medo: falhar ou nunca tentar?","É melhor ter tido e perdido, ou nunca ter tido?","Uma mentira pode ser a coisa certa a fazer? Dá um exemplo.",
+"O que é que a maioria das pessoas valoriza demais?","E o que é que a maioria das pessoas valoriza de menos?","Se pudesses ter um superpoder só por um dia, qual era e o que fazias?",
+"O que te faz sentir mais vivo?","Achas que a amizade verdadeira aguenta tudo?","Qual é a coisa mais importante que aprendeste sem ninguém te ensinar?",
+"Se pudesses apagar uma memória, apagavas? Qual?","Preferias ser o mais inteligente da sala ou o mais divertido?","O que achas que vão dizer de ti daqui a 50 anos?",
+"Qual é a tua definição de sucesso?","Somos mais nós próprios sozinhos ou com os amigos?","Se pudesses jantar com qualquer pessoa da história, quem escolhias?",
+"Qual é a pergunta que mais gostavas que te fizessem e ninguém faz?","Achas que há coisas que é melhor não saber?","O que é que tu sabes hoje que gostavas de ter sabido há 5 anos?",
+"Qual é a regra que segues mesmo quando ninguém está a ver?","Se a tua vida fosse um filme, que género era?","O tempo cura mesmo tudo?",
+"Preferias poder voltar atrás no tempo ou ver o futuro?","Qual é o maior luxo da vida que não custa dinheiro?","O que é que te faz confiar em alguém?",
+"Se pudesses mudar uma coisa no mundo amanhã, o que mudavas?","Achas que é possível ser feliz sem ambição?","Qual foi o momento em que te sentiste mais adulto?",
+"O que é que te torna diferente de toda a gente que conheces?","Preferias uma vida tranquila ou uma vida cheia de aventuras?","Quando foi a última vez que mudaste de opinião sobre algo importante?",
+"Há algum sonho que já desististe? Arrependes-te?","O que é que o mundo precisa mais: de mais coragem ou de mais calma?","Qual é a tua maior contradição?",
+"Se tivesses de escolher uma palavra para resumir a tua vida até agora, qual era?","Achas que a sorte se faz ou simplesmente acontece?","O que é que gostavas que o grupo soubesse sobre ti e talvez não saiba?",
 ];
-function systemPrompt(g, host, cw) {
-  const evs = Object.values(events).filter(e => e.groupId === g.id && e.date >= ymd(new Date(Date.now() - 7 * 864e5)) && e.date <= ymd(new Date(Date.now() + 7 * 864e5)))
-    .map(e => `${e.title} (${e.date})`).slice(0, 6);
-  const others = (g.members || []).filter(k => k !== host).map(first);
-  const gala = (g.galas || []).filter(d => d >= today).sort()[0];
-  return `És o "Anfitrião do Cantinho", um bot numa app de um grupo de amigos portugueses chamado "${g.name}".
-Esta semana, quem está sentado no cantinho é ${name(host)} (trata-o por ${first(host)}). Só ele te responde; o resto do grupo (${others.join(", ")}) lê a conversa e reage.
-Hoje é ${today}.${evs.length ? ` Eventos do grupo por estes dias: ${evs.join("; ")}.` : ""}${gala ? ` A Gala de fim de época (jantar de Natal) é a ${gala}.` : ""}
-
-Como te comportas:
-- Escreves sempre em português de Portugal (nunca do Brasil), num tom caloroso, curioso e com humor leve, como um amigo de café com alma de filósofo.
-- Fazes UMA pergunta de cada vez e esperas pela resposta. Mensagens curtas: 1 a 3 frases, no máximo cerca de 50 palavras.
-- Começas a semana com perguntas filosóficas. Depois das primeiras respostas, vais misturando perguntas sobre a rotina, a semana, os gostos e o grupo, sempre a partir do que ele disse.
-- Reages ao que ele respondeu (com interesse genuíno, às vezes um pequeno comentário ou provocação simpática) e só depois fazes a pergunta seguinte.
-- Lembra-te de que o grupo está a ler: podes de vez em quando puxar pelos amigos ("o que é que o ${others[0] || "grupo"} diria disto?"), sem nunca gozar com ninguém de forma maldosa.
-- Nunca falas de votos, rankings, prémios ou de quem votou em quem. Não fazes perguntas sobre saúde, dinheiro, política, religião ou vida íntima.
-- Se ele disser algo que mostre que não está bem, respondes com cuidado e sem fazer piadas.
-- Não uses listas nem formatação; escreve como numa conversa de chat.`;
+const ROUTINE = [
+"Como é uma manhã perfeita para ti, do acordar ao almoço?","Qual foi o melhor momento da tua semana até agora?","Qual é a primeira coisa que fazes quando acordas?",
+"O que é que comeste hoje que valeu a pena?","Qual é a tua série ou programa do momento?","Que música andas a ouvir em repeat?",
+"Qual é a tarefa de casa que mais odeias?","Café, chá ou nada? E como?","Qual é o teu plano ideal para um domingo?",
+"Se hoje tivesses a tarde livre, o que fazias?","Qual é a tua comida de conforto?","És mais de deitar cedo ou de deitar tarde? Porquê?",
+"Qual foi a última coisa que compraste e não precisavas?","Que hábito gostavas de ter e ainda não tens?","Qual é a app que mais usas no telemóvel (sem contar com esta)?",
+"Qual é o teu restaurante preferido e o que pedes sempre?","O que é que te tirou do sério esta semana?","Qual é a tua rotina antes de dormir?",
+"Qual foi a última vez que te riste até doer a barriga?","Qual foi o último sítio novo que visitaste?","Fazes desporto? Qual e quantas vezes?",
+"Qual é a viagem que tens mesmo de fazer nos próximos anos?","Se pudesses mudar uma coisa no teu dia a dia, o que era?","Qual é o melhor conselho que já te deram?",
+"Quem do grupo é que te ligava às 3h da manhã a pedir ajuda?","Qual é a tua memória preferida com este grupo?","Qual foi o jantar de grupo mais épico de sempre?",
+"O que é que te põe de bom humor em 5 minutos?","Qual é o teu maior vício inofensivo?","Qual foi o último livro, filme ou podcast que te marcou?",
+"Que prato sabes cozinhar melhor do que ninguém?","Qual é a coisa mais aleatória que tens no quarto?","O que é que estás a planear para o Natal?",
+"Qual é o teu plano para o próximo fim de semana?","Qual foi a última mensagem que te fez sorrir?","És mais de praia ou de montanha?",
+"Qual é a coisa que fazes melhor do que toda a gente do grupo?","E a coisa que fazes pior?","Qual foi a última vez que fizeste algo pela primeira vez?",
+"Se tivesses de dar uma aula sobre qualquer tema, qual era?","Qual é o teu som preferido?","Qual é a tua estação do ano preferida e porquê?",
+"O que é que tens sempre no frigorífico?","Qual foi o melhor presente que já recebeste?","Qual é a tua mania que mais irrita os outros?",
+"Que objeto levavas para uma ilha deserta?","Qual é o teu sítio preferido em Portugal?","O que é que te dá mais preguiça?",
+"Se pudesses aprender uma língua num estalar de dedos, qual era?","Qual foi o melhor concerto ou espetáculo a que foste?",
+];
+const REACTIONS = ["Interessante… 🤔","Gostei dessa! 👏","Hmm, isso dá que pensar 🧐","Uau, não estava à espera 😮","Fica registado 📝","Muito bem respondido 😌",
+"Isso explica muita coisa 😄","Resposta digna de filósofo 🏛️","O grupo vai adorar ler isto 👀","Faz todo o sentido 👌","Ah, então é assim! 😅","Profundo… 🌊",
+"Respeito 🙌","Essa vai dar conversa no próximo jantar 🍷","Nota 10 para a sinceridade 💯","Estou a ver, estou a ver… 🤓","Belíssimo 😎","Não esperava outra coisa de ti 😏",
+"Guardado no cantinho 🛋️","Gosto da forma como pensas 💭","Boa! Próxima 🚀","Isso merecia um brinde 🥂","Mais uma para a coleção 😄","Está bem visto 👁️"];
+const PER_DAY = 3; // perguntas por dia, no máximo
+const MORNING = 10; // a partir das 10h há pergunta nova, se a de ontem já foi respondida
+const pick = (arr, used) => { const free = arr.map((_, i) => i).filter(i => !used.includes(i)); const pool = free.length ? free : arr.map((_, i) => i); return pool[Math.floor(Math.random() * pool.length)]; };
+function nextQuestion(gs, nAsked) {
+  // começa com 3 filosóficas; depois alterna rotina / filosófica
+  const philo = nAsked < 3 || nAsked % 2 === 1; const key = philo ? "usedP" : "usedR"; const arr = philo ? PHILO : ROUTINE;
+  let used = gs[key] || []; if (used.length >= arr.length) used = [];
+  const i = pick(arr, used); gs[key] = [...used, i]; return arr[i];
 }
-async function ai(system, msgs) {
-  if (!AI_KEY) return null;
-  const turns = [];
-  for (const m of msgs) { const role = m.from === BOT ? "assistant" : "user"; const text = (m.text || "").slice(0, 2000);
-    if (turns.length && turns[turns.length - 1].role === role) turns[turns.length - 1].content += "\n" + text; else turns.push({ role, content: text }); }
-  if (!turns.length || turns[0].role !== "user") turns.unshift({ role: "user", content: "(O cantinho desta semana acabou de abrir.)" });
-  if (turns[turns.length - 1].role !== "user") return null;
-  const r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST",
-    headers: { "content-type": "application/json", "x-api-key": AI_KEY, "anthropic-version": "2023-06-01" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 400, system, messages: turns.slice(-40) }) });
-  if (!r.ok) { console.log("Erro da IA:", r.status, (await r.text()).slice(0, 300)); return null; }
-  const j = await r.json(); return (j.content || []).filter(c => c.type === "text").map(c => c.text).join("").trim() || null;
-}
-async function botSay(cid, text) {
+function reaction(gs) { const i = pick(REACTIONS, gs.usedRx || []); gs.usedRx = [...(gs.usedRx || []).slice(-10), i]; return REACTIONS[i]; }
+async function botSay(cid, text, q) {
   const at = Date.now();
   if (DRY) { console.log("[simulação] o Anfitrião diria:", text); return; }
-  await db.collection(`chats/${cid}/msgs`).add({ from: BOT, text, at });
+  await db.collection(`chats/${cid}/msgs`).add(q ? { from: BOT, text, at, q: true } : { from: BOT, text, at });
   await db.doc("chats/" + cid).update({ lastAt: at, lastText: text.slice(0, 140), lastFrom: BOT });
 }
 
@@ -161,9 +173,8 @@ for (const [gid, g0] of Object.entries(groups)) {
     chat = { groupId: gid, type: "cantinho", host, week: wk, name: `Cantinho do ${first(host)}`, members, createdBy: BOT, createdAt: Date.now(), lastAt: null, lastText: "", lastFrom: null };
     console.log(`${g.name}: cantinho aberto (${members.length} com acesso).`);
     if (!DRY) await ref.set(chat);
-    const opening = await ai(systemPrompt(g, host, chat), []) ||
-      `Bem-vindo ao cantinho, ${first(host)} 🛋️ Esta semana és tu que te sentas aqui e o grupo todo está a ler. Começamos com calma: ${OPENERS[Math.floor(Math.random() * OPENERS.length)]}`;
-    await botSay(cid, opening);
+    const opening = `Bem-vindo ao cantinho, ${first(host)} 🛋️ Esta semana és tu que te sentas aqui e o grupo todo está a ler. Começamos com calma: ${nextQuestion(gs, 0)}`;
+    await botSay(cid, opening, true);
     await send(host, { title: "🛋️ Estás no cantinho esta semana!", body: "O Anfitrião já te fez a primeira pergunta. O grupo está à espera da tua resposta 👀", tag: "cant-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
     if (DRY) continue;
   }
@@ -176,13 +187,17 @@ for (const [gid, g0] of Object.entries(groups)) {
       await send(k, { title: `🛋️ ${chat.name}`, body: `O ${first(chat.host)} respondeu no cantinho 👀`, tag: "cant-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
     gs.seen = { ...(gs.seen || {}), [cid]: Math.max(...fresh.map(m => m.at)) };
   }
-  const last = msgs[msgs.length - 1];
-  const botToday = msgs.filter(m => m.from === BOT && ymd(new Date(m.at)) === today).length;
-  if (last && last.from === chat.host && botToday < 40) {
-    const reply = await ai(systemPrompt(g, chat.host, chat), msgs.filter(m => m.from === BOT || m.from === chat.host));
-    if (reply) { await botSay(cid, reply); await send(chat.host, { title: "🛋️ O Anfitrião respondeu", body: reply.slice(0, 120), tag: "cant-host-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` }); }
-    else if (!AI_KEY) console.log(`${g.name}: resposta à espera da chave ANTHROPIC_API_KEY.`);
+  const last = msgs[msgs.length - 1]; if (!last) continue;
+  const asked = msgs.filter(m => m.from === BOT && m.q); const askedToday = asked.filter(m => ymd(new Date(m.at)) === today).length;
+  const tell = text => send(chat.host, { title: "🛋️ O Anfitrião respondeu", body: text.slice(0, 140), tag: "cant-host-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
+  if (last.from === chat.host) {
+    // a pessoa respondeu: reação curta + pergunta seguinte (até PER_DAY por dia)
+    if (askedToday < PER_DAY) { const t = `${reaction(gs)} ${nextQuestion(gs, asked.length)}`; await botSay(cid, t, true); await tell(t); }
+    else { await botSay(cid, `${reaction(gs)} Por hoje ficamos por aqui 😌 Amanhã há mais perguntas no cantinho.`); }
+  } else if (last.from === BOT && !last.q && ymd(new Date(last.at)) < today && hourLx() >= MORNING) {
+    // dia novo e a última pergunta já foi respondida: pergunta do dia
+    const t = `Bom dia, ${first(chat.host)} ☀️ Pergunta do dia: ${nextQuestion(gs, asked.length)}`; await botSay(cid, t, true); await tell(t);
   }
 }
 if (!DRY) await stRef.set(newSt);
-console.log(`Feito: ${sent} notificações.${AI_KEY ? "" : " (sem chave da IA)"}`);
+console.log(`Feito: ${sent} notificações.`);

@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795280114">
+<meta name="pes-version" content="1795283209">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1641,7 +1641,7 @@ function cantinhoSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(
   const me=ME(); const c=Object.entries(S.chats).find(([id,x])=>x.type==="cantinho"&&x.groupId===gid&&x.week===nextW); const host=c?c[1].host:(nextW===CANT_START?cantFirstHost(gid):null);
   const who=host?`${avatar(host,30)}<b>${esc(nm(host))}${host===me?" (tu!)":""}</b>`:"";
   if(nextW===CANT_START) return `<div class="label" style="margin-top:20px">🛋️ Novidade: o Cantinho</div><div class="card pad cantsum">
-    <p>A partir de hoje, todas as semanas há um <b>Cantinho</b> no topo do GAP. Uma pessoa do grupo é escolhida ao calhas e senta-se no cantinho a conversar com o <b>Anfitrião</b>, um bot com inteligência artificial que começa com perguntas filosóficas e vai puxando conversa sobre a vida, a rotina e o grupo.</p>
+    <p>A partir de hoje, todas as semanas há um <b>Cantinho</b> no topo do GAP. Uma pessoa do grupo é escolhida ao calhas e senta-se no cantinho a conversar com o <b>Anfitrião</b>, um bot que começa com perguntas filosóficas e depois vai misturando perguntas sobre a vida, a rotina e o grupo. A cada resposta reage e faz a pergunta seguinte (até 3 por dia), e todas as manhãs há uma pergunta do dia.</p>
     <p>Só quem está no cantinho responde. O resto do grupo lê, reage e recebe uma notificação sempre que há uma resposta nova. Ninguém repete até todos terem tido a sua vez.</p>
     <p>⚠️ Quem não completar a votação da semana fica sem acesso ao cantinho na semana seguinte.</p>
     ${host?`<div class="cantwho"><span>O primeiro do cantinho é</span><span class="cw">${who}</span></div>`:""}</div>`;
