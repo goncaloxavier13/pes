@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795271374">
+<meta name="pes-version" content="1795278418">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -569,6 +569,16 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .rankrow .n{width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .namechip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:22px;background:var(--card);font-size:14px;font-weight:500}
+.jvote{display:block;width:100%;text-align:left;border:0;border-radius:18px;padding:16px;background:linear-gradient(135deg,#0a84ff,#30b0ff);color:#fff;font:inherit;cursor:pointer}
+.jvote.done{background:var(--card);color:var(--text)}
+.jvtop{display:flex;align-items:center;gap:12px}.jvtop b{display:block;font-size:17px}.jvtop small{display:block;opacity:.85;font-size:13px;margin-top:2px}.jvtop svg{width:20px;height:20px}
+.jvico{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.2);display:grid;place-items:center;flex:none}.jvote.done .jvico{background:rgba(48,209,88,.18);color:var(--green)}
+.jvpills{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.jpill{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:99px;background:rgba(255,255,255,.18)}.jpill svg{width:13px;height:13px}
+.jvote.done .jpill{background:var(--card2)}.jvote.done .jpill.ok{color:var(--green)}
+.qweek{padding:14px 16px}.qweek+.qweek{border-top:1px solid var(--border)}.qwk{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px}
+.qrow+.qrow{margin-top:10px}.qtxt{font-size:14px;color:var(--muted);margin-bottom:6px}.qwin{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.qwin span{display:inline-flex;align-items:center;gap:6px}
+.qlock{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--muted)}.qlock svg{width:16px;height:16px;flex:none;margin-top:2px}
 </style>
 </head>
 <body>
@@ -881,7 +891,7 @@ function weeklySummaryData(gid,w=lastClosedWeek()){
   const now=averages(gid,w,s), before=first?[]:averages(gid,pw,s);
   const pos=k=>{ const i=now.findIndex(a=>a.k===k); return i<0?null:i+1; }, posB=k=>{ const i=before.findIndex(a=>a.k===k); return i<0?null:i+1; };
   const moves=first?[]:now.map(a=>({k:a.k,d:(posB(a.k)??pos(a.k))-pos(a.k)})).filter(x=>x.d!==0).sort((a,b)=>b.d-a.d);
-  const submitted=(g.members||[]).filter(k=>S.rankings[k]?.weeks?.[w]?.[gid]);
+  const submitted=(g.members||[]).filter(k=>weekComplete(gid,k,w));
   const mon=weekMonday(w), sun=new Date(mon); sun.setUTCDate(mon.getUTCDate()+6); const d0=utcToYmd(mon), d1=utcToYmd(sun);
   const evs=groupEvents(gid).filter(e=>e.date>=d0&&e.date<=d1);
   return {g,me,w,first,now,top:now.slice(0,3),myPos:pos(me),myPrev:first?null:posB(me),myAvg:now.find(a=>a.k===me)?.avg??null,
@@ -895,7 +905,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   const tile=(big,label,sub,extra="")=>`<div class="ws-tile"><b class="num">${big}</b><span>${label}</span>${sub?`<small>${sub}</small>`:""}${extra}</div>`;
   const locked=!d.iSubmitted;
   const head=`<div class="ws-head"><div class="ws-emo">📊</div><h2>Resumo da semana</h2><p>${esc(g.name)} · ${esc(d.label)}</p></div>`;
-  const part=`<div class="ws-part"><div class="ws-bar"><i style="width:${Math.round(100*d.submitted.length/Math.max(1,n))}%"></i></div><span><b>${d.submitted.length}/${n}</b> submeteram o ranking ${d.submitted.length===n?"🙌 toda a gente!":""}</span></div>`;
+  const part=`<div class="ws-part"><div class="ws-bar"><i style="width:${Math.round(100*d.submitted.length/Math.max(1,n))}%"></i></div><span><b>${d.submitted.length}/${n}</b> votaram ${d.submitted.length===n?"🙌 toda a gente!":""}</span></div>`;
   let body;
   if(locked){
     // Teaser that looks like the real thing… and then a cheeky message
@@ -908,8 +918,8 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
     const fake=(b,l)=>`<div class="ws-tile"><b class="num">${b}</b><span>${l}</span><small>████████</small></div>`;
     body=`<div class="ws-tease"><div class="ws-grid ws-blur" aria-hidden="true">${fake("#?","A tua posição")}${fake("#?","Na época")}${fake("?🔥","Sequência")}${fake("?/?","Eventos")}</div>
       <div class="ws-joke"><div class="ws-jemo">🔒</div><b>${jk[0]}</b><p>${jk[1]}</p>
-        <small>Faz o ranking desta semana e na próxima segunda o resumo é todo teu.</small>
-        ${myRankingThisWeek(gid)?`<span class="chip" style="margin-top:8px">Ranking desta semana feito ✔︎</span>`:`<span class="btn" style="margin-top:10px" data-act="rank">${ic("edit")}Fazer o ranking</span>`}</div></div>
+        <small>Faz a votação desta semana e na próxima segunda o resumo é todo teu.</small>
+        ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎</span>`:`<span class="btn" style="margin-top:10px" data-act="rank">${ic("edit")}Fazer a votação</span>`}</div></div>
       <div class="label" style="margin-top:20px">Top 3 da semana</div><div class="card list ws-blur" aria-hidden="true">${[1,2,3].map(i=>`<div class="row"><span class="rank">${["🥇","🥈","🥉"][i-1]}</span><span class="av" style="width:36px;height:36px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">██████ ████</div></div><span class="num" style="font-weight:700;color:var(--accent)">?.?</span></div>`).join("")}</div>`;
   } else {
     const me1=tile(d.myPos?`#${d.myPos}`:"—","A tua posição",d.myAvg!=null?`média ${d.myAvg.toFixed(1)}`:"",d.first?"":arrow(d.myPos,d.myPrev));
@@ -1060,8 +1070,8 @@ function myRankingThisWeek(gid){ return S.rankings[ME()]?.weeks?.[curWeek()]?.[g
 function firstWeekReveal(gid){ if(viewingPast(gid)) return false; const s=currentSeason(gid); return !!(s.startW && curWeek()<=s.startW); }
 function rankLocked(gid){ const g=S.groups[gid]; if(!g||!ME()||(g.members||[]).length<2) return false;
   if(viewingPast(gid)||votingClosed(gid)||seasonPending(gid)) return false;
-  // Access this week = you submitted the ranking of the week that just closed
-  return !S.rankings[ME()]?.weeks?.[lastClosedWeek()]?.[gid]; }
+  // Access this week = you completed the whole vote (ranking + awards + questions) of the week that just closed
+  return !weekComplete(gid,ME(),lastClosedWeek()); }
 function scoreWeeks(gid){ const s=viewSeason(gid); const cw=curWeek(); const end=s.endW&&s.endW<cw?s.endW:cw; return weeksBack(8,end).filter(w=>inSeasonW(s,w)); }
 function rankingWeeksDone(k,gid){ const ws=scoreWeeks(gid); return ws.filter(w=>S.rankings[k]?.weeks?.[w]?.[gid]).length; }
 function voteWeeksDone(k,gid){ const aw=groupAwards(gid).map(a=>a.id); const ws=scoreWeeks(gid); return ws.filter(w=>{ const v=S.votes[k]?.weeks?.[w]||{}; return aw.some(a=>v[a]); }).length; }
@@ -1129,7 +1139,7 @@ function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false
 function unreadCount(){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>(c.members||[]).includes(me)&&S.groups[c.groupId]?.members?.includes(me)&&isUnread({id,...c})).length; }
 function voteClosing(gid){ const dow=ymdToUTC(lisbonYMD()).getUTCDay(); if(dow!==6&&dow!==0) return false; if(votingClosed(gid)) return false;
   const g=S.groups[gid]; const me=ME(); const wk=curWeek(); const v=S.votes[me]?.weeks?.[wk]||{};
-  const missVote=groupAwards(gid).some(a=>!v[a.id]&&!(gid===S.groupId&&S.localVotes[a.id])); const missRank=(g?.members||[]).length>1&&!myRankingThisWeek(gid);
+  const missVote=weekItems(gid).some(a=>!v[a.id]); const missRank=(g?.members||[]).length>1&&!myRankingThisWeek(gid);
   return missVote||missRank; }
 function groupNotifs(gid){ const me=ME(); const msgs=chatsOf(gid).filter(isUnread).length; const evs=pendingFor(me).filter(e=>e.groupId===gid).length; const vote=voteClosing(gid);
   return {msgs,evs,vote,total:msgs+evs+(vote?1:0)}; }
@@ -1454,7 +1464,7 @@ function dashScreen(){
         ${locked?"":stat(mySIdx>=0?"#"+(mySIdx+1):"—","Posição média",mySIdx>=0?`média ${sav[mySIdx].avg.toFixed(1)} na época`:"sem rankings ainda")}
         ${locked?"":stat(myIdx>=0?"#"+(myIdx+1):"—",past?"Posição final":"Posição atual",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)} ${past?"no fim":"agora"}`:"sem rankings ainda")}
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
-        ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta votar nos prémios":"Votação da semana"}</span><span class="s" style="display:block">${done?"Ranking e prémios · toca para alterar":"Ranking + prémios · até domingo, 23:59"}</span></span><span class="rcount num" aria-label="${nDone} de ${g.members.length} membros já votaram esta semana"><b>${nDone}/${g.members.length}</b><small>votaram</small></span></button>`}
+        ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Ranking, prémios e perguntas · toca para alterar":"Ranking, prémios e perguntas · até domingo, 23:59"}</span></span><span class="rcount num" aria-label="${nDone} de ${g.members.length} membros já votaram esta semana"><b>${nDone}/${g.members.length}</b><small>votaram</small></span></button>`}
       </div></div>
     ${past?"":(()=>{ const nb=nudgeBlock(g); return nb?`<div class="section" style="margin-top:12px">${nb}</div>`:""; })()}
     ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const near=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal);
@@ -1468,7 +1478,7 @@ function dashScreen(){
 
     ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}${reveal
         ?`<b>Rankings revelados à meia-noite 🕛</b><span>É a primeira semana da época. Os rankings aparecem de domingo para segunda, às 00:00, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
-        :`<b>Rankings bloqueados</b><span>Não fizeste o ranking da semana passada, por isso esta semana não vês os rankings.${myRankingThisWeek(g.id)?" O ranking desta semana já está feito ✔︎: voltas a ver a partir de segunda, às 00:00.":" Faz o ranking desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`}</button></div>`:`
+        :`<b>Rankings bloqueados</b><span>Não completaste a votação da semana passada, por isso esta semana não vês os rankings.${weekDone(g.id)?" A votação desta semana já está feita ✔︎: voltas a ver a partir de segunda, às 00:00.":" Faz a votação desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${weekDone(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer a votação</span>`}`}</button></div>`:`
     <div class="section"><div class="label">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
       <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
         : `<div class="empty"><p>${seasonPending(g.id)?"Época nova: o ranking recomeça na próxima semana.":"Ainda ninguém submeteu o ranking nesta época."}</p></div>`}</div></div>
@@ -1539,24 +1549,36 @@ function journeyScreen(){
   const g=curGroup(); const me=ME();
   const head=g=>`<div class="tabhead"><div class="titles"><h1>Journey</h1>${groupPill(true)}</div>${g?`<button class="roundbtn" data-act="galaInfo" data-arg="${g.id}" aria-label="Gala de fim de ano" style="color:var(--gold)">${ic("trophy")}</button>`:""}${g&&isAdmin(g)?`<button class="roundbtn" data-act="newAward" aria-label="Novo prémio">${ic("plus")}</button>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="journey">${head(null)}${noGroup()}</div>`;
-  const aw=groupAwards(g.id); const nLocal=Object.keys(S.localVotes).filter(id=>aw.some(a=>a.id===id)).length;
-  const voted=aw.filter(a=>myVote(a.id)).length; const past=viewingPast(g.id); const closed=past?null:votingClosed(g.id); const lock=past||!!closed;
-  return `<div class="scroll pad-tabs" data-key="journey" style="${nLocal?"padding-bottom:calc(var(--tabh) + var(--sb) + 96px)":""}">${head(g)}${previewBanner()}
+  const aw=groupAwards(g.id); const past=viewingPast(g.id); const closed=past?null:votingClosed(g.id); const hid=resultsHidden(g.id);
+  const w=curWeek(); const v=S.votes[me]?.weeks?.[w]||{}; const qs=weekQuestions(g.id);
+  const rOk=!!myRankingThisWeek(g.id), aN=aw.filter(a=>v[a.id]).length, qN=qs.filter(q=>v[q.id]).length, done=weekDone(g.id);
+  const pill=(ok,txt)=>`<span class="jpill ${ok?"ok":""}">${ok?ic("check"):""}${txt}</span>`;
+  const voteCard=(past||closed)?"":`<div class="section" style="margin-top:14px"><button class="jvote ${done?"done":""}" data-act="rank">
+      <div class="jvtop"><span class="jvico">${ic(done?"check":"edit")}</span><span style="flex:1;text-align:left"><b>${done?"Votação da semana feita":"Votação da semana"}</b><small>${done?"Podes alterar até domingo, 23:59":`Semana de ${esc(weekRange(w))} · até domingo, 23:59`}</small></span>${ic("right")}</div>
+      <div class="jvpills">${pill(rOk,"Ranking")}${aw.length?pill(aN===aw.length,`Prémios ${aN}/${aw.length}`):""}${qs.length?pill(qN===qs.length,`Perguntas ${qN}/${qs.length}`):""}</div></button></div>`;
+  const awardsSec=aw.length?`<div class="section"><div class="label">Prémios da época</div>
+      ${hid?`<div class="card"><div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Ninguém vê votos nem resultados dos prémios até ao jantar${hid.gala?` da Gala ${esc(hid.year)} (${esc(fmtDate(hid.gala))})`:""}. Votas na "Votação da semana".</span></div></div></div><div style="height:10px"></div>`:""}
+      ${hid?`<div class="card list">${aw.map(a=>`<div class="row" style="align-items:flex-start"><span style="font-size:24px;width:32px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle">${esc(a.label)}</div>${a.desc?`<div class="rowsub" style="white-space:normal">${esc(a.desc)}</div>`:""}</div>${isAdmin(g)?`<button class="iconbtn" data-act="delAward" data-arg="${a.id}" aria-label="Apagar prémio" style="color:var(--red)">${ic("trash")}</button>`:""}</div>`).join("")}</div>`
+      : aw.map(a=>`<div style="margin-bottom:16px"><div class="award" style="margin-bottom:10px"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3><button class="minibtn" data-act="evolution" data-arg="${a.id}">${ic("trend")}Evolução</button>${isAdmin(g)&&!past?`<button class="iconbtn" data-act="delAward" data-arg="${a.id}" aria-label="Apagar prémio" style="color:var(--red)">${ic("trash")}</button>`:""}</div>${a.desc?`<p class="small muted" style="margin:-4px 4px 10px 40px">${esc(a.desc)}</p>`:""}${awardBlock(g,a,false)}</div>`).join("")}</div>`
+    : `<div class="section"><div class="label">Prémios da época</div><div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>${isAdmin(g)?"Cria o primeiro prémio com + ou começa com os sugeridos.":"Os admins do grupo ainda não criaram prémios."}</p>${isAdmin(g)?`<button class="btn ghost" style="margin-top:8px" data-act="suggestAwards" data-arg="${g.id}">${ic("trophy")}Adicionar prémios sugeridos</button>`:""}</div></div></div>`;
+  return `<div class="scroll pad-tabs" data-key="journey">${head(g)}${previewBanner()}
     ${past?pastSeasonBanner(g)+`<div class="section" style="margin-top:12px"><button class="galabanner" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}"><span class="ge">🎞️</span><span style="flex:1;text-align:left"><b>Rever a Gala ${esc(viewSeason(g.id).year)}</b><small>Os vencedores e os momentos da época</small></span>${ic("right")}</button></div>`:`<div class="section" style="margin-top:10px">${galaBanner(g)}</div>`}
     ${closed?`<div class="banner" style="margin-top:14px">${ic("lock")}<span>A época terminou na Gala ${esc(closed.year)}. Os votos recomeçam segunda-feira, ${esc(shortDate(addDays(closed.gala,7-((ymdToUTC(closed.gala).getUTCDay()+6)%7))))}, numa época nova.</span></div>`:""}
-    <div class="section" style="margin-top:14px"${lock?' hidden':''}><p class="small muted" style="margin:0 4px 10px">Vota uma vez por semana em cada prémio. Os votos são secretos — só aparecem os totais. Podes mudar até domingo às 23:59.</p>
-      ${aw.length?`<div class="dots">${aw.map(a=>`<span class="dot ${myVote(a.id)?"on":""}" title="${esc(a.label)}">${myVote(a.id)?ic("check"):""}</span>`).join("")}<span class="small muted" style="margin-left:4px">${voted}/${aw.length} votados · semana de ${esc(weekRange(curWeek()))}</span></div>`:""}</div>
-    ${aw.length? aw.map(a=>{ const v=myVote(a.id); const local=S.localVotes[a.id]!=null;
-      return `<div class="section"><div class="award" style="margin-bottom:10px"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3>
-        <button class="minibtn" data-act="evolution" data-arg="${a.id}">${ic("trend")}Evolução</button>
-        ${isAdmin(g)?`<button class="iconbtn" data-act="delAward" data-arg="${a.id}" aria-label="Apagar prémio" style="color:var(--red)">${ic("trash")}</button>`:""}</div>
-        ${a.desc?`<p class="small muted" style="margin:-4px 4px 10px 40px">${esc(a.desc)}</p>`:""}
-        ${lock?"":`<button class="votechip ${v?"set":""} ${local?"local":""}" data-act="vote" data-arg="${a.id}">${v?avatar(v,28):ic("plus")}<span class="grow">${v?esc(nm(v)):"Votar neste prémio"}</span>${v&&!local?`<span class="chip green">${ic("check")}Votado</span>`:""}${local?`<span class="chip">Por submeter</span>`:""}${ic("down")}</button>
-        <div style="height:10px"></div>`}${awardBlock(g,a,false)}</div>`; }).join("")
-      : `<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>${isAdmin(g)?"Cria o primeiro prémio com + ou começa com os sugeridos.":"Os admins do grupo ainda não criaram prémios."}</p>${isAdmin(g)?`<button class="btn ghost" style="margin-top:8px" data-act="suggestAwards" data-arg="${g.id}">${ic("trophy")}Adicionar prémios sugeridos</button>`:""}</div></div></div>`}
-    </div>
-`;
+    ${voteCard}
+    ${questionsArchive(g)}
+    ${awardsSec}
+  </div>`;
 }
+// Archive of the weekly questions: closed weeks of the season being viewed. Results only for weeks you voted; never who voted for whom.
+function questionsArchive(g){ const me=ME(); const s=viewSeason(g.id); const cw=curWeek();
+  const ws=seasonWeeks(g.id).filter(w=>w<cw&&w>=Q_START&&inSeasonW(s,w)).reverse();
+  const cur=!viewingPast(g.id)&&cw>=Q_START&&inSeasonW(s,cw);
+  if(!ws.length&&!cur) return "";
+  const body=ws.length?ws.map(w=>{ const ok=weekComplete(g.id,me,w); const rs=questionResults(g.id,w);
+      return `<div class="qweek"><div class="qwk">${esc(weekRange(w))}</div>${ok?rs.map(q=>`<div class="qrow"><div class="qtxt">${esc(q.text)}</div><div class="qwin">${q.winners.length?q.winners.map(k=>`<span>${avatar(k,24)}<b>${esc(first(nm(k)))}${k===me?" (tu)":""}</b></span>`).join("")+`<small class="muted">${q.max} ${q.max===1?"voto":"votos"}</small>`:`<small class="muted">Sem respostas</small>`}</div></div>`).join("")
+        :`<div class="qlock">${ic("lock")}<span>Não completaste a votação desta semana, por isso não vês estas respostas.</span></div>`}</div>`; }).join("")
+    :`<div class="empty" style="padding:18px 16px"><p>As respostas desta semana aparecem aqui na segunda-feira, às 00:00.</p></div>`;
+  return `<div class="section"><div class="label">🎲 Perguntas da semana</div><div class="card">${body}</div><p class="info">Só aparecem os vencedores, nunca quem votou em quem.</p></div>`; }
 
 /* ───────────────────────── screens: GAP ───────────────────────── */
 function gapScreen(){
@@ -1824,6 +1846,11 @@ function questionResults(gid,w){ const g=S.groups[gid]; return weekQuestions(gid
   const max=Math.max(0,...Object.values(c)); return {...q,tot,winners:Object.keys(c).filter(k=>c[k]===max&&max>0),max}; }); }
 /* ───────── Weekly vote: friendship ranking + award votes in ONE place. Nothing is saved until everything is answered. ───────── */
 function weekItems(gid){ return [...groupAwards(gid).map(a=>({id:a.id,label:a.label,emoji:a.emoji||"🏆",desc:a.desc,kind:"award"})),...weekQuestions(gid).map(q=>({id:q.id,label:q.text,emoji:"🎲",desc:"",kind:"q"}))]; }
+// A week's vote is complete = ranking + every award that existed that week + that week's questions
+function weekEndMs(w){ const m=weekMonday(w); return m.getTime()+7*864e5+2*3600e3; }
+function weekComplete(gid,k,w){ if(!S.rankings[k]?.weeks?.[w]?.[gid]) return false; const v=S.votes[k]?.weeks?.[w]||{}; const end=weekEndMs(w);
+  const aw=groupAwards(gid).filter(a=>!a.createdAt||+new Date(a.createdAt)<end).map(a=>a.id);
+  return [...aw,...weekQuestions(gid,w).map(q=>q.id)].every(id=>v[id]); }
 function weekDone(gid,k=ME()){ const w=curWeek(); return !!S.rankings[k]?.weeks?.[w]?.[gid] && weekItems(gid).every(a=>S.votes[k]?.weeks?.[w]?.[a.id]); }
 function rankSheet(startStep=1, focusAward=null){
   const g=curGroup(); const me=ME(); const others=g.members.filter(k=>k!==me); const w=curWeek(); const aw=weekItems(g.id);
