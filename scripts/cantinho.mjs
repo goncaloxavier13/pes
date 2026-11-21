@@ -145,7 +145,16 @@ for (const [gid, g0] of Object.entries(groups)) {
     for (const k of chat.members || []) if (k !== chat.host)
       await send(k, { title: `🛋️ ${chat.name}`, body: `O ${first(chat.host)} respondeu no cantinho 👀`, tag: "cant-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
     gs.seen = { ...(gs.seen || {}), [cid]: Math.max(...fresh.map(m => m.at)) };
+    // FOMO: quem ficou de fora sabe que há respostas que não pode ler (no máximo 1 vez por dia)
+    const fomo = gs.fomo?.day === today ? gs.fomo.list || [] : [];
+    for (const k of mem) if (!(chat.members || []).includes(k) && !fomo.includes(k)) {
+      fomo.push(k); await send(k, { title: `🔒 Há novidades no Cantinho do ${g.name}`, body: `O ${first(chat.host)} respondeu no cantinho… e tu não podes ler 😬 Vota esta semana para entrares no próximo.`, tag: "cant-fomo-" + gid, url: `./?g=${gid}&t=gap` }); }
+    gs.fomo = { day: today, list: fomo };
   }
+  // contadores públicos do cantinho (só números, sem conteúdo) para o ecrã de quem está de fora
+  if (!DRY) { const ans = msgs.filter(m => m.from === chat.host).length; const prevC = g.cant || {};
+    if (prevC.week !== wk || prevC.answers !== ans || prevC.inside !== (chat.members || []).length)
+      await db.doc("groups/" + gid).update({ cant: { week: wk, answers: ans, inside: (chat.members || []).length } }); }
   const last = msgs[msgs.length - 1]; if (!last) continue;
   const qs = msgs.filter(m => m.from === BOT && m.q); const lastQ = qs[qs.length - 1]; const nThemes = qs.filter(m => m.st === 0).length;
   const tell = text => send(chat.host, { title: "🛋️ O Anfitrião respondeu", body: text.slice(0, 140), tag: "cant-host-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });

@@ -130,24 +130,47 @@ if (hourLx() >= 18) {
   }
 }
 
-// 4) votação de domingo (a partir das 18h; uma vez por semana)
+// 4) votação de domingo: às 18h lembrete e às 22h última chamada (com FOMO)
 const wk = weekOf(ymd());
-if (weekdayLx() === "Sun" && hourLx() >= 18 && st.weekly !== wk) {
-  const [awards, votes, rankings] = await Promise.all([all("awards"), all("votes"), all("rankings")]);
-  const todo = {}, firstG = {};
+const FULL_VOTE_FROM = "2026-W47";
+const tsMs = x => x == null ? 0 : typeof x === "number" ? x : x.toMillis ? x.toMillis() : +new Date(x);
+function wkMonday(w) { const y = +w.slice(0, 4), n = +w.slice(6); const j4 = new Date(Date.UTC(y, 0, 4)); const m = new Date(j4); m.setUTCDate(j4.getUTCDate() - ((j4.getUTCDay() + 6) % 7) + (n - 1) * 7); return m; }
+let VR = null; const loadVR = async () => VR || (VR = await Promise.all([all("awards"), all("votes"), all("rankings")]));
+function complete([awards, votes, rankings], gid, k, w) { // mesma regra da app
+  if (!rankings[k]?.weeks?.[w]?.[gid]) return false; if (w < FULL_VOTE_FROM) return true;
+  const v = votes[k]?.weeks?.[w] || {}; const end = wkMonday(w).getTime() + 7 * 864e5 + 2 * 3600e3;
+  const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid && (!a.createdAt || tsMs(a.createdAt) < end)).map(([id]) => id);
+  return [...aw, ...weekQuestions(gid, w).map(q => q.id)].every(id => v[id]);
+}
+const stage = weekdayLx() === "Sun" ? (hourLx() >= 22 ? "22" : hourLx() >= 18 ? "18" : null) : null;
+if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly === wk + ":22")) {
+  const vr = await loadVR();
   for (const [gid, g] of Object.entries(groups)) {
-    // Gala already happened this week: the season is closed until Monday, no reminder
-    if ((g.galas || []).some(d => d < ymd() && weekOf(d) === wk)) continue;
-    const aw = [...Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id), ...weekQuestions(gid, wk).map(q => q.id)];
-    for (const k of g.members || []) {
-      const v = votes[k]?.weeks?.[wk] || {}; const r = rankings[k]?.weeks?.[wk]?.[gid];
-      const missingVote = aw.some(id => !v[id]); const missingRank = (g.members || []).length > 1 && !r;
-      if (missingVote || missingRank) { (todo[k] = todo[k] || []).push(g.name); (firstG[k] = firstG[k] || gid); }
+    if ((g.galas || []).some(d => d < ymd() && weekOf(d) === wk)) continue; // época fechada depois da Gala
+    const mem = g.members || []; if (mem.length < 2) continue;
+    const done = mem.filter(k => complete(vr, gid, k, wk)); const miss = mem.filter(k => !done.includes(k));
+    for (const k of miss) {
+      const others = miss.length - 1;
+      const p = stage === "18"
+        ? { title: `⏳ A votação do ${g.name} fecha hoje às 23:59`, body: `Já votaram ${done.length} de ${mem.length}. Se não votares, amanhã ficas sem ranking, sem resumo da semana e sem Cantinho 🔒` }
+        : { title: "🚨 Última chamada: faltam 2 horas", body: others ? `Só faltas tu e mais ${others}. À meia-noite fecha e ficas de fora a semana toda 😬` : `Só faltas TU. O grupo todo já votou… à meia-noite ficas sozinho de fora 😬` };
+      await send(k, "votes", { ...p, tag: "votes-" + wk, url: `./?g=${gid}&t=dash` });
     }
   }
-  for (const [k, gs] of Object.entries(todo))
-    await send(k, "votes", { title: "Ainda vais a tempo de votar", body: `Falta acabar a tua votação (ranking, prémios ou perguntas) em ${gs.slice(0, 3).join(", ")}. O prazo acaba hoje às 23:59.`, tag: "votes-" + wk, url: `./?g=${firstG[k]}&t=journey` });
-  st.weekly = wk;
+  st.weekly = wk + ":" + stage;
+}
+
+// 4b) segunda-feira: quem não completou a votação da semana passada fica a saber que ficou de fora (uma vez por semana)
+if (weekdayLx() === "Mon" && st.locked !== wk) {
+  const vr = await loadVR(); const pw = weekOf(new Date(wkMonday(wk).getTime() - 3 * 864e5).toISOString().slice(0, 10));
+  for (const [gid, g] of Object.entries(groups)) {
+    if ((g.galas || []).some(d => weekOf(d) === pw || weekOf(d) === wk)) continue; // semana da Gala: sem castigos
+    const mem = g.members || []; if (mem.length < 2) continue;
+    const inside = mem.filter(k => complete(vr, gid, k, pw)); if (!inside.length) continue;
+    for (const k of mem.filter(k => !inside.includes(k)))
+      await send(k, "votes", { title: "🔒 Esta semana ficaste de fora", body: `${inside.length} ${inside.length === 1 ? "amigo já está" : "amigos já estão"} a ver o ranking, o resumo e o Cantinho do ${g.name}. Tu não 😬 Vota esta semana para voltares na próxima segunda.`, tag: "locked-" + wk, url: `./?g=${gid}&t=dash` });
+  }
+  st.locked = wk;
 }
 
 // 5) aniversários (a partir das 9h; uma vez por dia)
@@ -189,6 +212,6 @@ if (nudges.length) {
   st.nudged = { day: today, list: done };
 }
 
-await stRef.set({ lastRun: now, weekly: st.weekly || null, bday: st.bday || null, nudged: st.nudged || null }, { merge: true });
+await stRef.set({ lastRun: now, weekly: st.weekly || null, locked: st.locked || null, bday: st.bday || null, nudged: st.nudged || null }, { merge: true });
 console.log(`Feito: ${sent} notificações enviadas.`);
 process.exit(0);
