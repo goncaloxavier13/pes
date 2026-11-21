@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795126431">
+<meta name="pes-version" content="1795265117">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1690,7 +1690,20 @@ function votePicker(aid){
     body:()=>`<p class="muted small" style="text-align:center;margin:-4px 0 14px">${esc(a.desc||"Escolhe uma pessoa")}. O teu voto é secreto.</p>
       <div class="card list">${g.members.filter(k=>k!==me).sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const on=myVote(aid)===k; return `<button class="row" data-pick="${k}">${avatar(k,38)}<span class="grow rowtitle" style="font-weight:${on?600:400}">${esc(nm(k))}</span><span class="check ${on?"on":""}">${on?ic("check"):""}</span></button>`; }).join("")}</div>`,
     onMount:L=>{ L.body.addEventListener("click",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return; const saved=S.votes[me]?.weeks?.[curWeek()]?.[aid];
-      if(saved===b.dataset.pick) delete S.localVotes[aid]; else S.localVotes[aid]=b.dataset.pick; popLayer(L); render(); }); }});
+      if(saved===b.dataset.pick) delete S.localVotes[aid]; else S.localVotes[aid]=b.dataset.pick; popLayer(L); render(); layers.forEach(x=>x.live&&x.render&&x.render()); }); }});
+}
+/* Step 2 after the friendship ranking: the award votes (only your own choices are ever shown — results stay secret until the Gala) */
+function votesStepSheet(gid){
+  const g=S.groups[gid]; const aw=groupAwards(gid); if(!aw.length) return;
+  const L=openSheet({title:"Falta 1 passo",left:"Mais tarde",right:"Submeter",rightDisabled:true,live:true,
+    body:()=>{ const done=aw.filter(a=>myVote(a.id)).length; const pend=Object.keys(S.localVotes).length;
+      setTimeout(()=>setRight(L,pend>0),0);
+      return `<div class="ws-head"><div class="ws-emo">🗳️</div><h2>Agora os prémios</h2><p>Ranking feito ✔︎ · ${done}/${aw.length} prémios votados</p></div>
+      <div class="card list">${aw.map(a=>{ const v=myVote(a.id); const local=!!S.localVotes[a.id];
+        return `<button class="row" data-aw="${a.id}"><span style="font-size:24px;width:32px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle">${esc(a.label)}</div><div class="rowsub">${v?`O teu voto: ${esc(nm(v))}${local?" · por submeter":""}`:"Ainda não votaste"}</div></div>${v?`<span style="color:${local?"var(--gold)":"var(--green)"}">${ic(local?"edit":"check",'style="width:20px;height:20px"')}</span>`:`<span class="muted">${ic("right",'style="width:18px;height:18px"')}</span>`}</button>`; }).join("")}</div>
+      <p class="info">🤫 Os teus votos são secretos. Os resultados só são revelados no jantar da Gala.</p>`; },
+    onMount:L=>L.body.addEventListener("click",e=>{ const b=e.target.closest("[data-aw]"); if(b) votePicker(b.dataset.aw); }),
+    onRight:async L=>{ setRight(L,false); await A.submitVotes(); popLayer(L); }});
 }
 function rankSheet(){
   const g=curGroup(); const me=ME(); const others=g.members.filter(k=>k!==me);
@@ -1717,7 +1730,10 @@ function rankSheet(){
       L.render(); setRight(L,!unr.length); }); },
     onRight:async L=>{ if(unr.length) return; setRight(L,false); const w=curWeek(); const r={}; ranked.forEach((k,i)=>r[k]=i+1);
       const doc=S.rankings[me]?JSON.parse(JSON.stringify(S.rankings[me])):{weeks:{}}; doc.weeks=doc.weeks||{}; doc.weeks[w]={...(doc.weeks[w]||{}),[g.id]:r};
-      const ok=await write(()=>D("rankings/"+me).set(doc),"Ranking submetido"); if(ok) popLayer(L); else setRight(L,true); }});
+      const ok=await write(()=>D("rankings/"+me).set(doc),"Ranking submetido"); if(ok){ popLayer(L);
+        // Step 2: open the award votes if any is still missing this week
+        const missing=groupAwards(g.id).some(a=>!S.votes[me]?.weeks?.[curWeek()]?.[a.id]); if(missing&&!votingClosed(g.id)) setTimeout(()=>votesStepSheet(g.id),350); }
+      else setRight(L,true); }});
 }
 function evolutionSheet(aid){
   const g=curGroup(); const a=S.awards[aid];
