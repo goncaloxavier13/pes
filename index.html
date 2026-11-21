@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795278982">
+<meta name="pes-version" content="1795279115">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1890,9 +1890,11 @@ function questionResults(gid,w){ const g=S.groups[gid]; return weekQuestions(gid
   const max=Math.max(0,...Object.values(c)); return {...q,tot,winners:Object.keys(c).filter(k=>c[k]===max&&max>0),max}; }); }
 /* ───────── Weekly vote: friendship ranking + award votes in ONE place. Nothing is saved until everything is answered. ───────── */
 function weekItems(gid){ return [...groupAwards(gid).map(a=>({id:a.id,label:a.label,emoji:a.emoji||"🏆",desc:a.desc,kind:"award"})),...weekQuestions(gid).map(q=>({id:q.id,label:q.text,emoji:"🎲",desc:"",kind:"q"}))]; }
+// Until 2026-W46 the rule was "ranking only" (awards were a separate vote). From W47 on, the full vote is required.
+const FULL_VOTE_FROM="2026-W47";
 // A week's vote is complete = ranking + every award that existed that week + that week's questions
 function weekEndMs(w){ const m=weekMonday(w); return m.getTime()+7*864e5+2*3600e3; }
-function weekComplete(gid,k,w){ if(!S.rankings[k]?.weeks?.[w]?.[gid]) return false; const v=S.votes[k]?.weeks?.[w]||{}; const end=weekEndMs(w);
+function weekComplete(gid,k,w){ if(!S.rankings[k]?.weeks?.[w]?.[gid]) return false; if(w<FULL_VOTE_FROM) return true; const v=S.votes[k]?.weeks?.[w]||{}; const end=weekEndMs(w);
   const aw=groupAwards(gid).filter(a=>!a.createdAt||+new Date(a.createdAt)<end).map(a=>a.id);
   return [...aw,...weekQuestions(gid,w).map(q=>q.id)].every(id=>v[id]); }
 function weekDone(gid,k=ME()){ const w=curWeek(); return !!S.rankings[k]?.weeks?.[w]?.[gid] && weekItems(gid).every(a=>S.votes[k]?.weeks?.[w]?.[a.id]); }
