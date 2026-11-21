@@ -13,6 +13,7 @@ initializeApp({ credential: cert(JSON.parse(SA)) });
 const db = getFirestore();
 if (VAPID_PRIVATE) webpush.setVapidDetails("mailto:goncaloxavier13@gmail.com", VAPID_PUBLIC, VAPID_PRIVATE);
 
+const Q_START = "2026-W47";
 const CANT_START = "2026-W48", FULL_VOTE_FROM = "2026-W47", BOT = "bot";
 const ymd = (d = new Date()) => new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Lisbon", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 const hourLx = () => +new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", hour: "2-digit", hour12: false }).format(new Date());
