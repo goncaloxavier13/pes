@@ -102,6 +102,7 @@ for (const d of (await db.collection("events").where("createdAt", ">", since).ge
 // 2) mensagens novas (agrupadas por conversa)
 for (const c of (await db.collection("chats").where("lastAt", ">", since).get()).docs) {
   const chat = c.data();
+  if (chat.type === "cantinho") continue; // o cantinho tem as suas próprias notificações (scripts/cantinho.mjs)
   const msgs = (await db.collection(`chats/${c.id}/msgs`).where("at", ">", since).get()).docs.map(m => m.data()).sort((a, b) => a.at - b.at);
   if (!msgs.length) continue;
   const title = chat.type === "direct" ? null : (chat.name || groups[chat.groupId]?.name || "Grupo");

@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795279115">
+<meta name="pes-version" content="1795279934">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -586,6 +586,13 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .lockpin{position:absolute;inset:0;display:grid;place-items:center;color:var(--gold)}.lockpin svg{width:28px;height:28px}
 button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cursor:pointer;padding:0}
 .ws-tile[data-act]{cursor:pointer}
+.cantcard{width:100%;display:flex;align-items:center;gap:12px;border:0;border-radius:18px;padding:14px 16px;font:inherit;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(135deg,#ff9f0a,#ff375f)}
+.cantcard .grow{min-width:0}.cantcard b{display:block;font-size:17px}.cantcard small{display:block;font-size:13.5px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cantcard svg{width:20px;height:20px;flex:none}.cantcard .dotu{background:#fff}
+.cantcard.locked,.cantcard.wait{background:var(--card);color:var(--text)}.cantcard.locked small,.cantcard.wait small{color:var(--muted);white-space:normal}.cantcard.locked svg{color:var(--gold)}
+.cant-emo{font-size:30px;line-height:1;flex:none}
+.cantnote{padding:12px 16px calc(12px + var(--sb));font-size:14px;color:var(--muted);text-align:center;border-top:1px solid var(--border);background:var(--card)}
+.cantsum p{margin:0 0 10px;font-size:14.5px;line-height:1.45}.cantwho{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:6px;padding-top:12px;border-top:1px solid var(--border)}.cantwho>span:first-child{color:var(--muted);font-size:13px}.cw{display:inline-flex;align-items:center;gap:8px;font-size:17px}
 </style>
 </head>
 <body>
@@ -595,7 +602,8 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 "use strict";
 /* ───────────────────────── constants ───────────────────────── */
 /* People are created by each user (no fixed member list). nm() resolves a person's display name. */
-const nm = k => S.people[k]?.name || "Alguém";
+const BOT="bot"; const BOT_NAME="Anfitrião do Cantinho";
+const nm = k => k===BOT ? BOT_NAME : (S.people[k]?.name || "Alguém");
 const DEFAULT_AWARDS = [
   {key:"the_best",label:"The Best",emoji:"🏆",desc:"Melhor membro do ano",order:1},
   {key:"fdgp",label:"Prémio FDGP",emoji:"😈",desc:"O membro mais egoísta",order:2},
@@ -775,6 +783,10 @@ function generateDemo(nowMs){
     ["zeca-couceiro","Malta, já reservei para dia 12. Mesa para 11!",2900],["tuna-cardoso","Grande! Onde é?",2890],["zeca-couceiro","No sítio do ano passado, em Alcântara",2880],
     ["sid","Eu levo o amigo secreto organizado",1500],["jorge","Vou chegar um bocadinho atrasado 😅",1490],["joao-t","Clássico. Rei do Atraso garantido",1485],
     ["manel-xavier","Limite do amigo secreto 20€?",300],["frederico-napoles","Por mim 20€ está ótimo",45],["zeca-couceiro","Fechado: 20€. Confirmem presença no evento!",12]]);
+  { const cw=weekOf(lisbonYMD()); chat("cant-g-elcalderon-"+cw,{groupId:"g-elcalderon",type:"cantinho",host:"manel-xavier",week:cw,name:"Cantinho do Manel",members:elc,createdBy:"bot",createdAt:nowMs-DAY},[
+    ["bot","Bem-vindo ao cantinho, Manel 🛋️ Começamos com calma: se pudesses saber a resposta a uma única pergunta sobre o universo, qual escolhias?",1400],
+    ["manel-xavier","Se existe vida noutro planeta. Acho que mudava tudo",1300],
+    ["bot","Mudava tudo como? Achas que íamos ficar mais unidos ou mais assustados?",1290]]); }
   chat("c-tuna",{groupId:"g-elcalderon",type:"direct",name:"",members:[me,"tuna-cardoso"],createdBy:"tuna-cardoso",createdAt:nowMs-20*DAY},[
     ["tuna-cardoso","Viste o resultado de ontem?",3000],[me,"Vi, que jogo!",2990],["tuna-cardoso","Para a semana jogamos outra vez quinta?",1440],[me,"Conta comigo",1430],["tuna-cardoso","Leva a bola nova",95]]);
   chat("c-jogos",{groupId:"g-elcalderon",type:"group",name:"Noite de jogos",members:[me,"zeca-couceiro","francisco-cabral","francisco-guerra","joao-porto"],createdBy:me,createdAt:nowMs-40*DAY},[
@@ -837,6 +849,7 @@ const isAdmin = g => !!g && (g.admins||[]).includes(ME());
 const photo = k => S.people[k]?.photo || null;
 
 function avatar(k,size=36,cls=""){
+  if(k===BOT) return `<span class="av ${cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.55)}px;background:linear-gradient(135deg,#ff9f0a,#ff375f)" title="${BOT_NAME}">🛋️</span>`;
   const p=photo(k); const n=nm(k)||"?";
   const st=`width:${size}px;height:${size}px;font-size:${Math.round(size*.36)}px;background:hsl(${hue(k)} 45% 52%)`;
   return `<span class="av ${cls}" style="${st}" title="${esc(n)}">${p?`<img src="${esc(p)}" alt="">`:esc(initials(n))}</span>`;
@@ -943,7 +956,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
       <p class="info">Esta foi a primeira semana da época, por isso ainda não há comparações. Todas as segundas, à meia-noite, chega um resumo novo.</p>`:"";
     const qr=questionResults(gid,w).filter(q=>q.tot>0);
     const qhtml=qr.length?`<div class="label" style="margin-top:20px">🎲 Perguntas da semana</div><div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="margin-bottom:6px;white-space:normal">${esc(q.text)}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${q.winners.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px">${avatar(k,28)}<b>${esc(nm(k))}${k===me?" (tu)":""}</b></span>`).join("")}<span class="muted small">${q.max} ${q.max===1?"voto":"votos"}${q.winners.length>1?" cada":""}</span></div></div></div>`).join("")}</div>`:"";
-    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${qhtml}${top}${mv}${future}`;
+    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${qhtml}${top}${mv}${future}${cantinhoSummary(gid,w)}`;
   }
   openSheet({title:"",left:"Fechar",body:()=>`${head}${part}${body}<p class="info" style="text-align:center">Os prémios continuam secretos até à Gala 🤫</p>`});
 }
@@ -1140,15 +1153,19 @@ async function syncAllGroupChats(){ if(chatSyncBusy||!S.fb||!ME()) return; chatS
   finally{ chatSyncBusy=false; } }
 /* "Delete" a conversation = hide it for me and clear its history for me. A new message brings it back. */
 const hiddenAt = cid => S.reads[ME()]?.hidden?.[cid] || 0;
-function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>c.groupId===gid && (c.members||[]).includes(me) && (!hiddenAt(id) || (c.lastAt||0)>hiddenAt(id))).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
+/* ───────── Cantinho: each week one member chats with an AI host. Only people who completed last week's vote are in it. ───────── */
+const CANT_START="2026-W48";
+function cantinhoOf(gid){ const me=ME(); const e=Object.entries(S.chats).find(([id,c])=>c.type==="cantinho"&&c.groupId===gid&&c.week===curWeek()&&(c.members||[]).includes(me)); return e?{id:e[0],...e[1]}:null; }
+function cantFirstHost(gid){ return (S.groups[gid]?.members||[]).find(k=>first(nm(k))==="Manel")||null; }
+function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>c.groupId===gid && c.type!=="cantinho" && (c.members||[]).includes(me) && (!hiddenAt(id) || (c.lastAt||0)>hiddenAt(id))).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
 const openChatId = () => { const r=topRoute(); return r?.name==="chat"&&document.visibilityState!=="hidden" ? r.arg : null; };
 function isUnread(c){ const me=ME(); if(!c.lastAt||c.lastFrom===me) return false; if(c.id===openChatId()) return false; return c.lastAt > (S.reads[me]?.chats?.[c.id]||0); }
-function unreadCount(){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>(c.members||[]).includes(me)&&S.groups[c.groupId]?.members?.includes(me)&&isUnread({id,...c})).length; }
+function unreadCount(){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>(c.members||[]).includes(me)&&S.groups[c.groupId]?.members?.includes(me)&&!(c.type==="cantinho"&&c.week!==curWeek())&&isUnread({id,...c})).length; }
 function voteClosing(gid){ const dow=ymdToUTC(lisbonYMD()).getUTCDay(); if(dow!==6&&dow!==0) return false; if(votingClosed(gid)) return false;
   const g=S.groups[gid]; const me=ME(); const wk=curWeek(); const v=S.votes[me]?.weeks?.[wk]||{};
   const missVote=weekItems(gid).some(a=>!v[a.id]); const missRank=(g?.members||[]).length>1&&!myRankingThisWeek(gid);
   return missVote||missRank; }
-function groupNotifs(gid){ const me=ME(); const msgs=chatsOf(gid).filter(isUnread).length; const evs=pendingFor(me).filter(e=>e.groupId===gid).length; const vote=voteClosing(gid);
+function groupNotifs(gid){ const me=ME(); const ct=cantinhoOf(gid); const msgs=chatsOf(gid).filter(isUnread).length+(ct&&isUnread(ct)?1:0); const evs=pendingFor(me).filter(e=>e.groupId===gid).length; const vote=voteClosing(gid);
   return {msgs,evs,vote,total:msgs+evs+(vote?1:0)}; }
 function chatTitle(c){ const me=ME(); if(c.type==="direct"){ const o=(c.members||[]).find(k=>k!==me); return nm(o)||"Conversa"; } return c.name || (c.members||[]).filter(k=>k!==me).map(k=>first(nm(k))).join(", ") || "Grupo"; }
 
@@ -1611,7 +1628,7 @@ function gapScreen(){
   const head=`<div class="tabhead"><div class="titles"><h1>GAP</h1>${groupPill()}</div>${g?`<div style="display:flex;gap:8px;align-items:center">${g&&chatsOf(g.id).length?`<button class="linkbtn" data-act="gapEdit" style="font-weight:600;padding:8px 4px">${S.gapEdit?"OK":"Editar"}</button>`:""}<button class="roundbtn fill" data-act="newChat" aria-label="Nova conversa">${ic("compose")}</button></div>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="gap">${head}${noGroup()}</div>`;
   const cs=chatsOf(g.id); const me=ME();
-  return `<div class="scroll pad-tabs" data-key="gap">${head}${previewBanner()}<div class="section" style="margin-top:12px">
+  return `<div class="scroll pad-tabs" data-key="gap">${head}${previewBanner()}${cantinhoCard(g)}<div class="section" style="margin-top:12px">
     ${cs.length?`<div class="card list">${cs.map(c=>{ const u=isUnread(c); const other=c.type==="direct"?(c.members||[]).find(k=>k!==me):null;
       return `<div class="chatwrap">${S.gapEdit?`<button class="chatdel" data-act="deleteChat" data-arg="${c.id}" aria-label="Apagar conversa ${esc(chatTitle(c))}">${ic("trash")}</button>`:""}<button class="row chatrow" data-act="${S.gapEdit?"deleteChat":"openChat"}" data-arg="${c.id}">${other?avatar(other,48):`<span class="gphoto" style="width:48px;height:48px;border-radius:50%">${ic("users")}</span>`}
         <div class="grow"><div style="display:flex;gap:8px;align-items:baseline"><span class="rowtitle" style="flex:1;${u?"font-weight:700":""}">${esc(chatTitle(c))}</span><span class="small ${u?"":"muted"}" style="${u?"color:var(--accent);font-weight:600":""}">${esc(ago(c.lastAt))}</span></div>
@@ -1620,20 +1637,39 @@ function gapScreen(){
     <p class="info">Só os participantes veem cada conversa. Apagar uma conversa só a apaga para ti: se chegar uma mensagem nova, volta a aparecer.</p></div></div>`;
 }
 
+function cantinhoSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); if(nextW<CANT_START) return "";
+  const me=ME(); const c=Object.entries(S.chats).find(([id,x])=>x.type==="cantinho"&&x.groupId===gid&&x.week===nextW); const host=c?c[1].host:(nextW===CANT_START?cantFirstHost(gid):null);
+  const who=host?`${avatar(host,30)}<b>${esc(nm(host))}${host===me?" (tu!)":""}</b>`:"";
+  if(nextW===CANT_START) return `<div class="label" style="margin-top:20px">🛋️ Novidade: o Cantinho</div><div class="card pad cantsum">
+    <p>A partir de hoje, todas as semanas há um <b>Cantinho</b> no topo do GAP. Uma pessoa do grupo é escolhida ao calhas e senta-se no cantinho a conversar com o <b>Anfitrião</b>, um bot com inteligência artificial que começa com perguntas filosóficas e vai puxando conversa sobre a vida, a rotina e o grupo.</p>
+    <p>Só quem está no cantinho responde. O resto do grupo lê, reage e recebe uma notificação sempre que há uma resposta nova. Ninguém repete até todos terem tido a sua vez.</p>
+    <p>⚠️ Quem não completar a votação da semana fica sem acesso ao cantinho na semana seguinte.</p>
+    ${host?`<div class="cantwho"><span>O primeiro do cantinho é</span><span class="cw">${who}</span></div>`:""}</div>`;
+  return `<div class="label" style="margin-top:20px">🛋️ Cantinho desta semana</div><div class="card pad cantsum">${host?`<div class="cantwho"><span>Quem se senta no cantinho esta semana é</span><span class="cw">${who}</span></div><p class="small muted" style="margin:10px 0 0">Vai ao GAP ler as respostas.</p>`:`<p style="margin:0">O sorteio do cantinho está quase a sair. Espreita o GAP daqui a pouco.</p>`}</div>`; }
+function cantinhoCard(g){ if(curWeek()<CANT_START||votingClosed(g.id)) return "";
+  if(rankLocked(g.id)) return `<div class="section" style="margin-top:12px"><button class="cantcard locked" data-act="tease"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>Só para quem completou a votação da semana passada 🔒</small></span>${ic("lock")}</button></div>`;
+  const c=cantinhoOf(g.id); const me=ME();
+  if(!c) return `<div class="section" style="margin-top:12px"><div class="cantcard wait"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>A sortear quem se senta no cantinho esta semana…</small></span></div></div>`;
+  const u=isUnread(c); const host=c.host===me;
+  return `<div class="section" style="margin-top:12px"><button class="cantcard" data-act="openChat" data-arg="${c.id}"><span class="cant-emo">🛋️</span><span class="grow"><b>${esc(c.name||"Cantinho")}${host?" (és tu!)":""}</b><small>${c.lastText?`${c.lastFrom===BOT?"🛋️":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:(host?"O Anfitrião vai fazer-te a primeira pergunta":"À espera da primeira pergunta")}</small></span>${u?'<span class="dotu" aria-label="Por ler"></span>':ic("right")}</button></div>`; }
 /* ───────────────────────── chat screen ───────────────────────── */
 let chatSub=null, chatMsgs=[], chatId=null, chatLoaded=false; const chatMsgsAll=()=>chatMsgs;
 function chatShell(cid){
   const c=S.chats[cid]; if(!c) return navhead("Conversa")+`<div class="center muted">Esta conversa já não existe.</div>`;
-  const sub=c.type==="direct"?"Conversa privada":`${(c.members||[]).length} participantes`;
+  const cant=c.type==="cantinho"; const canWrite=!cant||c.host===ME();
+  const sub=c.type==="direct"?"Conversa privada":cant?`Cantinho da semana · só ${c.host===ME()?"tu respondes":`o ${first(nm(c.host))} responde`}`:`${(c.members||[]).length} participantes`;
   return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes","",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
     <div class="replybar" id="replyBar" hidden><div class="rbt"><b></b><span></span></div><button type="button" id="replyX" aria-label="Cancelar resposta">${ic("x")}</button></div>
-    <form class="composer" id="composer"><textarea id="msgInput" rows="1" placeholder="Mensagem" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`;
+    ${canWrite?`<form class="composer" id="composer"><textarea id="msgInput" rows="1" placeholder="${cant?"Responde ao Anfitrião…":"Mensagem"}" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`
+      :`<div class="cantnote">🛋️ Este é o cantinho do ${esc(first(nm(c.host)))}. Só ele conversa com o Anfitrião, mas podes reagir às mensagens.</div>`}`;
 }
 function mountChat(cid,scr){
   if(chatId!==cid){ chatSub&&chatSub(); chatMsgs=[]; chatLoaded=false; chatId=cid;
     chatSub=S.db.collection(`chats/${cid}/msgs`).orderBy("at","desc").limit(300).onSnapshot(s=>{ chatMsgs=s.docs.map(d=>({id:d.id,...d.data()})).reverse(); chatLoaded=true; updateChat(cid); markRead(cid); }, ()=>{ chatLoaded=true; updateChat(cid); }); }
   else updateChat(cid);
   const ta=scr.querySelector("#msgInput"), btn=scr.querySelector("#sendBtn"), form=scr.querySelector("#composer");
+  const box0=scr.querySelector("#msgs");
+  if(!form){ box0.addEventListener("click",e=>{ const rc=e.target.closest(".rxc"); if(rc){ setReaction(cid,rc.dataset.mid,rc.dataset.rx); return; } const b=e.target.closest(".bub[data-mid]"); if(b) msgMenu(cid,b.dataset.mid,b); }); return; }
   const draft=lsGet("draft:"+cid,""); ta.value=draft; btn.disabled=!draft.trim();
   const fit=()=>{ ta.style.height="auto"; ta.style.height=Math.min(120,ta.scrollHeight)+"px"; };
   ta.addEventListener("input",()=>{ btn.disabled=!ta.value.trim(); fit(); lsSet("draft:"+cid,ta.value); });
@@ -1679,7 +1715,7 @@ function updateChat(cid){
   const atBottom=sc.scrollHeight-sc.scrollTop-sc.clientHeight<80;
   if(!chatLoaded){ return; }
   const me=ME(); const c=S.chats[cid]||{}; const hid=hiddenAt(cid); const chatMsgs=hid?chatMsgsAll().filter(m=>(m.at||0)>hid):chatMsgsAll();
-  if(!chatMsgs.length){ box.innerHTML=`<div class="empty" style="margin-top:40px"><div class="ico">${ic("chat")}</div><h3>Sem mensagens</h3><p>Diz olá 👋</p></div>`; return; }
+  if(!chatMsgs.length){ box.innerHTML=c.type==="cantinho"?`<div class="empty" style="margin-top:40px"><div class="ico">🛋️</div><h3>O cantinho está a abrir</h3><p>O Anfitrião vai fazer a primeira pergunta daqui a pouco.</p></div>`:`<div class="empty" style="margin-top:40px"><div class="ico">${ic("chat")}</div><h3>Sem mensagens</h3><p>Diz olá 👋</p></div>`; return; }
   let html="", lastDay="";
   chatMsgs.forEach((m,i)=>{
     const day=lisbonYMD(new Date(m.at)); if(day!==lastDay){ html+=`<div class="day">${esc(dayLabel(m.at))}</div>`; lastDay=day; }
@@ -2051,10 +2087,10 @@ const A = {
   chatInfo:cid=>{ const c=S.chats[cid]; if(!c) return; const me=ME(); const g=S.groups[c.groupId];
     openSheet({title:chatTitle({id:cid,...c}),left:"Fechar",live:true,body:()=>{ const cc=S.chats[cid]||c;
       const mem=[...(cc.members||[])].sort((a,b)=>(b===me)-(a===me)||nm(a).localeCompare(nm(b)));
-      return `<p class="muted small" style="text-align:center;margin:-4px 0 14px">${cc.type==="direct"?"Conversa privada":"Conversa de grupo"} · ${esc(g?.name||"")}${cc.createdBy?` · criada por ${esc(cc.createdBy===me?"ti":nm(cc.createdBy))}`:""}</p>
+      return `<p class="muted small" style="text-align:center;margin:-4px 0 14px">${cc.type==="direct"?"Conversa privada":cc.type==="cantinho"?"Cantinho da semana":"Conversa de grupo"} · ${esc(g?.name||"")}${cc.createdBy?` · criada por ${esc(cc.createdBy===me?"ti":nm(cc.createdBy))}`:""}</p>
         <div class="label">${mem.length} participantes${cc.type==="group"&&(g?.members||[]).some(k=>!(cc.members||[]).includes(k))?`<button data-act="chatAdd" data-arg="${cid}">Adicionar</button>`:""}</div>
-        <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>
-        <button class="btn ghost block danger" style="margin-top:22px" data-act="deleteChat" data-arg="${cid}">${ic("trash")}Apagar conversa</button>`; }}); },
+        <div class="card list">${mem.map(k=>`<div class="row">${avatar(k,40)}<div class="grow"><div class="rowtitle">${esc(nm(k))}${k===me?" (tu)":""}</div>${(g?.admins||[]).includes(k)?`<div class="rowsub">Admin do grupo</div>`:""}</div>${cc.type==="cantinho"&&k===cc.host?`<span class="chip">🛋️ No cantinho</span>`:k===cc.createdBy?`<span class="chip grey">Criou</span>`:""}</div>`).join("")}</div>
+        ${cc.type==="cantinho"?`<p class="info">No cantinho só estão as pessoas que completaram a votação da semana passada.</p>`:`<button class="btn ghost block danger" style="margin-top:22px" data-act="deleteChat" data-arg="${cid}">${ic("trash")}Apagar conversa</button>`}`; }}); },
   toggleAward:id=>{ expanded.has(id)?expanded.delete(id):expanded.add(id); render(); },
   allSeasonAvg:()=>{ const g=curGroup(); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
     openSheet({title:"Rating médio da época",left:"Fechar",live:true,body:()=>(rankLocked(g.id)||firstWeekReveal(g.id))?`<div class="card lockcard">${ic("lock")}<b>Rankings bloqueados</b></div>`:`<div class="card list">${seasonAverages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">em ${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média de todas as posições recebidas nos rankings semanais da época. Quanto mais baixo, melhor.</p>`}); },
