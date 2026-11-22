@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795340963">
+<meta name="pes-version" content="1795341084">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1780,7 +1780,7 @@ async function clearChatNotifs(cid){ try{ const reg=await navigator.serviceWorke
 const MYVER=document.querySelector('meta[name="pes-version"]')?.content||"dev"; let lastVerCheck=0;
 async function checkUpdate(){ if(MYVER==="dev"||!/^https?:/.test(location.protocol)) return; if(Date.now()-lastVerCheck<30000) return; lastVerCheck=Date.now();
   try{ const t=await (await fetch(location.pathname+"?_="+Date.now(),{cache:"no-store"})).text(); const m=t.match(/name="pes-version" content="([^"]+)"/);
-    if(m&&m[1]!==MYVER){ location.reload(); } }catch{} }
+    if(m&&m[1]!==MYVER){ const u=new URL(location.href); if(u.searchParams.get("v")===m[1]) return; u.searchParams.set("v",m[1]); location.replace(u.toString()); } }catch{} }
 setTimeout(checkUpdate,3000); setInterval(()=>{ if(document.visibilityState==="visible") checkUpdate(); },60000);
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ S.wsChecked=false; checkUpdate(); const cid=openChatId(); if(cid) markRead(cid); scheduleRender(); } });
 
