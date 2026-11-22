@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795306509">
+<meta name="pes-version" content="1795306615">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -870,6 +870,9 @@ const groupAwards = gid => Object.entries(S.awards).filter(([,a])=>a.groupId===g
 const statusOf = (e,k) => e.createdBy===k ? "yes" : (e.att||{})[k];
 const presentKeys = e => Object.keys(e.att||{}).filter(k=>statusOf(e,k)==="yes");
 const isFuture = e => (e.date||"") > lisbonYMD();
+// Only "group events" (4 or more people present) count for event statistics (created, attendance, score, achievements, summary, Gala)
+const MIN_GROUP_EVENT=4;
+const countsForStats = e => presentKeys(e).length >= MIN_GROUP_EVENT;
 const mapsUrl = q => "https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
 function tomorrowYMD(){ const d=ymdToUTC(lisbonYMD()); d.setUTCDate(d.getUTCDate()+1); return utcToYmd(d); }
 /* Events today or tomorrow that I'm going to (or haven't answered) */
@@ -877,7 +880,7 @@ function upcomingSoon(gid){ const me=ME(); const t=lisbonYMD(), tm=tomorrowYMD()
   return groupEvents(gid).filter(e=>(e.date===t||e.date===tm)&&(e.att||{})[me]!==undefined&&statusOf(e,me)!=="no").sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)); }
 
 function eventStats(gid,k){
-  const s=viewSeason(gid); const evs=groupEvents(gid).filter(e=>inSeasonD(s,e.date||"")); const created=evs.filter(e=>e.createdBy===k).length;
+  const s=viewSeason(gid); const evs=groupEvents(gid).filter(e=>inSeasonD(s,e.date||"")&&countsForStats(e)); const created=evs.filter(e=>e.createdBy===k).length;
   const past=evs.filter(e=>!isFuture(e) && (e.att||{})[k]!==undefined);
   const attended=past.filter(e=>statusOf(e,k)==="yes").length;
   return {created, attended, invited:past.length, rate:pct(attended,past.length)};
@@ -917,11 +920,11 @@ function weeklySummaryData(gid,w=lastClosedWeek()){
   const moves=first?[]:now.map(a=>({k:a.k,d:(posB(a.k)??pos(a.k))-pos(a.k)})).filter(x=>x.d!==0).sort((a,b)=>b.d-a.d);
   const submitted=(g.members||[]).filter(k=>weekComplete(gid,k,w));
   const mon=weekMonday(w), sun=new Date(mon); sun.setUTCDate(mon.getUTCDate()+6); const d0=utcToYmd(mon), d1=utcToYmd(sun);
-  const evs=groupEvents(gid).filter(e=>e.date>=d0&&e.date<=d1);
+  const evs=groupEvents(gid).filter(e=>e.date>=d0&&e.date<=d1&&countsForStats(e));
   return {g,me,w,first,now,top:now.slice(0,3),myPos:pos(me),myPrev:first?null:posB(me),myAvg:now.find(a=>a.k===me)?.avg??null,
     seasonPos:(()=>{ const sa=seasonAverages(gid,w,s); const i=sa.findIndex(a=>a.k===me); return i<0?null:{p:i+1,avg:sa[i].avg}; })(),
     up:moves.find(x=>x.d>0)||null, down:[...moves].reverse().find(x=>x.d<0)||null,
-    submitted, iSubmitted:submitted.includes(me), streak:rankStreak(gid,me,w), evs, myEvs:evs.filter(e=>e.att?.[me]==="yes").length, label:weekRange(w)};
+    submitted, iSubmitted:submitted.includes(me), streak:rankStreak(gid,me,w), evs, myEvs:evs.filter(e=>statusOf(e,me)==="yes").length, label:weekRange(w)};
 }
 function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   const d=weeklySummaryData(gid,w); if(forceLocked) d.iSubmitted=false; const g=d.g; const me=d.me; const n=(g.members||[]).length;
@@ -1028,10 +1031,10 @@ function achievements(gid,k=ME()){
   let best=0,run=0,prev=null; myWeeks.forEach(w=>{ run=(prev&&prevWeekKey(w)===prev)?run+1:1; best=Math.max(best,run); prev=w; });
   const fullVoteWeeks=Object.keys(S.votes[k]?.weeks||{}).filter(w=>w<=lc&&aw.length&&aw.every(a=>S.votes[k].weeks[w]?.[a])).sort();
   let vBest=0,vRun=0,vPrev=null; fullVoteWeeks.forEach(w=>{ vRun=(vPrev&&prevWeekKey(w)===vPrev)?vRun+1:1; vBest=Math.max(vBest,vRun); vPrev=w; });
-  const evs=groupEvents(gid).filter(e=>!isFuture(e)); const yes=e=>Object.values(e.att||{}).filter(v=>v==="yes").length;
-  const att=evs.filter(e=>e.att?.[k]==="yes").length; const created=groupEvents(gid).filter(e=>e.createdBy===k).length;
-  const groupEv=evs.filter(e=>yes(e)>=4&&e.att?.[k]==="yes").length; const bigHost=evs.filter(e=>e.createdBy===k&&yes(e)>=8).length;
-  const full=evs.filter(e=>e.att?.[k]==="yes"&&mem.length>2&&mem.every(m=>e.att?.[m]==="yes")).length;
+  const evs=groupEvents(gid).filter(e=>!isFuture(e)&&countsForStats(e)); const yes=e=>presentKeys(e).length;
+  const att=evs.filter(e=>statusOf(e,k)==="yes").length; const created=groupEvents(gid).filter(e=>e.createdBy===k&&countsForStats(e)).length;
+  const groupEv=evs.filter(e=>yes(e)>=6&&statusOf(e,k)==="yes").length; const bigHost=evs.filter(e=>e.createdBy===k&&yes(e)>=8).length;
+  const full=evs.filter(e=>statusOf(e,k)==="yes"&&mem.length>2&&mem.every(m=>statusOf(e,m)==="yes")).length;
   const allW=[...new Set(mem.flatMap(r=>Object.keys(S.rankings[r]?.weeks||{}).filter(w=>w<=lc&&S.rankings[r].weeks[w]?.[gid])))].sort();
   let tops=0,podiums=0,rocket=0,lastPos=null,steady=0,stRun=0,unanimous=0,lastPlace=0;
   allW.forEach(w=>{ const l=weekAvgReceived(gid,w); const i=l.findIndex(a=>a.k===k); if(i<0){ lastPos=null; stRun=0; return; } const p=i+1;
@@ -1048,7 +1051,7 @@ function achievements(gid,k=ME()){
   const qAnswered=Object.entries(S.votes[k]?.weeks||{}).filter(([w])=>w<=lc).reduce((n,[w,v])=>n+Object.keys(v||{}).filter(id=>id.startsWith("q:")&&weekQuestions(gid,w).some(q=>q.id===id)).length,0);
   let qWins=0; Object.keys(S.votes[k]?.weeks||{}).concat(allW).filter((w,i,a)=>a.indexOf(w)===i&&w<=lc&&w>=Q_START).forEach(w=>{ questionResults(gid,w).forEach(q=>{ if(q.winners.includes(k)) qWins++; }); });
   const cantHost=Object.values(S.chats).filter(c=>c.type==="cantinho"&&c.groupId===gid&&c.host===k).length;
-  const evWeeks={}; evs.filter(e=>e.att?.[k]==="yes").forEach(e=>{ const w=weekOf(e.date); evWeeks[w]=(evWeeks[w]||0)+1; }); const busy=Math.max(0,...Object.values(evWeeks));
+  const evWeeks={}; evs.filter(e=>statusOf(e,k)==="yes").forEach(e=>{ const w=weekOf(e.date); evWeeks[w]=(evWeeks[w]||0)+1; }); const busy=Math.max(0,...Object.values(evWeeks));
   const chatsMade=Object.values(S.chats).filter(c=>c.groupId===gid&&c.createdBy===k&&c.type!=="cantinho").length;
   const A=(id,cat,emo,name,desc,val,goal)=>({id,cat,emo,name,desc,val:Math.min(val,goal),goal,done:val>=goal});
   return [
@@ -1079,7 +1082,7 @@ function achievements(gid,k=ME()){
     A("last","Posições","🏮","Lanterna vermelha","Fica em último numa semana (acontece aos melhores)",lastPlace,1),
     A("att5","Eventos","🎉","Sempre lá","Presente em 5 eventos",att,5),
     A("att15","Eventos","🏟️","Habitué","Presente em 15 eventos",att,15),
-    A("group3","Eventos","👥","Malta toda","3 eventos com 4 ou mais pessoas",groupEv,3),
+    A("group3","Eventos","👥","Malta toda","3 eventos com 6 ou mais pessoas",groupEv,3),
     A("full","Eventos","🫂","Ninguém faltou","Um evento com o grupo inteiro",full,1),
     A("org3","Eventos","📅","Organizador","Cria 3 eventos",created,3),
     A("host","Eventos","🎪","Anfitrião","Cria um evento com 8 ou mais pessoas",bigHost,1),
@@ -1608,7 +1611,7 @@ function eventCard(e,me){
       ${creator?`<button class="iconbtn" data-act="eventMenu" data-arg="${e.id}" aria-label="Opções do evento" style="margin:-6px -8px 0 0">${ic("more")}</button>`:""}</div>
       ${e.desc?`<p class="desc">${esc(e.desc)}</p>`:""}
       ${e.place?`<a class="place" href="${esc(mapsUrl(e.place))}" target="_blank" rel="noopener">${ic("pin")}<span>${esc(e.place)}</span></a>`:""}
-      <div class="meta">${pres.length>=4?`<span class="chip">${ic("users")}Evento de grupo</span>`:""}${future?`<span class="chip grey">Em breve</span>`:""}<span>${esc(fmtDate(e.date))}${e.time?` · ${esc(e.time)}`:""}</span><span>por ${esc(creator?"ti":first(nm(e.createdBy)))}</span></div>
+      <div class="meta">${pres.length>=MIN_GROUP_EVENT?`<span class="chip">${ic("users")}Evento de grupo</span>`:future?"":`<span class="chip grey">Não conta para as estatísticas</span>`}${future?`<span class="chip grey">Em breve</span>`:""}<span>${esc(fmtDate(e.date))}${e.time?` · ${esc(e.time)}`:""}</span><span>por ${esc(creator?"ti":first(nm(e.createdBy)))}</span></div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${pres.length?stack(pres,26,7):""}<span class="small muted num" style="flex:1">${pres.length} de ${invited} ${future?"confirmados":"presentes"}</span>${!future||e.photos?`<button class="minibtn" data-act="eventPhotos" data-arg="${e.id}">${ic("camera")}Fotos</button>`:""}</div>
     </div></div>
     ${part&&!creator?`<div class="presence"><span class="q">${mine==="pending"?(future?"Ainda não respondeste. Vais?":"Ainda não respondeste. Estiveste lá?"):mine?(future?"A tua resposta":"Estiveste lá?"):(future?"Vais?":"Estiveste lá?")}</span>
@@ -2139,7 +2142,7 @@ const A = {
   allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
     openSheet({title:"Ranking atual",left:"Fechar",live:true,body:()=>(rankLocked(g.id)||firstWeekReveal(g.id))?`<div class="card lockcard">${ic("lock")}<b>Rankings bloqueados</b></div>`:`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
   scoreInfo:()=>{ const g=curGroup(); const me=ME(); const st=eventStats(g.id,me);
-    alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}) e 30% semanas com votos no Journey (${voteWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}), nas últimas 8 semanas desta época.`); },
+    alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença em eventos de grupo, com 4 ou mais pessoas (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}) e 30% semanas com votos nos prémios (${voteWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}), nas últimas 8 semanas desta época.`); },
   presence:async arg=>{ const [id,v]=arg.split("|"); const me=ME(); const e=S.events[id]; if(!e) return; if((e.att||{})[me]===v) return;
     await write(()=>D("events/"+id).update({att:{[me]:v}}), v==="yes"?"Marcado como presente":"Marcado como ausente"); },
   eventMenu:async id=>{ const v=await actionSheet(S.events[id]?.title,[{t:"Editar evento",v:"edit"},{t:"Apagar evento",v:"del",danger:true}]);
@@ -2384,7 +2387,7 @@ function galaDateSheet(gid){
 }
 function galaData(gid,s=currentSeason(gid)){
   const g={id:gid,...S.groups[gid]}; const year=s.year||lisbonYMD().slice(0,4); const members=g.members||[];
-  const evs=groupEvents(gid).filter(e=>inSeasonD(s,e.date||"")&&!isFuture(e));
+  const evs=groupEvents(gid).filter(e=>inSeasonD(s,e.date||"")&&!isFuture(e)&&countsForStats(e));
   const pres=evs.map(e=>({e,p:presentKeys(e).filter(k=>members.includes(k))}));
   const count=f=>{ const c={}; members.forEach(k=>c[k]=0); f(c); return Object.entries(c).map(([k,v])=>({k,v})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v||nm(a.k).localeCompare(nm(b.k))); };
   const attendance=count(c=>pres.forEach(x=>x.p.forEach(k=>c[k]++)));
