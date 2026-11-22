@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795285681">
+<meta name="pes-version" content="1795306509">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1033,9 +1033,9 @@ function achievements(gid,k=ME()){
   const groupEv=evs.filter(e=>yes(e)>=4&&e.att?.[k]==="yes").length; const bigHost=evs.filter(e=>e.createdBy===k&&yes(e)>=8).length;
   const full=evs.filter(e=>e.att?.[k]==="yes"&&mem.length>2&&mem.every(m=>e.att?.[m]==="yes")).length;
   const allW=[...new Set(mem.flatMap(r=>Object.keys(S.rankings[r]?.weeks||{}).filter(w=>w<=lc&&S.rankings[r].weeks[w]?.[gid])))].sort();
-  let tops=0,podiums=0,rocket=0,lastPos=null,steady=0,stRun=0,unanimous=0;
+  let tops=0,podiums=0,rocket=0,lastPos=null,steady=0,stRun=0,unanimous=0,lastPlace=0;
   allW.forEach(w=>{ const l=weekAvgReceived(gid,w); const i=l.findIndex(a=>a.k===k); if(i<0){ lastPos=null; stRun=0; return; } const p=i+1;
-    if(p===1) tops++; if(p<=3) podiums++; if(lastPos!=null) rocket=Math.max(rocket,lastPos-p);
+    if(p===1) tops++; if(p<=3) podiums++; if(l.length>=4&&p===l.length) lastPlace++; if(lastPos!=null) rocket=Math.max(rocket,lastPos-p);
     stRun=(lastPos===p)?stRun+1:1; steady=Math.max(steady,stRun); lastPos=p;
     const rankers=mem.filter(r=>r!==k&&S.rankings[r]?.weeks?.[w]?.[gid]); if(rankers.length>=3&&rankers.every(r=>S.rankings[r].weeks[w][gid][k]===1)) unanimous++; });
   let rx=0; Object.values(S.chats).filter(c=>c.groupId===gid).forEach(c=>Object.values(c.rx||{}).forEach(m=>{ if(m[k]) rx++; }));
@@ -1043,12 +1043,29 @@ function achievements(gid,k=ME()){
   const past=seasonsOf(gid).filter(x=>x.gala&&x.gala<lisbonYMD());
   let titles=0, veteran=0; past.forEach(x=>{ groupAwards(gid).forEach(a=>{ const st=standings(gid,a.id,x.endW,x); if(st.list[0]?.k===k&&st.total>0) titles++; });
     if(myWeeks.some(w=>inSeasonW(x,w))) veteran++; });
+  // new: full votes, weekly questions, cantinho, busy weeks, chats
+  const fullW=allW.filter(w=>w>=FULL_VOTE_FROM&&weekComplete(gid,k,w)); let cBest=0,cRun=0,cPrev=null; fullW.forEach(w=>{ cRun=(cPrev&&prevWeekKey(w)===cPrev)?cRun+1:1; cBest=Math.max(cBest,cRun); cPrev=w; });
+  const qAnswered=Object.entries(S.votes[k]?.weeks||{}).filter(([w])=>w<=lc).reduce((n,[w,v])=>n+Object.keys(v||{}).filter(id=>id.startsWith("q:")&&weekQuestions(gid,w).some(q=>q.id===id)).length,0);
+  let qWins=0; Object.keys(S.votes[k]?.weeks||{}).concat(allW).filter((w,i,a)=>a.indexOf(w)===i&&w<=lc&&w>=Q_START).forEach(w=>{ questionResults(gid,w).forEach(q=>{ if(q.winners.includes(k)) qWins++; }); });
+  const cantHost=Object.values(S.chats).filter(c=>c.type==="cantinho"&&c.groupId===gid&&c.host===k).length;
+  const evWeeks={}; evs.filter(e=>e.att?.[k]==="yes").forEach(e=>{ const w=weekOf(e.date); evWeeks[w]=(evWeeks[w]||0)+1; }); const busy=Math.max(0,...Object.values(evWeeks));
+  const chatsMade=Object.values(S.chats).filter(c=>c.groupId===gid&&c.createdBy===k&&c.type!=="cantinho").length;
   const A=(id,cat,emo,name,desc,val,goal)=>({id,cat,emo,name,desc,val:Math.min(val,goal),goal,done:val>=goal});
   return [
     A("first","Ranking","🗳️","Estreia","Faz o teu primeiro ranking",myWeeks.length,1),
     A("streak4","Ranking","🔥","Em chamas","4 semanas seguidas com ranking",best,4),
     A("streak10","Ranking","☄️","Imparável","10 semanas seguidas com ranking",best,10),
     A("weeks25","Ranking","💯","Assíduo","Ranking feito em 25 semanas",myWeeks.length,25),
+    A("weeks50","Ranking","🏛️","Pilar do grupo","Ranking feito em 50 semanas",myWeeks.length,50),
+    A("complete1","Votação","✅","Votação completa","Faz uma votação completa: ranking, prémios e perguntas",fullW.length,1),
+    A("complete4","Votação","🛡️","Nunca trancado","4 semanas seguidas com a votação completa",cBest,4),
+    A("complete12","Votação","🏰","Muralha","12 semanas seguidas com a votação completa",cBest,12),
+    A("q10","Perguntas","🎲","Curioso","Responde a 10 perguntas da semana",qAnswered,10),
+    A("q50","Perguntas","🧠","Opinião para tudo","Responde a 50 perguntas da semana",qAnswered,50),
+    A("qwin1","Perguntas","🎯","O mais provável","Ganha uma pergunta da semana",qWins,1),
+    A("qwin5","Perguntas","🃏","Figura do grupo","Ganha 5 perguntas da semana",qWins,5),
+    A("cant","Cantinho","🛋️","Sentado no cantinho","Sê escolhido para o Cantinho da semana",cantHost,1),
+    A("cant2","Cantinho","🪑","Cliente habitual","Senta-te no Cantinho 2 vezes",cantHost,2),
     A("voter","Prémios","📮","Eleitor","Vota em todos os prémios numa semana",fullVoteWeeks.length,1),
     A("voter4","Prémios","🗓️","Voto em dia","4 semanas seguidas a votar em todos os prémios",vBest,4),
     A("top1","Posições","🥇","Número 1","Fica em 1.º no ranking de uma semana",tops,1),
@@ -1056,18 +1073,28 @@ function achievements(gid,k=ME()){
     A("rocket","Posições","🚀","Foguete","Sobe 3 lugares de uma semana para a outra",rocket,3),
     A("steady","Posições","🧱","Rocha","Mesma posição 3 semanas seguidas",steady,3),
     A("unanimous","Posições","💛","Unânime","1.º lugar para toda a gente numa semana",unanimous,1),
+    A("top3x","Posições","👑","Tricampeão","1.º lugar em 3 semanas",tops,3),
+    A("podium15","Posições","⭐","Estrela","15 semanas no top 3",podiums,15),
+    A("comeback","Posições","🦅","Ressurreição","Sobe 5 lugares de uma semana para a outra",rocket,5),
+    A("last","Posições","🏮","Lanterna vermelha","Fica em último numa semana (acontece aos melhores)",lastPlace,1),
     A("att5","Eventos","🎉","Sempre lá","Presente em 5 eventos",att,5),
     A("att15","Eventos","🏟️","Habitué","Presente em 15 eventos",att,15),
     A("group3","Eventos","👥","Malta toda","3 eventos com 4 ou mais pessoas",groupEv,3),
     A("full","Eventos","🫂","Ninguém faltou","Um evento com o grupo inteiro",full,1),
     A("org3","Eventos","📅","Organizador","Cria 3 eventos",created,3),
     A("host","Eventos","🎪","Anfitrião","Cria um evento com 8 ou mais pessoas",bigHost,1),
+    A("att30","Eventos","🎡","Inseparável","Presente em 30 eventos",att,30),
+    A("org10","Eventos","🧭","Agenda cheia","Cria 10 eventos",created,10),
+    A("busy","Eventos","⚡","Semana louca","Vai a 3 eventos na mesma semana",busy,3),
     A("rx10","Social","😂","Reações","Reage a 10 mensagens",rx,10),
+    A("rx50","Social","🤣","Reator nuclear","Reage a 50 mensagens",rx,50),
+    A("chats3","Social","💬","Conversador","Cria 3 conversas no GAP",chatsMade,3),
     A("photo","Social","📸","Cara conhecida","Põe uma foto de perfil",hasPhoto?1:0,1),
     A("bday","Social","🎂","Festa marcada","Adiciona o teu aniversário",hasBday?1:0,1),
     A("veteran","Gala","🎖️","Veterano","Participa numa época até à Gala",veteran,1),
     A("title","Gala","🏆","Campeão","Ganha um prémio numa Gala",titles,1),
-    A("legend","Gala","👑","Lenda","Ganha 3 prémios nas Galas",titles,3),
+    A("legend","Gala","🌟","Lenda","Ganha 3 prémios nas Galas",titles,3),
+    A("veteran2","Gala","🎗️","Da casa","Participa em 2 épocas até à Gala",veteran,2),
   ];
 }
 function achievementsSheet(gid){
