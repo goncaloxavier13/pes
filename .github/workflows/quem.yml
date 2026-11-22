@@ -1,0 +1,15 @@
+name: Quem falta
+on: { workflow_dispatch: {} }
+jobs:
+  quem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install --no-audit --no-fund firebase-admin@12
+      - run: node scripts/who.mjs
+        env: { FIREBASE_SERVICE_ACCOUNT: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" }
+      - uses: actions/upload-artifact@v4
+        with: { name: quem, path: who.json, retention-days: 1 }
