@@ -1,5 +1,8 @@
 name: Quem falta
-on: { workflow_dispatch: {} }
+on:
+  workflow_dispatch:
+    inputs:
+      pubkey: { description: "Chave pública (base64)", required: true }
 jobs:
   quem:
     runs-on: ubuntu-latest
@@ -10,6 +13,4 @@ jobs:
         with: { node-version: 20 }
       - run: npm install --no-audit --no-fund firebase-admin@12
       - run: node scripts/who.mjs
-        env: { FIREBASE_SERVICE_ACCOUNT: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" }
-      - uses: actions/upload-artifact@v4
-        with: { name: quem, path: who.json, retention-days: 1 }
+        env: { FIREBASE_SERVICE_ACCOUNT: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}", PUBKEY: "${{ inputs.pubkey }}" }

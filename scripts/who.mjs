@@ -1,7 +1,7 @@
 // Pês — lista privada de quem ainda não completou a votação da semana (grava num ficheiro, não imprime nomes no registo público).
 import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { writeFileSync } from "node:fs";
+import crypto from "node:crypto";
 initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
 const db = getFirestore();
 const all = async c => Object.fromEntries((await db.collection(c).get()).docs.map(d => [d.id, d.data()]));
@@ -61,5 +61,8 @@ for (const [gid, g] of Object.entries(groups)) {
     const pa = aw.filter(id => v[id]).length, pq = qs.filter(id => v[id]).length;
     return { nome: people[k]?.name || k, ranking: r, premios: `${pa}/${aw.length}`, perguntas: `${pq}/${qs.length}`, completo: r && pa === aw.length && pq === qs.length }; });
 }
-writeFileSync("who.json", JSON.stringify({ semana: wk, ...out }, null, 1));
-console.log("Lista gravada no ficheiro privado.");
+// cifrado com a chave pública recebida: só quem tem a chave privada consegue ler
+const key = crypto.randomBytes(32), iv = crypto.randomBytes(12); const c = crypto.createCipheriv("aes-256-gcm", key, iv);
+const data = Buffer.concat([c.update(JSON.stringify({ semana: wk, ...out })), c.final()]);
+const ek = crypto.publicEncrypt({ key: Buffer.from(process.env.PUBKEY, "base64").toString(), oaepHash: "sha256" }, key);
+console.log("CIFRADO:" + [ek, iv, c.getAuthTag(), data].map(b => b.toString("base64")).join("."));
