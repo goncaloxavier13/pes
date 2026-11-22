@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795342512">
+<meta name="pes-version" content="1795371477">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -852,14 +852,14 @@ const S = {
   db:null, preview:false, uid:null, isOwner:false, canWrite:true,
   people:{}, groups:{}, awards:{}, events:{}, votes:{}, rankings:{}, chats:{}, reads:{},
   loaded:new Set(), stale:false,
-  actingAs:lsGet("actingAs",null), groupId:lsGet("group",null), tab:"home", theme:lsGet("theme","system"),
+  actingAs:(lsSet("actingAs",null),null), groupId:lsGet("group",null), tab:"home", theme:lsGet("theme","system"),
   route:[], // stack of {name, arg}
   localVotes:{}, claimBusy:false,
 };
 const COLS=["people","groups","awards","events","votes","rankings","chats","reads"];
 
 function myRealMember(){ if (S.fb && S.myKey && (!S.peopleOk || S.people[S.myKey]?.uid===S.uid)) return S.myKey; for (const [k,v] of Object.entries(S.people)) if (v.uid && v.uid===S.uid) return k; return null; }
-function myMember(){ if (S.isOwner && S.actingAs && S.people[S.actingAs]) return S.actingAs; return myRealMember(); }
+function myMember(){ return myRealMember(); } // "ver a app como outra pessoa" foi removido: cada um vê sempre como si próprio
 const ME = () => myMember();
 const myGroups = () => Object.entries(S.groups).filter(([,g])=>(g.members||[]).includes(ME())).map(([id,g])=>({id,...g})).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
 function curGroup(){ const gs=myGroups(); return gs.find(g=>g.id===S.groupId) || gs[0] || null; }
@@ -1818,7 +1818,7 @@ function ownerTools(){
   return `<div class="section"><div class="label">Ferramentas do dono da app</div><div class="card list">
     <button class="row" data-act="previewAnn"><div class="grow"><div class="rowtitle">Ver aviso das notificações</div><div class="rowsub">Como aparece a quem ainda não as ativou</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
     <button class="row" data-act="previewLockedSummary"><div class="grow"><div class="rowtitle">Ver resumo bloqueado</div><div class="rowsub">Como aparece a quem não fez o ranking</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
-    <button class="row" data-act="actAs"><div class="grow"><div class="rowtitle">Ver a app como…</div><div class="rowsub">${S.actingAs?esc(nm(S.actingAs)):"Tu próprio"} · para testar o ponto de vista de cada pessoa</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
+    
     <button class="row" data-act="releaseClaim"><div class="grow"><div class="rowtitle">Desligar um perfil de uma conta</div><div class="rowsub">Se alguém escolheu o nome errado</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
     <button class="row" data-act="loadDemo"><div class="grow"><div class="rowtitle">Carregar dados de demonstração</div><div class="rowsub">7 grupos e 28 pessoas. O El Calderón tem histórico desde janeiro de 2025 (Gala 2025 e época 2026)</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted)"')}</button>
     <button class="row" data-act="resetAll"><div class="grow"><div class="rowtitle" style="color:var(--red)">Apagar todos os dados</div><div class="rowsub">Antes de convidares os amigos a sério</div></div></button>
@@ -2354,9 +2354,6 @@ const A = {
       await ref.update({uid:S.uid}); S.route=[]; S.tab="home";
     } catch(e){ await alertD("Não foi possível guardar","Verifica a ligação e tenta outra vez."); }
     finally{ S.claimBusy=false; render(); } },
-  actAs:async()=>{ const ps=Object.entries(S.people).sort((a,b)=>a[1].name.localeCompare(b[1].name));
-    const v=await actionSheet("Ver a app como",[{t:"Eu próprio",v:"__me",sel:!S.actingAs},...ps.map(([k,p])=>({t:p.name,v:k,sel:S.actingAs===k}))]);
-    if(!v) return; S.actingAs=v==="__me"?null:v; lsSet("actingAs",S.actingAs); S.localVotes={}; S.groupId=null; render(); },
   releaseClaim:async()=>{ const taken=Object.entries(S.people).filter(([,p])=>p.uid); if(!taken.length){ alertD("Nenhum perfil está ligado a uma conta",""); return; }
     const v=await actionSheet("Desligar perfil",taken.map(([k,p])=>({t:p.name+(p.uid===S.uid?" (tu)":""),v:k})));
     if(v&&await confirmD(`Desligar ${nm(v)}?`,"A conta associada volta a ver o ecrã inicial e pode escolher outro perfil. Os dados ficam.","Desligar",true)) await write(()=> S.fb? fbRelease(v) : D("people/"+v).update({uid:null}),"Perfil desligado"); },
