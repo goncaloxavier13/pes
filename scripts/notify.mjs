@@ -99,8 +99,11 @@ for (const d of (await db.collection("events").where("createdAt", ">", since).ge
   }
 }
 
-// 2) mensagens novas (agrupadas por conversa)
-for (const c of (await db.collection("chats").where("lastAt", ">", since).get()).docs) {
+// 2) mensagens novas (agrupadas por conversa) — só se o vigia do chat (chatwatch.mjs) não estiver a correr
+const cw = (await db.doc("system/chatwatch").get()).data() || {};
+const watcherAlive = cw.alive && Date.now() - cw.alive < 12 * 60e3;
+if (watcherAlive) console.log("Mensagens: tratadas pelo vigia do chat.");
+for (const c of watcherAlive ? [] : (await db.collection("chats").where("lastAt", ">", since).get()).docs) {
   const chat = c.data();
   if (chat.type === "cantinho") continue; // o cantinho tem as suas próprias notificações (scripts/cantinho.mjs)
   const msgs = (await db.collection(`chats/${c.id}/msgs`).where("at", ">", since).get()).docs.map(m => m.data()).sort((a, b) => a.at - b.at);
