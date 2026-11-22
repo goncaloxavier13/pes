@@ -73,6 +73,6 @@ for (const [gid, g] of Object.entries(groups)) {
 }
 out.conversas = Object.keys(chats).length;
 if (process.env.PERSON) for (const [gid, g] of Object.entries(groups)) { const k = (g.members || []).find(k => (people[k]?.name || "").split(" ")[0] === process.env.PERSON); if (!k) continue;
-  out.pessoa = { fez_ranking_semana_passada: !!rankings[k]?.weeks?.[prev]?.[gid], fez_ranking_esta_semana: !!rankings[k]?.weeks?.[wk]?.[gid], tem_conta: mapped.includes(k) }; }
+  out.pessoa = { fez_ranking_semana_passada: !!rankings[k]?.weeks?.[prev]?.[gid], fez_ranking_esta_semana: !!rankings[k]?.weeks?.[wk]?.[gid], tem_conta: mapped.includes(k), dispositivos_notificacoes: Object.keys(reads[k]?.push?.subs || {}).length, prefs: reads[k]?.push?.prefs || {}, ultima_leitura_ms_atras: Date.now() - Math.max(0, ...Object.values(reads[k]?.chats || reads[k]?.read || {}).map(Number).filter(Boolean)) }; }
 const n = sys.notify || {}; out.notificacoes_ultima_execucao = n.lastRun ? new Date(n.lastRun).toISOString() : null;
 console.log(JSON.stringify(out, null, 2));
