@@ -390,6 +390,23 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .rowbtn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;text-align:left}
 .rowbtn .grow{min-width:0}
 .rowbtn .rowsub{white-space:normal}
+.story{position:absolute;inset:0;display:flex;flex-direction:column;color:#fff;background:linear-gradient(165deg,var(--s1,#5B2BE0) 0%,var(--s2,#1A0B4D) 100%);transition:background .4s;
+  --muted:rgba(255,255,255,.72);--border:rgba(255,255,255,.16);--card:rgba(255,255,255,.12);--card2:rgba(255,255,255,.08);--text:#fff;--accent:#FFD60A;--accent-soft:rgba(255,255,255,.16);color-scheme:dark;overflow:hidden;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.sbars{display:flex;gap:4px;padding:calc(var(--st) + 10px) 12px 0}
+.sbars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}.sbars b{display:block;height:100%;width:0;background:#fff}
+.shead{display:flex;align-items:center;gap:10px;padding:10px 14px 2px}.shead .s-g{flex:1;font-size:13px;font-weight:700}.shead .s-g span{font-weight:500;opacity:.75}
+.shead .gclose{background:rgba(255,255,255,.16)}
+.sstage{flex:1;overflow-y:auto;display:flex;cursor:pointer;padding-bottom:env(safe-area-inset-bottom)}
+.sstep{margin:auto;width:100%;max-width:460px;padding:12px 20px 30px;display:flex;flex-direction:column;gap:14px;animation:gin .4s ease}
+.s-emo{font-size:56px;line-height:1;text-align:center}.s-title{font-family:var(--display);text-align:center;font-size:30px;font-weight:800;line-height:1.1;letter-spacing:-.4px}
+.s-sub{text-align:center;color:var(--muted);font-size:14px;margin-top:-6px}.s-txt{text-align:center;color:var(--muted);font-size:14px;margin:0}
+.story .ws-part{margin:0}.story .ws-bar{background:rgba(255,255,255,.2)}.story .card{background:var(--card)}
+.s-lock{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:22px 18px;border-radius:20px;background:rgba(0,0,0,.22);margin-top:6px}
+.s-lock .s-lemo{font-size:34px;line-height:1}.s-lock b{font-size:20px;font-weight:800}.s-lock p{margin:0;font-size:15px;line-height:1.45;color:#E8E6F5;max-width:320px}
+.s-lock .btn{height:44px;padding:0 18px}
+.story.paused .sstep{opacity:.92}
+.story .ws-up{color:#5CF09A}.story .ws-down{color:#FF9BAA}.story .ws-eq{color:rgba(255,255,255,.7)}
+.pfcard.locked{opacity:.75}
 .ws-tease{position:relative}
 .ws-blur{filter:blur(7px);opacity:.75;pointer-events:none;user-select:none}
 .ws-tease .ws-grid{min-height:300px;grid-auto-rows:1fr}
@@ -942,44 +959,71 @@ function weeklySummaryData(gid,w=lastClosedWeek()){
 }
 function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   const d=weeklySummaryData(gid,w); if(forceLocked) d.iSubmitted=false; const g=d.g; const me=d.me; const n=(g.members||[]).length;
+  const locked=!d.iSubmitted;
   const arrow=(a,b)=>a==null||b==null||a===b?`<span class="ws-eq">=</span>`:a<b?`<span class="ws-up">▲ ${b-a}</span>`:`<span class="ws-down">▼ ${a-b}</span>`;
   const tile=(big,label,sub,extra="")=>`<div class="ws-tile"><b class="num">${big}</b><span>${label}</span>${sub?`<small>${sub}</small>`:""}${extra}</div>`;
-  const locked=!d.iSubmitted;
-  const head=`<div class="ws-head"><div class="ws-emo">📊</div><h2>Resumo da semana</h2><p>${esc(g.name)} · ${esc(d.label)}</p></div>`;
-  const part=`<div class="ws-part"><div class="ws-bar"><i style="width:${Math.round(100*d.submitted.length/Math.max(1,n))}%"></i></div><span><b>${d.submitted.length}/${n}</b> votaram ${d.submitted.length===n?"🙌 toda a gente!":""}</span></div>`;
-  let body;
-  if(locked){
-    // Teaser that looks like the real thing… and then a cheeky message
-    const jokes=[["Ups… 🙈","Estavas mesmo à espera de ver alguma coisa? Quem não faz o ranking fica a ver navios."],
-      ["Bela tentativa 😏","Sem ranking não há resumo. Os teus amigos já sabem onde estás… tu é que não."],
-      ["Querias saber se subiste? 🤔","Nós também gostávamos de saber se ias votar. Ficamos os dois na dúvida."],
-      ["Spoiler: não há spoiler 🍿","Este resumo foi visto por toda a gente que votou. Adivinha quem ficou de fora? 👀"],
-      ["Acesso negado 🚫","Os números estão aqui, mesmo atrás desta mensagem. Pena não os poderes ver."]];
-    const jk=jokes[[...(d.w+me)].reduce((a,c)=>a+c.charCodeAt(0),0)%jokes.length];
-    const fake=(b,l)=>`<div class="ws-tile" data-act="tease"><b class="num">${b}</b><span>${l}</span><small>████████</small></div>`;
-    body=`<div class="ws-tease" data-act="tease"><div class="ws-grid ws-blur" aria-hidden="true">${fake("#?","A tua posição")}${fake("#?","Na época")}${fake("?🔥","Sequência")}${fake("?/?","Eventos")}</div>
-      <div class="ws-joke"><div class="ws-jemo">🔒</div><b>${jk[0]}</b><p>${jk[1]}</p>
-        <small>Faz a votação desta semana e na próxima segunda o resumo é todo teu.</small>
-        ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎</span>`:`<span class="btn" style="margin-top:10px" data-act="rank">${ic("edit")}Fazer a votação</span>`}</div></div>
-      <div class="label" style="margin-top:20px">Top 3 da semana</div><div data-act="tease" style="cursor:pointer"><div class="card list ws-blur" aria-hidden="true">${[1,2,3].map(i=>`<div class="row"><span class="rank">${["🥇","🥈","🥉"][i-1]}</span><span class="av" style="width:36px;height:36px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">██████ ████</div></div><span class="num" style="font-weight:700;color:var(--accent)">?.?</span></div>`).join("")}</div></div>`;
-  } else {
-    const me1=tile(d.myPos?`#${d.myPos}`:"—","A tua posição",d.myAvg!=null?`média ${d.myAvg.toFixed(1)}`:"",d.first?"":arrow(d.myPos,d.myPrev));
-    const me2=tile(d.seasonPos?`#${d.seasonPos.p}`:"—","Na época",d.seasonPos?`média ${d.seasonPos.avg.toFixed(1)}`:"");
-    const me3=tile(`${d.streak}🔥`,"Sequência",d.streak===1?"semana seguida":"semanas seguidas");
-    const me4=tile(d.evs.length?`${d.myEvs}/${d.evs.length}`:"0","Eventos",d.evs.length?"em que estiveste":"nesta semana");
-    const top=`<div class="label" style="margin-top:20px">Top 3 da semana</div><div class="card list">${d.top.map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,36)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div>`;
-    const mv=d.first?"":`<div class="label" style="margin-top:20px">Movimentos</div><div class="ws-moves">
-      ${d.up?`<div class="ws-move">${avatar(d.up.k,40)}<div><b>${esc(first(nm(d.up.k)))}</b><span class="ws-up">▲ ${d.up.d} ${d.up.d===1?"lugar":"lugares"}</span><small>quem mais subiu</small></div></div>`:""}
-      ${d.down?`<div class="ws-move">${avatar(d.down.k,40)}<div><b>${esc(first(nm(d.down.k)))}</b><span class="ws-down">▼ ${-d.down.d} ${d.down.d===-1?"lugar":"lugares"}</span><small>quem mais desceu</small></div></div>`:""}
-      ${!d.up&&!d.down?`<p class="muted small" style="margin:0">Ninguém mudou de lugar esta semana.</p>`:""}</div>`;
-    const future=d.first?`<div class="label" style="margin-top:20px">A partir da próxima segunda 🔮</div>
-      <div class="card list ws-future">${[["▲▼","Se subiste ou desceste de lugar","comparado com a semana anterior"],["🚀","Quem mais subiu e quem mais caiu","os movimentos da semana no grupo"],["🔥","A tua sequência","semanas seguidas com ranking feito"],["📈","A tua evolução","a média desta semana vs. a anterior"]].map(([e,t,sub])=>`<div class="row"><span class="ws-fe">${e}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub">${sub}</div></div></div>`).join("")}</div>
-      <p class="info">Esta foi a primeira semana da época, por isso ainda não há comparações. Todas as segundas, à meia-noite, chega um resumo novo.</p>`:"";
-    const qr=questionResults(gid,w).filter(q=>q.tot>0);
-    const qhtml=qr.length?`<div class="label" style="margin-top:20px">🎲 Perguntas da semana</div><div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="margin-bottom:6px;white-space:normal">${esc(q.text)}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${q.winners.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px">${avatar(k,28)}<b>${esc(nm(k))}${k===me?" (tu)":""}</b></span>`).join("")}<span class="muted small">${q.max} ${q.max===1?"voto":"votos"}${q.winners.length>1?" cada":""}</span></div></div></div>`).join("")}</div>`:"";
-    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${qhtml}${pfSummary(gid,w)}${top}${mv}${future}${cantinhoSummary(gid,w)}`;
-  }
-  openSheet({title:"",left:"Fechar",body:()=>`${head}${part}${body}<p class="info" style="text-align:center">Os prémios continuam secretos até à Gala 🤫</p>`});
+  const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7));
+  // Each story: emoji, topic title, content (for who voted) and a cheeky line (for who didn't)
+  const S_=[];
+  S_.push({emo:"📊",title:"Resumo da semana",sub:`${esc(g.name)} · ${esc(d.label)}`,
+    html:()=>`<div class="ws-part"><div class="ws-bar"><i style="width:${Math.round(100*d.submitted.length/Math.max(1,n))}%"></i></div><span><b>${d.submitted.length}/${n}</b> votaram ${d.submitted.length===n?"🙌 toda a gente!":""}</span></div>
+      <p class="s-txt">Toca para avançar. Mantém o dedo no ecrã para parar.</p>`,
+    joke:["Bem-vindo ao resumo… versão grátis 🙃","Não completaste a votação, por isso esta semana só tens direito à capa e aos títulos. Aproveita, que é tudo o que há."]});
+  S_.push({emo:"🏆",title:"Top 3 da semana",
+    html:()=>d.top.length?`<div class="card list">${d.top.map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,40)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div>`:`<p class="s-txt">Ainda não há ranking desta semana.</p>`,
+    joke:["Três pessoas no pódio 🤐","Toda a gente já sabe quem são. Tu vais ter de perguntar a alguém… e explicar porque não sabes."]});
+  S_.push({emo:"🚀",title:d.first?"A partir da próxima segunda":"Quem subiu e quem desceu",
+    html:()=>d.first?`<div class="card list ws-future">${[["▲▼","Se subiste ou desceste de lugar","comparado com a semana anterior"],["🚀","Quem mais subiu e quem mais caiu","os movimentos da semana no grupo"],["🔥","A tua sequência","semanas seguidas com ranking feito"],["📈","A tua evolução","a média desta semana vs. a anterior"]].map(([e,t,sub])=>`<div class="row"><span class="ws-fe">${e}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub">${sub}</div></div></div>`).join("")}</div>
+      <p class="s-txt">Esta foi a primeira semana da época, por isso ainda não há comparações.</p>`
+      :`<div class="ws-moves">${d.up?`<div class="ws-move">${avatar(d.up.k,40)}<div><b>${esc(first(nm(d.up.k)))}</b><span class="ws-up">▲ ${d.up.d} ${d.up.d===1?"lugar":"lugares"}</span><small>quem mais subiu</small></div></div>`:""}
+        ${d.down?`<div class="ws-move">${avatar(d.down.k,40)}<div><b>${esc(first(nm(d.down.k)))}</b><span class="ws-down">▼ ${-d.down.d} ${d.down.d===-1?"lugar":"lugares"}</span><small>quem mais desceu</small></div></div>`:""}</div>
+        ${!d.up&&!d.down?`<p class="s-txt">Ninguém mudou de lugar esta semana.</p>`:""}`,
+    joke:["Houve quem subisse e quem caísse 📉📈","Tu ficaste exatamente onde estavas: no sofá, sem votar."]});
+  S_.push({emo:"📈",title:"As tuas estatísticas",
+    html:()=>`<div class="ws-grid">${tile(d.myPos?`#${d.myPos}`:"—","A tua posição",d.myAvg!=null?`média ${d.myAvg.toFixed(1)}`:"",d.first?"":arrow(d.myPos,d.myPrev))}
+      ${tile(d.seasonPos?`#${d.seasonPos.p}`:"—","Na época",d.seasonPos?`média ${d.seasonPos.avg.toFixed(1)}`:"")}
+      ${tile(`${d.streak}🔥`,"Sequência",d.streak===1?"semana seguida":"semanas seguidas")}
+      ${tile(d.evs.length?`${d.myEvs}/${d.evs.length}`:"0","Eventos",d.evs.length?"em que estiveste":"nesta semana")}</div>`,
+    joke:["Os teus números existem 🔢","Estão aqui, mesmo atrás deste cadeado. Só não são para ti esta semana."]});
+  S_.push({emo:"🎲",title:"Perguntas da semana",
+    html:()=>{ const qr=questionResults(gid,w).filter(q=>q.tot>0);
+      return qr.length?`<div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="margin-bottom:6px;white-space:normal">${esc(q.text)}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${q.winners.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px">${avatar(k,28)}<b>${esc(nm(k))}${k===me?" (tu)":""}</b></span>`).join("")}<span class="muted small">${q.max} ${q.max===1?"voto":"votos"}${q.winners.length>1?" cada":""}</span></div></div></div>`).join("")}</div><p class="s-txt">Ninguém sabe quem votou em quem 🤫</p>`
+        :`<p class="s-txt">Esta semana ninguém respondeu às perguntas.</p>`; },
+    joke:["Toda a gente já sabe quem ganhou 🎲","Toda a gente menos tu. E não, não vale a pena perguntar no GAP."]});
+  S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
+    html:()=>pfSummary(gid,w)||`<p class="s-txt">Não houve Preferias Flash esta semana.</p>`,
+    joke:["Preferias votar ou ficar de fora? 😏","Já escolheste. E, por isso, esta semana também não jogas o Preferias Flash."]});
+  S_.push({emo:"🛋️",title:nextW===CANT_START?"Novidade: o Cantinho":"Cantinho desta semana",
+    html:()=>cantinhoSummary(gid,w)||`<p class="s-txt">O Cantinho começa em breve.</p>`,
+    joke:["O Cantinho vai acontecer sem ti 🔒","Podes imaginar as respostas. Isso, pelo menos, ninguém te tira."]});
+  S_.push({emo:"🤫",title:locked?"Fim… do que não viste":"E por esta semana é tudo",
+    html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">Na próxima segunda, à meia-noite, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
+    joke:null});
+  const lockedEnd=()=>`<div class="s-lock"><div class="s-lemo">🔒</div><b>Voltas a ver tudo quando votares</b><p>Quem não completa a votação de uma semana não vê nada na semana seguinte.</p>
+    ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎ · na próxima segunda vês tudo</span>`:`<button class="btn" style="margin-top:10px" data-act="teaseVote">${ic("edit")}Fazer a votação</button>`}</div>`;
+  const render=s=>`<div class="s-emo">${s.emo}</div><div class="s-title">${s.title}</div>${s.sub?`<div class="s-sub">${s.sub}</div>`:""}
+    ${locked?(s.joke?`<div class="s-lock"><div class="s-lemo">🔒</div><b>${s.joke[0]}</b><p>${s.joke[1]}</p></div>`:lockedEnd()):s.html()}`;
+  const COLORS=[["#5B2BE0","#1A0B4D"],["#E0A100","#5A2C00"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#FF375F","#4D0717"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#3A3A55","#0B0B16"]];
+  let i=0, t0=0, elapsed=0, dur=6000, paused=false, raf=0, held=false, holdT=0, skipClick=false;
+  const L=pushLayer(`<div class="story ${locked?"locked":""}" role="dialog" aria-modal="true" aria-label="Resumo da semana">
+    <div class="sbars">${S_.map(()=>"<i><b></b></i>").join("")}</div>
+    <div class="shead"><span class="s-g">${esc(g.name)} · <span>${esc(d.label)}</span></span><button class="gclose" data-sx data-x aria-label="Fechar o resumo">${ic("close")}</button></div>
+    <div class="sstage"></div></div>`, ()=>cancelAnimationFrame(raf));
+  const root=L.el.querySelector(".story"), stage=L.el.querySelector(".sstage"), bars=[...L.el.querySelectorAll(".sbars b")];
+  const show=()=>{ const s=S_[i]; const c=COLORS[i%COLORS.length]; root.style.setProperty("--s1",c[0]); root.style.setProperty("--s2",c[1]);
+    stage.innerHTML=`<div class="sstep">${render(s)}</div>`; stage.scrollTop=0;
+    bars.forEach((b,j)=>b.style.width=j<i?"100%":"0%");
+    dur=Math.min(20000,Math.max(5000,4000+stage.textContent.trim().length*45)); elapsed=0; t0=performance.now(); };
+  const go=k=>{ if(k<0) k=0; if(k>=S_.length){ elapsed=dur; return; } i=k; show(); };
+  const tick=now=>{ if(!L.el.isConnected) return; if(paused||document.hidden) t0=now; else { elapsed+=now-t0; t0=now; }
+    bars[i].style.width=`${Math.min(100,elapsed/dur*100)}%`; if(elapsed>=dur&&i<S_.length-1) go(i+1); raf=requestAnimationFrame(tick); };
+  root.addEventListener("pointerdown",e=>{ if(e.target.closest("button,a")) return; clearTimeout(holdT); holdT=setTimeout(()=>{ held=true; paused=true; root.classList.add("paused"); },220); });
+  const release=()=>{ clearTimeout(holdT); if(held){ held=false; paused=false; root.classList.remove("paused"); skipClick=true; setTimeout(()=>skipClick=false,350); } };
+  root.addEventListener("pointerup",release); root.addEventListener("pointercancel",release);
+  root.addEventListener("click",e=>{ if(e.target.closest("[data-sx]")){ popLayer(L); return; } if(e.target.closest("button,a,[data-act]")) return; if(skipClick){ skipClick=false; return; }
+    const r=root.getBoundingClientRect(); if(e.clientX-r.left<r.width*0.3) go(i-1); else if(i<S_.length-1) go(i+1); });
+  L.key=ev=>{ if(ev.key==="ArrowRight"||ev.key===" ") go(i+1); if(ev.key==="ArrowLeft") go(i-1); if(ev.key==="Escape") popLayer(L); };
+  show(); raf=requestAnimationFrame(tick);
 }
 /* One-time announcement: notifications are now available (shown once per device, unless already enabled) */
 function maybeNotifAnnouncement(force){ if(!force){ if(!S.fb||!ME()||layers.length) return false; if(lsGet("ann:notif1",false)) return false;
@@ -1691,12 +1735,12 @@ function gapScreen(){
 function cantinhoSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); if(nextW<CANT_START) return "";
   const me=ME(); const c=Object.entries(S.chats).find(([id,x])=>x.type==="cantinho"&&x.groupId===gid&&x.week===nextW); const host=c?c[1].host:(nextW===CANT_START?cantFirstHost(gid):null);
   const who=host?`${avatar(host,30)}<b>${esc(nm(host))}${host===me?" (tu!)":""}</b>`:"";
-  if(nextW===CANT_START) return `<div class="label" style="margin-top:20px">🛋️ Novidade: o Cantinho</div><div class="card pad cantsum">
+  if(nextW===CANT_START) return `<div class="card pad cantsum">
     <p>A partir de hoje, todas as semanas há um <b>Cantinho</b> no topo do GAP. Uma pessoa do grupo é escolhida ao calhas e senta-se no cantinho a conversar com o <b>Anfitrião</b>, um bot que todos os dias traz um tema novo, com 3 perguntas ligadas entre si. Começa pela filosofia e depois vai alternando com a rotina, a vida e o grupo. A cada resposta, o Anfitrião reage e puxa pela pergunta seguinte.</p>
     <p>Só quem está no cantinho responde. O resto do grupo lê, reage e recebe uma notificação sempre que há uma resposta nova. Ninguém repete até todos terem tido a sua vez.</p>
     <p>⚠️ Quem não completar a votação da semana fica sem acesso ao cantinho na semana seguinte.</p>
     ${host?`<div class="cantwho"><span>O primeiro do cantinho é</span><span class="cw">${who}</span></div>`:""}</div>`;
-  return `<div class="label" style="margin-top:20px">🛋️ Cantinho desta semana</div><div class="card pad cantsum">${host?`<div class="cantwho"><span>Quem se senta no cantinho esta semana é</span><span class="cw">${who}</span></div><p class="small muted" style="margin:10px 0 0">Vai ao GAP ler as respostas.</p>`:`<p style="margin:0">O sorteio do cantinho está quase a sair. Espreita o GAP daqui a pouco.</p>`}</div>`; }
+  return `<div class="card pad cantsum">${host?`<div class="cantwho"><span>Quem se senta no cantinho esta semana é</span><span class="cw">${who}</span></div><p class="small muted" style="margin:10px 0 0">Vai ao GAP ler as respostas.</p>`:`<p style="margin:0">O sorteio do cantinho está quase a sair. Espreita o GAP daqui a pouco.</p>`}</div>`; }
 function cantinhoCard(g){ if(curWeek()<CANT_START||votingClosed(g.id)) return "";
   if(rankLocked(g.id)&&!cantinhoOf(g.id)) return `<div class="section" style="margin-top:12px"><button class="cantcard locked" data-act="tease"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>${g.cant&&g.cant.week===curWeek()&&g.cant.answers?`${g.cant.answers} ${g.cant.answers===1?"resposta":"respostas"} que não podes ler 😬`:"Só para quem completou a votação da semana passada 🔒"}</small></span>${ic("lock")}</button></div>`;
   const c=cantinhoOf(g.id); const me=ME();
@@ -2027,10 +2071,13 @@ function weekPF(gid,w=curWeek()){ if(!w||w<PF_START) return []; const y=+w.slice
       a=a.replace("{A}",sn(x)).replace("{B}",sn(z)); b=b.replace("{A}",sn(x)).replace("{B}",sn(z)); }
     return {id:`pf:${cat}:${i}`,cat,label,a,b}; }); }
 const pfDone=(gid,k=ME(),w=curWeek())=>{ const it=weekPF(gid,w); const v=S.votes[k]?.weeks?.[w]||{}; return it.length>0&&it.every(q=>v[q.id]); };
-function pfCard(g){ if(!pfOpen()) return ""; const it=weekPF(g.id); if(!it.length) return ""; const done=pfDone(g.id); const n=(g.members||[]).filter(k=>pfDone(g.id,k)).length;
+function pfCard(g){ if(!pfOpen()) return ""; const it=weekPF(g.id); if(!it.length) return "";
+  if(rankLocked(g.id)) return `<div class="section" style="margin-top:14px"><button class="pfcard locked" data-act="tease"><span class="pf-bolt">⚡</span><span class="grow"><b>Preferias Flash</b><small>Não completaste a votação da semana passada, por isso esta semana não jogas 🔒</small></span>${ic("lock")}</button></div>`;
+  const done=pfDone(g.id); const n=(g.members||[]).filter(k=>pfDone(g.id,k)).length;
   return `<div class="section" style="margin-top:14px"><button class="pfcard ${done?"done":""}" data-act="pfPlay"><span class="pf-bolt">⚡</span><span class="grow"><b>${done?"Preferias Flash feito ✓":"Preferias Flash"}</b><small>${done?"Os resultados saem no resumo de segunda 👀":`4 dilemas · fecha em ${fmtLeft(pfMsLeft())} · ${n} de ${(g.members||[]).length} já jogaram`}</small></span>${ic("right")}</button></div>`; }
 function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const w=curWeek(); const it=weekPF(g.id,w);
   if(!pfOpen()){ toast("O Preferias Flash já fechou. Volta na quarta ⚡"); return; }
+  if(rankLocked(g.id)){ teaseSheet(); return; }
   const prev=S.votes[me]?.weeks?.[w]||{}; const ans={}; it.forEach(q=>{ if(prev[q.id]) ans[q.id]=prev[q.id]; });
   let step=it.findIndex(q=>!ans[q.id]); if(step<0) step=it.length;
   const L=openSheet({title:"⚡ Preferias Flash",left:"Fechar",body:()=>{
@@ -2043,22 +2090,23 @@ function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const w=cu
       <button class="pf-opt a" data-pf="A">${esc(q.a)}</button><div class="pf-or">ou</div><button class="pf-opt b" data-pf="B">${esc(q.b)}</button>
       <p class="info" style="text-align:center">Fecha quinta às 23:30 · faltam ${fmtLeft(pfMsLeft())}</p>`; },
     onMount:L=>{ L.body.addEventListener("click",async e=>{ const b=e.target.closest("[data-pf]"); if(!b) return; const q=it[step]; ans[q.id]=b.dataset.pf; b.classList.add("pick"); step++;
-      if(step>=it.length){ if(!pfOpen()){ toast("O Preferias Flash já fechou"); return; }
+      if(step>=it.length){ if(!pfOpen()){ toast("O Preferias Flash já fechou"); return; } if(rankLocked(g.id)){ toast("Esta semana não podes jogar 🔒"); return; }
         const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{}; doc.weeks[w]={...(doc.weeks[w]||{}),...ans};
         const ok=await write(()=>D("votes/"+me).set(doc),"Preferias Flash feito ⚡"); if(!ok){ step--; } }
       setTimeout(()=>{ L.render(); L.body.scrollTop=0; },180); }); }}); }
 function pfSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); const me=ME(); const g=S.groups[gid];
   let out="";
   const it=weekPF(gid,w);
-  if(it.length){ if(!pfDone(gid,me,w)) out+=`<div class="label" style="margin-top:20px">⚡ Preferias Flash</div><button class="card pad pflock" data-act="tease"><b>🔒 Não jogaste o Preferias Flash desta semana</b><span>Por isso não vês o que a malta escolheu 😏 Joga na quarta para não ficares de fora outra vez.</span></button>`;
-    else out+=`<div class="label" style="margin-top:20px">⚡ Preferias Flash</div>${it.map(q=>{ const who={A:[],B:[]}; (g?.members||[]).forEach(k=>{ const v=S.votes[k]?.weeks?.[w]?.[q.id]; if(v==="A"||v==="B") who[v].push(k); });
+  if(it.length){ if(!pfDone(gid,me,w)) out+=`<div class="card pad pflock"><b>🔒 Não jogaste o Preferias Flash desta semana</b><span>Por isso não vês o que a malta escolheu 😏 Joga na quarta para não ficares de fora outra vez.</span></div>`;
+    else out+=`${it.map(q=>{ const who={A:[],B:[]}; (g?.members||[]).forEach(k=>{ const v=S.votes[k]?.weeks?.[w]?.[q.id]; if(v==="A"||v==="B") who[v].push(k); });
       const tot=who.A.length+who.B.length; const pa=tot?Math.round(100*who.A.length/tot):0;
       const side=(t,list,p,cls)=>`<div class="pfr ${cls}"><div class="pfr-top"><span>${esc(t)}</span><b class="num">${p}%</b></div><div class="pfr-who">${list.length?list.map(k=>{ const f=first(nm(k)); const dup=(g?.members||[]).filter(o=>first(nm(o))===f).length>1; return `<span>${avatar(k,22)}${esc(dup?nm(k):f)}${k===me?" (tu)":""}</span>`; }).join(""):'<small class="muted">Ninguém</small>'}</div></div>`;
       return `<div class="card pad" style="margin-bottom:10px"><div class="rowsub" style="margin-bottom:8px">${q.label} · Preferias…</div>${side(q.a,who.A,pa,"a")}${side(q.b,who.B,tot?100-pa:0,"b")}</div>`; }).join("")}`; }
-  if(nextW===PF_START) out+=`<div class="label" style="margin-top:20px">⚡ Novidade: Preferias Flash</div><div class="card pad cantsum">
+  if(nextW===PF_START) out+=`<div class="card pad cantsum">
     <p>A partir desta semana, todas as <b>quartas-feiras</b> aparece no Dashboard o <b>Preferias Flash</b>: 4 dilemas rápidos, sempre um de cada tipo: ☕ rotina, 🌶️ picante, 🧠 filosofia e 👥 a malta do grupo.</p>
     <p>Só está aberto de <b>quarta às 00:00 até quinta às 23:30</b>. Depois fecha, sem desculpas.</p>
     <p>Na segunda-feira seguinte, o resumo da semana mostra o que cada um escolheu, com nome e tudo 👀 Mas atenção: <b>quem não jogar não vê as respostas dos outros</b>.</p>
+    <p>⚠️ Quem não completar a votação da semana não pode jogar o Preferias Flash na semana seguinte.</p>
     <div class="cantwho"><span>O primeiro Preferias Flash é já</span><span class="cw"><b>quarta-feira, 25 de novembro ⚡</b></span></div></div>`;
   return out; }
 /* ───────── Locked (didn't vote): every tap gets a cheeky message ───────── */
