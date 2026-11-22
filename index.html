@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795339952">
+<meta name="pes-version" content="1795340963">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -597,6 +597,7 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,69,58,.45)}50%{box-shadow:0 0 0 8px rgba(255,69,58,0)}}
 .fomo{display:flex;flex-direction:column;gap:6px;margin:8px 0 4px;font-size:14px;text-align:left;width:100%;background:rgba(0,0,0,.18);border-radius:14px;padding:10px 12px}
 @media (prefers-reduced-motion:reduce){.stat.cta.urgent{animation:none}}
+.field[hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -1838,34 +1839,41 @@ function eventSheet(eid){
   const g=curGroup(); const me=ME(); const ev=eid?S.events[eid]:null;
   const st={title:ev?.title||"", date:ev?.date||lisbonYMD(), time:ev?.time||"", place:ev?.place||"", desc:ev?.desc||"", sel:new Set(ev?Object.keys(ev.att||{}).filter(k=>k!==me&&ev.att[k]!=="pending"):[])};
   const others=g.members.filter(k=>k!==me).sort((a,b)=>nm(a).localeCompare(nm(b)));
-  const valid=()=>st.title.trim()&&/^\d{4}-\d{2}-\d{2}$/.test(st.date);
   const isFut=()=>st.date>lisbonYMD();
-  const countTxt=()=>{ if(!st.sel.size) return `Ninguém marcado: todos os membros vão receber o pedido para dizer se ${isFut()?"vão":"estiveram presentes"}.`;
-    const n=st.sel.size+1; return `${n} ${isFut()?"pessoas confirmadas":"presentes"} contigo${n>=4?` · <span style="color:var(--green)">evento de grupo (4+ presenças)</span>`:""}. Os outros membros podem sempre dizer se ${isFut()?"vão":"estiveram"}.`; };
+  // New events: (1) every member is invited, always; (2) an event that already happened needs at least 4 people present (you included)
+  const enough=()=>ev||isFut()||st.sel.size+1>=MIN_GROUP_EVENT;
+  const valid=()=>st.title.trim()&&/^\d{4}-\d{2}-\d{2}$/.test(st.date)&&enough();
+  const countTxt=()=>{ const n=st.sel.size+1;
+    if(!ev&&isFut()) return `📨 Todos os ${g.members.length} membros vão ser convidados e cada um diz se vai.`;
+    if(!ev) return n>=MIN_GROUP_EVENT?`<span style="color:var(--green)">✓ ${n} presentes contigo · todos os ${g.members.length} membros ficam convidados.</span> Quem não marcaste pode dizer se esteve.`
+      :`<span style="color:var(--red)">Marca pelo menos ${MIN_GROUP_EVENT-1} pessoas (${MIN_GROUP_EVENT} contigo) para poderes criar o evento.</span> Faltam ${MIN_GROUP_EVENT-n}. Todos os membros ficam convidados.`;
+    return `${n} ${isFut()?"pessoas confirmadas":"presentes"} contigo${n>=MIN_GROUP_EVENT?` · <span style="color:var(--green)">evento de grupo (4+ presenças)</span>`:""}. Os outros membros podem sempre dizer se ${isFut()?"vão":"estiveram"}.`; };
   const L=openSheet({title:eid?"Editar evento":"Novo evento",right:eid?"Guardar":"Criar",rightDisabled:!valid(),
     body:()=>`<div class="field"><label for="etitle">Nome</label><input id="etitle" class="input" maxlength="60" placeholder="Ex.: Jantar na tasca" value="${esc(st.title)}" autocomplete="off"></div>
       <div style="display:flex;gap:12px;margin-top:16px"><div class="field" style="flex:1.4;margin:0"><label for="edate">Data</label><input id="edate" class="input" type="date" value="${esc(st.date)}"></div>
         <div class="field" style="flex:1;margin:0"><label for="etime">Hora (opcional)</label><input id="etime" class="input" type="time" value="${esc(st.time)}"></div></div>
       <div class="field"><label for="eplace">Local (opcional)</label><input id="eplace" class="input" maxlength="80" placeholder="Ex.: Tasca do Chico, Lisboa" value="${esc(st.place)}" autocomplete="off"><p class="hint">Aparece com um link para o mapa.</p></div>
       <div class="field"><label for="edesc">Descrição (opcional)</label><textarea id="edesc" class="input" maxlength="300" placeholder="O que levar, código de vestuário…">${esc(st.desc)}</textarea></div>
-      <div class="field"><div class="flabel" style="display:flex;justify-content:space-between;align-items:center"><span>Quem esteve? (opcional)</span><button type="button" class="linkbtn small" data-allp style="text-transform:none;letter-spacing:0;font-size:14px">${st.sel.size===others.length?"Limpar":"Selecionar todos"}</button></div>
-        <p class="hint" style="margin:0 4px 6px">Ficas marcado como presente. Marca quem esteve contigo, ou não marques ninguém e cada um diz se esteve.</p>
+      <div class="field" id="pfield" ${!ev&&isFut()?"hidden":""}><div class="flabel" style="display:flex;justify-content:space-between;align-items:center"><span>${ev?"Quem esteve? (opcional)":"Quem esteve? (mínimo 4, contigo)"}</span><button type="button" class="linkbtn small" data-allp style="text-transform:none;letter-spacing:0;font-size:14px">${st.sel.size===others.length?"Limpar":"Selecionar todos"}</button></div>
+        <p class="hint" style="margin:0 4px 6px">${ev?"Ficas marcado como presente. Marca quem esteve contigo, ou não marques ninguém e cada um diz se esteve.":"Ficas marcado como presente. Marca quem esteve contigo: só dá para criar com 4 ou mais pessoas."}</p>
         <div class="card list" id="plist">${others.map(k=>`<button type="button" class="row" data-p="${k}" aria-pressed="${st.sel.has(k)}">${avatar(k,34)}<span class="grow rowtitle" style="font-weight:400">${esc(nm(k))}</span><span class="check ${st.sel.has(k)?"on":""}">${st.sel.has(k)?ic("check"):""}</span></button>`).join("")}</div>
-        <p class="hint" id="pcount" style="margin-top:8px">${countTxt()}</p></div>`,
+        </div><p class="hint" id="pcount" style="margin:8px 4px 0">${countTxt()}</p>`,
     onMount:L=>{ const b=L.body; const upd=()=>setRight(L,!!valid());
-      b.querySelector("#etitle").oninput=e=>{ st.title=e.target.value; upd(); }; b.querySelector("#edate").oninput=e=>{ st.date=e.target.value; upd(); const pc=b.querySelector("#pcount"); if(pc) pc.innerHTML=countTxt(); };
+      b.querySelector("#etitle").oninput=e=>{ st.title=e.target.value; upd(); }; b.querySelector("#edate").oninput=e=>{ st.date=e.target.value; upd(); const pc=b.querySelector("#pcount"); if(pc) pc.innerHTML=countTxt(); const pf=b.querySelector("#pfield"); if(pf&&!ev) pf.hidden=isFut(); };
       b.querySelector("#edesc").oninput=e=>{ st.desc=e.target.value; };
       b.querySelector("#etime").oninput=e=>{ st.time=e.target.value; }; b.querySelector("#eplace").oninput=e=>{ st.place=e.target.value; };
-      const refresh=()=>{ b.querySelectorAll("[data-p]").forEach(r=>{ const on=st.sel.has(r.dataset.p); r.setAttribute("aria-pressed",on); const c=r.querySelector(".check"); c.className="check"+(on?" on":""); c.innerHTML=on?ic("check"):""; }); b.querySelector("#pcount").innerHTML=countTxt(); b.querySelector("[data-allp]").textContent=st.sel.size===others.length?"Limpar":"Selecionar todos"; };
+      const refresh=()=>{ b.querySelectorAll("[data-p]").forEach(r=>{ const on=st.sel.has(r.dataset.p); r.setAttribute("aria-pressed",on); const c=r.querySelector(".check"); c.className="check"+(on?" on":""); c.innerHTML=on?ic("check"):""; }); b.querySelector("#pcount").innerHTML=countTxt(); b.querySelector("[data-allp]").textContent=st.sel.size===others.length?"Limpar":"Selecionar todos"; upd(); };
       b.querySelectorAll("[data-p]").forEach(r=>r.onclick=()=>{ const k=r.dataset.p; st.sel.has(k)?st.sel.delete(k):st.sel.add(k); refresh(); });
       b.querySelector("[data-allp]").onclick=()=>{ if(st.sel.size===others.length) st.sel.clear(); else others.forEach(k=>st.sel.add(k)); refresh(); };
       if(!eid) b.querySelector("#etitle").focus(); },
-    onRight:async L=>{ if(!valid()) return; setRight(L,false);
+    onRight:async L=>{ if(!valid()){ if(!enough()) toast(`Marca pelo menos ${MIN_GROUP_EVENT-1} pessoas (${MIN_GROUP_EVENT} contigo)`); return; } setRight(L,false);
       // Marked people are present ("yes"; for a future event they are invited). Nobody marked: everyone is asked.
       const att={[me]:"yes"}; const fut=st.date>lisbonYMD();
       if(ev) Object.entries(ev.att||{}).forEach(([k,v])=>{ if(k!==me&&!st.sel.has(k)&&v!=="yes") att[k]=v; });
       st.sel.forEach(k=>{ att[k]= ev?.att?.[k]==="yes"||ev?.att?.[k]==="no" ? ev.att[k] : (fut?"pending":"yes"); });
-      if(!st.sel.size&&!ev) g.members.filter(k=>k!==me).forEach(k=>{ att[k]="pending"; });
+      if(!ev&&fut) st.sel.clear();
+      if(!ev) g.members.filter(k=>k!==me&&!st.sel.has(k)).forEach(k=>{ att[k]="pending"; }); // every member is invited
+      if(!ev&&!fut&&Object.values(att).filter(v=>v==="yes").length<MIN_GROUP_EVENT){ toast(`Um evento tem de ter pelo menos ${MIN_GROUP_EVENT} pessoas`); setRight(L,true); return; }
       const body={groupId:ev?.groupId||g.id,title:st.title.trim(),desc:st.desc.trim(),date:st.date,time:st.time||"",place:st.place.trim(),createdBy:ev?.createdBy||me,createdAt:ev?.createdAt||Date.now(),att,
         reminded: !!(ev && ev.reminded && ev.date===st.date)};
       const ok=await write(()=>D("events/"+(eid||"e-"+uidGen())).set(body), eid?"Evento atualizado":"Evento criado");
