@@ -996,6 +996,10 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   S_.push({emo:"🛋️",title:nextW===CANT_START?"Novidade: o Cantinho":"Cantinho desta semana",
     html:()=>cantinhoSummary(gid,w)||`<p class="s-txt">O Cantinho começa em breve.</p>`,
     joke:["O Cantinho vai acontecer sem ti 🔒","Podes imaginar as respostas. Isso, pelo menos, ninguém te tira."]});
+  S_.push({emo:"🔜",title:"Em breve na Pês",
+    html:()=>`<div class="card list ws-future">${[["⚔️","Desafios entre dois","Desafias um amigo para um duelo (quem chega primeiro, quem acerta mais…) e o resultado fica registado na app."],["⏳","Cápsula do tempo","Em janeiro, cada um escreve previsões para o ano. As mensagens ficam fechadas e só abrem na Gala."]].map(([e,t,sub])=>`<div class="row" style="align-items:flex-start"><span class="ws-fe">${e}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub" style="white-space:normal">${sub}</div></div></div>`).join("")}</div>
+      <p class="s-txt">Em desenvolvimento 🛠️</p>`,
+    joke:["Vêm aí novidades 🛠️","Quais? Isso é informação para quem vota. Tu ficas com a curiosidade."]});
   S_.push({emo:"🤫",title:locked?"Fim… do que não viste":"E por esta semana é tudo",
     html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">Na próxima segunda, à meia-noite, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
     joke:null});
