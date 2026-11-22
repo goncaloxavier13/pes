@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795341312">
+<meta name="pes-version" content="1795342512">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -598,6 +598,19 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .fomo{display:flex;flex-direction:column;gap:6px;margin:8px 0 4px;font-size:14px;text-align:left;width:100%;background:rgba(0,0,0,.18);border-radius:14px;padding:10px 12px}
 @media (prefers-reduced-motion:reduce){.stat.cta.urgent{animation:none}}
 .field[hidden]{display:none!important}
+.pfcard{width:100%;display:flex;align-items:center;gap:12px;border:0;border-radius:18px;padding:16px;font:inherit;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(135deg,#bf5af2,#5e5ce6 55%,#0a84ff)}
+.pfcard b{display:block;font-size:17px}.pfcard small{display:block;font-size:13.5px;opacity:.9}.pfcard svg{width:20px;height:20px;flex:none}.pfcard .grow{min-width:0}
+.pfcard.done{background:var(--card);color:var(--text)}.pfcard.done small{color:var(--muted);opacity:1}
+.pf-bolt{font-size:30px;line-height:1;flex:none}
+.pf-prog{display:flex;gap:6px;margin:4px 0 18px}.pf-prog i{flex:1;height:5px;border-radius:3px;background:var(--border)}.pf-prog i.ok{background:var(--accent)}.pf-prog i.on{background:linear-gradient(90deg,#bf5af2,#0a84ff)}
+.pf-cat{text-align:center;color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}.pf-q{text-align:center;font-size:28px;margin:6px 0 18px}
+.pf-opt{display:block;width:100%;min-height:96px;border:0;border-radius:20px;padding:18px;font:inherit;font-size:18px;font-weight:600;line-height:1.3;color:#fff;cursor:pointer;transition:transform .15s}
+.pf-opt.a{background:linear-gradient(135deg,#ff375f,#ff9f0a)}.pf-opt.b{background:linear-gradient(135deg,#0a84ff,#5e5ce6)}.pf-opt:active,.pf-opt.pick{transform:scale(.96)}
+.pf-or{text-align:center;font-weight:800;color:var(--muted);margin:10px 0;text-transform:uppercase;letter-spacing:.1em;font-size:13px}
+.pf-end{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}.pf-end b{font-size:22px}.pf-end p{margin:0 0 10px;color:var(--muted)}.pf-big{font-size:54px}
+.pfr{border-radius:12px;padding:10px 12px;margin-top:6px}.pfr.a{background:rgba(255,55,95,.12)}.pfr.b{background:rgba(10,132,255,.12)}
+.pfr-top{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}.pfr-top span{flex:1}.pfr-who{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:13px}.pfr-who span{display:inline-flex;align-items:center;gap:5px}
+.pflock{display:flex;flex-direction:column;gap:6px;width:100%;border:0;font:inherit;color:var(--text);text-align:left;cursor:pointer}.pflock span{color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
@@ -964,7 +977,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
       <p class="info">Esta foi a primeira semana da época, por isso ainda não há comparações. Todas as segundas, à meia-noite, chega um resumo novo.</p>`:"";
     const qr=questionResults(gid,w).filter(q=>q.tot>0);
     const qhtml=qr.length?`<div class="label" style="margin-top:20px">🎲 Perguntas da semana</div><div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="margin-bottom:6px;white-space:normal">${esc(q.text)}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${q.winners.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px">${avatar(k,28)}<b>${esc(nm(k))}${k===me?" (tu)":""}</b></span>`).join("")}<span class="muted small">${q.max} ${q.max===1?"voto":"votos"}${q.winners.length>1?" cada":""}</span></div></div></div>`).join("")}</div>`:"";
-    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${qhtml}${top}${mv}${future}${cantinhoSummary(gid,w)}`;
+    body=`<div class="ws-grid">${me1}${me2}${me3}${me4}</div>${qhtml}${pfSummary(gid,w)}${top}${mv}${future}${cantinhoSummary(gid,w)}`;
   }
   openSheet({title:"",left:"Fechar",body:()=>`${head}${part}${body}<p class="info" style="text-align:center">Os prémios continuam secretos até à Gala 🤫</p>`});
 }
@@ -1521,7 +1534,7 @@ function dashScreen(){
       <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Dashboard trancado</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p>${(()=>{ const n=(g.members||[]).length, nIn=insideCount(g.id), ct=g.cant&&g.cant.week===curWeek()?g.cant:null;
         return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar na segunda.`}</span></div>`; })()}
         <small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
-      ${voteBtn}
+      ${voteBtn}${pfCard(g)}
       <div class="section"><div class="label">Resumo da época</div><div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div></div>
       ${fsec("Resumo da semana",`<div style="padding:16px">${frows(2)}</div>`)}
       ${fsec("Conquistas",`<div style="padding:18px;display:flex;gap:10px">${[...Array(6)].map(()=>`<span style="width:40px;height:40px;border-radius:50%;background:var(--border);display:inline-block"></span>`).join("")}</div>`)}
@@ -1544,6 +1557,7 @@ function dashScreen(){
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Ranking, prémios e perguntas · toca para alterar":voteCtaSub(g)}</span></span><span class="rcount num" aria-label="${nDone} de ${g.members.length} membros já votaram esta semana"><b>${nDone}/${g.members.length}</b><small>votaram</small></span></button>`}
       </div></div>
+    ${past?"":pfCard(g)}
     ${past?"":(()=>{ const nb=nudgeBlock(g); return nb?`<div class="section" style="margin-top:12px">${nb}</div>`:""; })()}
     ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const near=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal);
       const nextA=near[0]; const strip=[...got,...near].slice(0,12);
@@ -1911,6 +1925,142 @@ function voteCtaSub(g){ const left=voteMsLeft(); const miss=(g.members||[]).filt
   if(left<72*3600e3) return `⏳ Fecha em ${fmtLeft(left)} · ${others?`faltas tu e mais ${others}`:"só faltas tu!"}`;
   return "Ranking, prémios e perguntas · até domingo, 23:59"; }
 function insideCount(gid){ return (S.groups[gid]?.members||[]).filter(k=>weekComplete(gid,k,lastClosedWeek())).length; }
+/* ───────── Preferias Flash: dilemas (A ou B). Em "membros", {A} e {B} são nomes sorteados do grupo. ───────── */
+const PF={
+rotina:[
+["Nunca mais beber café","Nunca mais dormir uma sesta"],["Acordar todos os dias às 6h","Só conseguir jantar depois das 23h"],["Viver sem telemóvel um mês","Viver sem televisão nem streaming um ano"],
+["Comer sopa ao pequeno-almoço todos os dias","Comer cereais ao jantar todos os dias"],["Fazer a cama todos os dias","Nunca mais ter de lavar a loiça"],["Ter sempre 5 minutos de atraso","Chegar sempre 30 minutos adiantado"],
+["Tomar só banhos frios","Só poder tomar banho à noite"],["Ir ao ginásio todos os dias às 7h","Correr 10 km todos os domingos"],["Nunca mais comer pizza","Nunca mais comer hambúrgueres"],
+["Trabalhar 4 dias por semana com 10h por dia","5 dias por semana com 8h"],["Ter um despertador que toca uma música que odeias","Acordar sem despertador mas sempre às 5h"],["Viver no centro da cidade num T0","Viver no campo numa casa enorme"],
+["Ter o frigorífico sempre cheio","Ter a casa sempre arrumada sem esforço"],["Só poder ouvir uma música para o resto da vida","Só poder ver um filme para o resto da vida"],["Conduzir sempre no trânsito da 2.ª Circular","Andar sempre de autocarro cheio"],
+["Ter Wi-Fi lento para sempre","Ter bateria do telemóvel sempre a 10%"],["Nunca mais poder comer fora","Nunca mais poder cozinhar em casa"],["Passar as férias sempre na praia","Passar as férias sempre na neve"],
+["Ter um fim de semana de 3 dias com segunda a trabalhar o dobro","Fim de semana normal"],["Dormir só 5 horas e sentir-te bem","Dormir 10 horas e sentir-te sempre cansado"],["Nunca mais usar meias","Nunca mais usar sapatos fechados"],
+["Ter um vizinho que toca bateria","Um vizinho que faz obras ao sábado de manhã"],["Ficar sem internet um fim de semana","Ficar sem água quente uma semana"],["Ter de responder a todos os emails no próprio dia","Nunca mais poder enviar áudios"],
+["Comer sempre a mesma coisa ao almoço","Nunca repetir um almoço"],["Ir às compras ao sábado à tarde","Ir às compras às 8h de segunda"],["Ter sempre a mochila pesada","Ter sempre os bolsos cheios de coisas"],
+["Passar o domingo inteiro no sofá","Passar o domingo inteiro fora de casa"],["Ter de cozinhar para o grupo todo todas as semanas","Ter de lavar a loiça do grupo todo todas as semanas"],["Ser sempre o condutor da noite","Pagar sempre o Uber de toda a gente"],
+["Ter um cão que ladra a noite toda","Um gato que te acorda às 5h"],["Viver sem ar condicionado no verão","Sem aquecimento no inverno"],["Ver todos os jogos do teu clube no estádio à chuva","Ver todos no sofá sem som"],
+["Esquecer sempre onde estacionaste","Esquecer sempre as chaves de casa"],["Ir trabalhar de fato todos os dias","Ir trabalhar de fato de treino mas com reuniões por vídeo o dia todo"],["Ter sempre fome às 3h da manhã","Nunca ter fome ao pequeno-almoço"],
+["Ter um chefe que manda mensagens ao domingo","Um chefe que marca reuniões às 18h de sexta"],["Nunca mais ver séries","Nunca mais ver futebol"],["Fazer uma maratona","Fazer um mês sem açúcar"],
+["Viver numa casa sem espelhos","Numa casa sem cortinas"],["Comer só comida picante","Comer só comida sem sal"],["Acordar sempre com o cabelo perfeito","Nunca mais ter olheiras"],
+["Ter um carro velho que nunca avaria","Um carro novo que avaria todos os meses"],["Passar o Natal sozinho numa praia tropical","Passar o Natal com a família toda e 40 primos"],["Ter de ler um livro por semana","Não poder ler nada durante um ano"],
+["Ir sempre a pé para todo o lado","Ir sempre de trotinete"],["Ter um colega de casa que nunca limpa","Um colega de casa que limpa às 7h com música alta"],["Beber só água para sempre","Beber só sumos para sempre"],
+["Jantar sempre às 19h","Jantar sempre às 22h30"],["Ter de cantar sempre que entras num elevador","Ter de dançar sempre que ouves música"],
+],
+erotico:[
+["Que o teu histórico de pesquisas fosse lido em voz alta no jantar de Natal","Que os teus pais vissem as tuas últimas 50 mensagens"],["Um primeiro encontro perfeito sem beijo no fim","Um encontro desastroso que acaba na melhor noite da tua vida"],
+["Só poder namorar com quem o grupo escolhesse","Ter de apresentar cada pessoa com quem sais ao grupo todo no primeiro encontro"],["Beijar alguém com mau hálito","Beijar alguém que não pára de falar"],
+["Uma noite de paixão inesquecível que nunca podes contar a ninguém","Uma noite banal que podes contar a toda a gente"],["Ser apanhado pelos pais num momento íntimo","Ser apanhado pelo grupo de amigos"],
+["Mandar uma mensagem atrevida para o grupo errado","Receber uma mensagem atrevida no ecrã do telemóvel durante uma reunião"],["Saber exatamente o que o teu par pensa de ti na cama","Nunca saber e viver na dúvida"],
+["Um encontro às escuras escolhido pela tua mãe","Um encontro às escuras escolhido pelo teu melhor amigo"],["Namorar alguém muito bonito sem piada nenhuma","Alguém com imensa piada mas sem química nenhuma"],
+["Ter o teu ex como vizinho da porta ao lado","Ter o teu ex como colega de trabalho"],["Ser sempre tu a dar o primeiro passo","Esperar sempre que dêem o primeiro passo"],
+["Perder o telemóvel com as fotos todas","Perder a carteira com todos os documentos"],["Um beijo à chuva","Um beijo ao pôr do sol na praia"],
+["Que o teu par ressonasse como um trator","Que roubasse sempre o edredão todo"],["Uma relação à distância com a pessoa certa","Viver ao lado da pessoa quase certa"],
+["Ter de ler em voz alta a tua última conversa de engate","Ter de mostrar a tua galeria de fotos ao grupo durante 1 minuto"],["Um encontro num restaurante de luxo com conversa chata","Um encontro numa bifana com a melhor conversa da tua vida"],
+["Saber dançar slow na perfeição","Saber fazer massagens na perfeição"],["Um flirt num casamento","Um flirt num avião"],
+["Que o teu par fosse ciumento","Que o teu par fosse completamente indiferente"],["Uma noite num hotel de cinco estrelas","Uma noite numa tenda debaixo das estrelas"],
+["Ter um par que canta no duche todas as manhãs","Um par que fala a dormir e conta segredos"],["Nunca mais poder usar emojis para namorar","Só poder namorar por áudios"],
+["Ser engatado com a pior frase de engate do mundo","Seres tu a usar essa frase e resultar"],["Ir a um speed dating com o grupo a ver","Ter o grupo a escolher o teu perfil numa app de encontros"],
+["Ficar preso num elevador com o teu crush","Com o teu ex"],["Fazer uma serenata à janela de alguém","Receber uma serenata à frente de toda a gente"],
+["Que soubessem todos os teus crushes de sempre","Que soubessem todas as tuas desculpas para não sair"],["Uma paixão de verão intensa que acaba em setembro","Uma relação morna que dura para sempre"],
+["Ter química com toda a gente mas não te apaixonares","Apaixonares-te facilmente sem química nenhuma"],["Um jantar romântico cozinhado por ti","Um jantar romântico cozinhado por quem amas mas que sabe mal"],
+["Que o teu par fosse dez anos mais velho","Dez anos mais novo"],["Ter um encontro com alguém famoso que não conheces","Com alguém normal que conheces muito bem"],
+["Beijar com os olhos abertos","Ser beijado por alguém de olhos abertos"],["Ter de mandar uma mensagem picante ao último contacto com quem falaste","Ter de ler em voz alta a última mensagem picante que recebeste"],
+["Dormir de conchinha a noite toda","Dormir cada um no seu lado da cama"],["Um par que manda mensagens de bom dia todos os dias","Um par que só responde ao fim do dia"],
+["Conhecer o amor da tua vida numa app","Num bar às 4h da manhã"],["Que o teu par tivesse cócegas em todo o lado","Que não tivesse cócegas em lado nenhum"],
+["Ir a um casamento sozinho e conhecer alguém","Ir acompanhado e passar a noite a dançar com o grupo"],["Ter sempre as mãos frias","Ter sempre os pés frios na cama"],
+["Uma lingerie ou boxers ridículos que adoras","Uns que odeias mas que o teu par adora"],["Que o teu par fosse muito romântico em público","Só romântico quando estão sozinhos"],
+["Ter de recriar o teu primeiro beijo com o grupo a ver","Ter de contar como foi ao pormenor"],["Um encontro num museu","Um encontro num karaoke"],
+["Um par que adora o teu grupo de amigos","Um par que o grupo adora mas que não aguenta o grupo"],["Saber sempre quando alguém está interessado em ti","Saber sempre quando alguém está a mentir"],
+["Fazer um strip ao som do Quim Barreiros","Fazer uma dança sensual ao som do hino nacional"],["Ter o primeiro encontro numa feira popular","Numa aula de dança de salão"],
+],
+filosofia:[
+["Saber a data em que vais morrer","Saber a forma como vais morrer"],["Ser muito feliz sem ninguém se lembrar de ti","Ser lembrado para sempre e nunca ser totalmente feliz"],["Poder voltar ao passado","Poder ver o futuro"],
+["Viver 200 anos com saúde média","Viver 70 anos com saúde perfeita"],["Saber sempre a verdade","Ser sempre feliz"],["Ser o mais inteligente da sala","Ser o mais divertido da sala"],
+["Ter muito dinheiro sem amigos","Ter amigos incríveis sem dinheiro"],["Esquecer as tuas piores memórias","Lembrar-te para sempre das melhores com todo o pormenor"],["Ser famoso sem talento","Ter talento e ninguém saber"],
+["Viver uma vida tranquila e previsível","Uma vida cheia de aventuras e altos e baixos"],["Mudar o passado do mundo","Mudar o futuro do mundo"],["Ler mentes","Ser invisível"],
+["Nunca mais mentir","Nunca mais ouvir uma mentira"],["Ser imortal sozinho","Morrer com quem gostas"],["Conhecer o sentido da vida","Ter uma vida com sentido sem nunca saber qual é"],
+["Ter um botão de pausa na vida","Um botão de avançar"],["Ser lembrado como boa pessoa","Ser lembrado como génio"],["Perder todas as memórias de infância","Nunca mais criar memórias novas por um ano"],
+["Ter sempre razão","Ser sempre amado"],["Viver numa utopia aborrecida","Num mundo caótico mas emocionante"],["Saber o que todos pensam de ti","Que ninguém nunca saiba o que pensas"],
+["Ser capaz de falar com animais","Falar todas as línguas do mundo"],["Viver no ano 1500","No ano 2500"],["Começar a vida de novo com o que sabes hoje","Continuar a vida sem arrependimentos"],
+["Ter coragem total","Ter calma total"],["Ver o mundo todo e não ter casa","Ter a casa perfeita e nunca viajar"],["Ser o primeiro humano em Marte","O último humano na Terra"],
+["Dizer sempre o que pensas","Nunca mais falar"],["Ter memória perfeita","Ter imaginação infinita"],["Ser jovem para sempre por fora","Sábio para sempre por dentro"],
+["Viver sem música","Viver sem cores"],["Saber como o universo começou","Saber como vai acabar"],["Perdoar tudo","Nunca precisar de ser perdoado"],
+["Ganhar o Euromilhões","Encontrar a tua vocação"],["Ser uma pessoa normal num mundo de génios","Um génio num mundo de pessoas normais"],["Ter um amigo que te diz sempre a verdade","Um amigo que te apoia sempre, mesmo sem razão"],
+["Viver sem medo","Viver sem dor"],["Ter tempo infinito e pouco dinheiro","Dinheiro infinito e pouco tempo"],["Nunca mais sentir tristeza","Nunca mais sentir saudade"],
+["Saber tudo sobre o passado","Saber tudo sobre ti próprio"],["Ser lembrado por uma única coisa grandiosa","Por mil pequenas coisas boas"],["Viver num sonho perfeito sem saberes","Na realidade dura sabendo tudo"],
+["Ter a vida decidida por outro e ser feliz","Decidir tudo e falhar muitas vezes"],["Ser o mais rico do cemitério","O mais feliz do bairro"],["Ser admirado","Ser compreendido"],
+["Ter um dom que te isola","Ser comum e muito acompanhado"],["Voltar a ter 10 anos por um dia","Ter 80 anos por um dia"],["Nunca mais ter de dormir","Nunca mais ter de comer"],
+["Escolher o teu destino","Ser surpreendido pelo destino"],["Viver numa cidade onde todos te conhecem","Numa onde ninguém te conhece"],
+],
+membros:[
+["Ficar fechado num elevador 5 horas com o {A}","Fazer uma viagem de 10 horas de carro com o {B} ao volante"],["Que o {A} escolhesse a tua roupa durante um mês","Que o {B} escolhesse todas as tuas refeições"],
+["Ter o sentido de humor do {A}","Ter a lábia do {B}"],["Ir de férias uma semana só com o {A}","Partilhar casa um mês com o {B}"],["Que o {A} organizasse o teu aniversário","Que o {B} escrevesse o teu discurso de casamento"],
+["Ter o estilo do {A}","Ter a sorte do {B}"],["Que o {A} lesse as tuas mensagens","Que o {B} visse o teu histórico do YouTube"],["Ser treinado pelo {A} no ginásio","Aprender a cozinhar com o {B}"],
+["Que o {A} fosse o teu advogado","Que o {B} fosse o teu médico"],["Ter o {A} como chefe","Ter o {B} como colega de secretária"],["Dançar um slow com o {A} no próximo jantar","Cantar um dueto no karaoke com o {B}"],
+["Fazer uma maratona de séries com o {A}","Fazer uma caminhada de 20 km com o {B}"],["Que o {A} conduzisse o teu carro um mês","Que o {B} tomasse conta da tua casa um mês"],["Ter a energia do {A} às 4h da manhã","Ter a calma do {B} numa discussão"],
+["Que o {A} fosse o teu padrinho de casamento","Que o {B} fosse o padrinho do teu filho"],["Jogar à bola na equipa do {A}","Ter o {B} como guarda-redes da tua equipa"],["Ir a um casino com o {A}","Ir a um festival de verão com o {B}"],
+["Que o {A} escolhesse o teu corte de cabelo","Que o {B} escolhesse a tua próxima tatuagem"],["Ter o telemóvel do {A} durante um dia","Ter a carteira do {B} durante um dia"],["Ser o melhor amigo do {A} numa ilha deserta","Ser o melhor amigo do {B} num apocalipse zombie"],
+["Que o {A} te desse conselhos amorosos","Que o {B} te desse conselhos financeiros"],["Ir às compras de Natal com o {A}","Montar um móvel do IKEA com o {B}"],["Ter a memória do {A}","Ter a pontualidade do {B}"],
+["Ser fotografado pelo {A} para o teu perfil","Que o {B} escrevesse a tua biografia"],["Que o {A} planeasse a próxima viagem do grupo","Que o {B} tratasse do orçamento"],["Passar a noite de Ano Novo com o {A}","Passar o dia de anos com o {B}"],
+["Ter o gosto musical do {A}","Ter o gosto para filmes do {B}"],["Que o {A} fosse o teu DJ de casamento","Que o {B} fosse o fotógrafo"],["Cozinhar um jantar para o {A}","Que o {B} cozinhasse para ti"],
+["Que o {A} te acordasse todos os dias","Que o {B} te deitasse todos os dias com uma história"],["Ser o par do {A} numa competição de dança","Ser a dupla do {B} num quiz de cultura geral"],["Fazer o Caminho de Santiago com o {A}","Uma road trip pela Europa com o {B}"],
+["Trocar de vida com o {A} durante uma semana","Trocar de casa com o {B} durante um mês"],["Que o {A} fosse presidente da Câmara","Que o {B} fosse primeiro-ministro"],["Que o {A} gerisse as tuas redes sociais","Que o {B} respondesse às tuas mensagens"],
+["Ter a paciência do {A}","Ter a coragem do {B}"],["Ir a um jantar de família com o {A} como teu par","Levar o {B} à tua entrevista de emprego"],["Ser o colega de quarto do {A} num Erasmus","Ser o colega de tenda do {B} num festival"],
+["Que o {A} contasse a tua história mais embaraçosa no jantar de Natal","Que o {B} mostrasse a tua foto mais embaraçosa"],["Ter o carro do {A}","Ter a casa do {B}"],["Ser defendido pelo {A} numa discussão","Ser acalmado pelo {B} depois dela"],
+["Que o {A} escolhesse o teu próximo destino de férias","Que o {B} escolhesse o hotel"],["Aprender uma língua com o {A}","Aprender a tocar guitarra com o {B}"],["Ter o {A} como vizinho","Ter o {B} como senhorio"],
+["Fazer um podcast com o {A}","Abrir um restaurante com o {B}"],["Que o {A} fosse o teu treinador de vida","Que o {B} fosse o teu personal shopper"],["Passar 24 horas sem telemóvel com o {A}","24 horas a pão e água com o {B}"],
+["Ter o talento do {A} para engatar","Ter o talento do {B} para desenrascar"],["Ser herdeiro do {A}","Ser o confidente do {B}"],["Ir num cruzeiro com o {A}","Num safari com o {B}"],
+],
+};
+const PF_CATS=[["rotina","☕ Rotina"],["erotico","🌶️ Picante"],["filosofia","🧠 Filosofia"],["membros","👥 Malta"]];
+const PF_START="2026-W48";
+function pfLx(){ const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Lisbon",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()).map(x=>[x.type,x.value])); return {dow:p.weekday,mins:(+p.hour%24)*60+(+p.minute)}; }
+// open from Wednesday 00:00 to Thursday 23:30 (Lisbon)
+function pfOpen(){ if(window.PF_FORCE) return true; if(curWeek()<PF_START) return false; const t=pfLx(); return t.dow==="Wed"||(t.dow==="Thu"&&t.mins<23*60+30); }
+function pfMsLeft(){ const t=pfLx(); return ((t.dow==="Wed"?1440:0)+23*60+30-t.mins)*6e4; }
+// 4 dilemmas a week, one per category; a fixed shuffle per group, category and year → no repeats for a year
+function weekPF(gid,w=curWeek()){ if(!w||w<PF_START) return []; const y=+w.slice(0,4), n=+w.slice(6); const mem=(S.groups[gid]?.members||[]).slice().sort();
+  return PF_CATS.map(([cat,label])=>{ const N=PF[cat].length; const idx=[...Array(N).keys()]; let seed=hashStr2(gid+"|"+y+"|"+cat); for(let i=N-1;i>0;i--){ seed=(Math.imul(seed,1664525)+1013904223)>>>0; const j=seed%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
+    const i=idx[(n-1)%N]; let [a,b]=PF[cat][i];
+    if(cat==="membros"&&mem.length>=2){ let h=hashStr2(gid+"|"+w); const x=mem[h%mem.length]; h=(Math.imul(h,1664525)+1013904223)>>>0; let z=mem[h%mem.length]; if(z===x) z=mem[(mem.indexOf(x)+1)%mem.length];
+      const sn=k=>{ const f=first(nm(k)); return mem.filter(o=>first(nm(o))===f).length>1?nm(k):f; }; // full name when the first name repeats
+      a=a.replace("{A}",sn(x)).replace("{B}",sn(z)); b=b.replace("{A}",sn(x)).replace("{B}",sn(z)); }
+    return {id:`pf:${cat}:${i}`,cat,label,a,b}; }); }
+const pfDone=(gid,k=ME(),w=curWeek())=>{ const it=weekPF(gid,w); const v=S.votes[k]?.weeks?.[w]||{}; return it.length>0&&it.every(q=>v[q.id]); };
+function pfCard(g){ if(!pfOpen()) return ""; const it=weekPF(g.id); if(!it.length) return ""; const done=pfDone(g.id); const n=(g.members||[]).filter(k=>pfDone(g.id,k)).length;
+  return `<div class="section" style="margin-top:14px"><button class="pfcard ${done?"done":""}" data-act="pfPlay"><span class="pf-bolt">⚡</span><span class="grow"><b>${done?"Preferias Flash feito ✓":"Preferias Flash"}</b><small>${done?"Os resultados saem no resumo de segunda 👀":`4 dilemas · fecha em ${fmtLeft(pfMsLeft())} · ${n} de ${(g.members||[]).length} já jogaram`}</small></span>${ic("right")}</button></div>`; }
+function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const w=curWeek(); const it=weekPF(g.id,w);
+  if(!pfOpen()){ toast("O Preferias Flash já fechou. Volta na quarta ⚡"); return; }
+  const prev=S.votes[me]?.weeks?.[w]||{}; const ans={}; it.forEach(q=>{ if(prev[q.id]) ans[q.id]=prev[q.id]; });
+  let step=it.findIndex(q=>!ans[q.id]); if(step<0) step=it.length;
+  const L=openSheet({title:"⚡ Preferias Flash",left:"Fechar",body:()=>{
+    if(step>=it.length) return `<div class="pf-end"><div class="pf-big">⚡</div><b>Feito!</b><p>As tuas escolhas ficam guardadas. Na segunda-feira, o resumo da semana mostra o que cada um escolheu.</p>
+      <div class="card list" style="width:100%;text-align:left">${it.map(q=>`<div class="row"><div class="grow"><div class="rowsub">${q.label}</div><div class="rowtitle" style="white-space:normal">${esc(ans[q.id]==="A"?q.a:q.b)}</div></div></div>`).join("")}</div>
+      <p class="info">Só quem joga vê as respostas dos outros no resumo 😏</p></div>`;
+    const q=it[step];
+    return `<div class="pf-prog">${it.map((_,i)=>`<i class="${i<step?"ok":i===step?"on":""}"></i>`).join("")}</div>
+      <div class="pf-cat">${q.label} · ${step+1} de ${it.length}</div><h2 class="pf-q">Preferias…</h2>
+      <button class="pf-opt a" data-pf="A">${esc(q.a)}</button><div class="pf-or">ou</div><button class="pf-opt b" data-pf="B">${esc(q.b)}</button>
+      <p class="info" style="text-align:center">Fecha quinta às 23:30 · faltam ${fmtLeft(pfMsLeft())}</p>`; },
+    onMount:L=>{ L.body.addEventListener("click",async e=>{ const b=e.target.closest("[data-pf]"); if(!b) return; const q=it[step]; ans[q.id]=b.dataset.pf; b.classList.add("pick"); step++;
+      if(step>=it.length){ if(!pfOpen()){ toast("O Preferias Flash já fechou"); return; }
+        const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{}; doc.weeks[w]={...(doc.weeks[w]||{}),...ans};
+        const ok=await write(()=>D("votes/"+me).set(doc),"Preferias Flash feito ⚡"); if(!ok){ step--; } }
+      setTimeout(()=>{ L.render(); L.body.scrollTop=0; },180); }); }}); }
+function pfSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); const me=ME(); const g=S.groups[gid];
+  let out="";
+  const it=weekPF(gid,w);
+  if(it.length){ if(!pfDone(gid,me,w)) out+=`<div class="label" style="margin-top:20px">⚡ Preferias Flash</div><button class="card pad pflock" data-act="tease"><b>🔒 Não jogaste o Preferias Flash desta semana</b><span>Por isso não vês o que a malta escolheu 😏 Joga na quarta para não ficares de fora outra vez.</span></button>`;
+    else out+=`<div class="label" style="margin-top:20px">⚡ Preferias Flash</div>${it.map(q=>{ const who={A:[],B:[]}; (g?.members||[]).forEach(k=>{ const v=S.votes[k]?.weeks?.[w]?.[q.id]; if(v==="A"||v==="B") who[v].push(k); });
+      const tot=who.A.length+who.B.length; const pa=tot?Math.round(100*who.A.length/tot):0;
+      const side=(t,list,p,cls)=>`<div class="pfr ${cls}"><div class="pfr-top"><span>${esc(t)}</span><b class="num">${p}%</b></div><div class="pfr-who">${list.length?list.map(k=>{ const f=first(nm(k)); const dup=(g?.members||[]).filter(o=>first(nm(o))===f).length>1; return `<span>${avatar(k,22)}${esc(dup?nm(k):f)}${k===me?" (tu)":""}</span>`; }).join(""):'<small class="muted">Ninguém</small>'}</div></div>`;
+      return `<div class="card pad" style="margin-bottom:10px"><div class="rowsub" style="margin-bottom:8px">${q.label} · Preferias…</div>${side(q.a,who.A,pa,"a")}${side(q.b,who.B,tot?100-pa:0,"b")}</div>`; }).join("")}`; }
+  if(nextW===PF_START) out+=`<div class="label" style="margin-top:20px">⚡ Novidade: Preferias Flash</div><div class="card pad cantsum">
+    <p>A partir desta semana, todas as <b>quartas-feiras</b> aparece no Dashboard o <b>Preferias Flash</b>: 4 dilemas rápidos, sempre um de cada tipo: ☕ rotina, 🌶️ picante, 🧠 filosofia e 👥 a malta do grupo.</p>
+    <p>Só está aberto de <b>quarta às 00:00 até quinta às 23:30</b>. Depois fecha, sem desculpas.</p>
+    <p>Na segunda-feira seguinte, o resumo da semana mostra o que cada um escolheu, com nome e tudo 👀 Mas atenção: <b>quem não jogar não vê as respostas dos outros</b>.</p>
+    <div class="cantwho"><span>O primeiro Preferias Flash é já</span><span class="cw"><b>quarta-feira, 25 de novembro ⚡</b></span></div></div>`;
+  return out; }
 /* ───────── Locked (didn't vote): every tap gets a cheeky message ───────── */
 const TEASES=[["Ups… 🙈","Estavas mesmo à espera de ver alguma coisa? Quem não vota fica a ver navios."],
   ["Bela tentativa 😏","Carregar mais vezes não desbloqueia nada. Votar desbloqueia."],
@@ -2129,7 +2279,7 @@ const A = {
   bdayCelebrate:a=>{ const [gid,k]=a.split("|"); bdayCelebration(gid,k); },
   editBday:()=>bdaySheet(),
   achievements:()=>{ const g=curGroup(); if(g) achievementsSheet(g.id); },
-  tease:()=>teaseSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  tease:()=>teaseSheet(), pfPlay:()=>pfSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
