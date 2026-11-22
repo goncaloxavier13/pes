@@ -69,6 +69,19 @@ function weekQuestions(gid,w){ if(!w||w<Q_START) return []; const y=+w.slice(0,4
   const idx=[...Array(N).keys()]; let seed=hashStr2(gid+"|"+y); for(let i=N-1;i>0;i--){ seed=(Math.imul(seed,1664525)+1013904223)>>>0; const j=seed%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
   return [0,1].map(o=>{ const i=idx[((n-1)*2+o)%N]; return {id:"q:"+i,text:QUESTIONS[i]}; }); }
 
+// ── pedidos de admins para apagar eventos de outras pessoas (as regras só deixam o criador apagar diretamente) ──
+if (!DRY) {
+  const rs = await db.collection("reads").get();
+  for (const d of rs.docs) { const req = d.data().delReq; if (!req || !Object.keys(req).length) continue;
+    for (const [eid, r] of Object.entries(req)) {
+      const ev = (await db.doc("events/" + eid).get()).data(); const g = ev && (await db.doc("groups/" + ev.groupId).get()).data();
+      if (ev && g && (g.admins || []).includes(d.id)) { await db.doc("events/" + eid).delete(); console.log("Evento apagado a pedido de um admin."); }
+      else console.log("Pedido de apagar evento ignorado (não é admin ou o evento já não existe).");
+    }
+    await db.doc("reads/" + d.id).update({ delReq: FieldValue.delete() });
+  }
+}
+
 const today = ymd(); const wk = process.env.DRY_WEEK || weekOf(today);
 if (wk < CANT_START) { console.log(`O cantinho só começa em ${CANT_START} (agora ${wk}).`); process.exit(0); }
 

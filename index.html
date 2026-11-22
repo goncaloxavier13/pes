@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795306615">
+<meta name="pes-version" content="1795339952">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1608,7 +1608,7 @@ function eventCard(e,me){
   const mine=statusOf(e,me); const future=isFuture(e); const creator=e.createdBy===me; const part=!!S.groups[e.groupId]?.members?.includes(me);
   return `<div class="card"><div class="ev"><div class="datebox"><b class="num">${d.getUTCDate()}</b><span>${MONTHS[d.getUTCMonth()]}</span></div>
     <div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:flex-start"><h3 style="flex:1">${esc(e.title)}</h3>
-      ${creator?`<button class="iconbtn" data-act="eventMenu" data-arg="${e.id}" aria-label="Opções do evento" style="margin:-6px -8px 0 0">${ic("more")}</button>`:""}</div>
+      ${creator||S.isOwner||isAdmin(S.groups[e.groupId])?`<button class="iconbtn" data-act="eventMenu" data-arg="${e.id}" aria-label="Opções do evento" style="margin:-6px -8px 0 0">${ic("more")}</button>`:""}</div>
       ${e.desc?`<p class="desc">${esc(e.desc)}</p>`:""}
       ${e.place?`<a class="place" href="${esc(mapsUrl(e.place))}" target="_blank" rel="noopener">${ic("pin")}<span>${esc(e.place)}</span></a>`:""}
       <div class="meta">${pres.length>=MIN_GROUP_EVENT?`<span class="chip">${ic("users")}Evento de grupo</span>`:future?"":`<span class="chip grey">Não conta para as estatísticas</span>`}${future?`<span class="chip grey">Em breve</span>`:""}<span>${esc(fmtDate(e.date))}${e.time?` · ${esc(e.time)}`:""}</span><span>por ${esc(creator?"ti":first(nm(e.createdBy)))}</span></div>
@@ -2145,9 +2145,16 @@ const A = {
     alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença em eventos de grupo, com 4 ou mais pessoas (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}) e 30% semanas com votos nos prémios (${voteWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}), nas últimas 8 semanas desta época.`); },
   presence:async arg=>{ const [id,v]=arg.split("|"); const me=ME(); const e=S.events[id]; if(!e) return; if((e.att||{})[me]===v) return;
     await write(()=>D("events/"+id).update({att:{[me]:v}}), v==="yes"?"Marcado como presente":"Marcado como ausente"); },
-  eventMenu:async id=>{ const v=await actionSheet(S.events[id]?.title,[{t:"Editar evento",v:"edit"},{t:"Apagar evento",v:"del",danger:true}]);
+  eventMenu:async id=>{ const e=S.events[id]; if(!e) return; const me=ME(); const mine=e.createdBy===me; const admin=isAdmin(S.groups[e.groupId]);
+    if(!mine&&!admin&&!S.isOwner) return;
+    const v=await actionSheet(e.title,[...(mine||S.isOwner?[{t:"Editar evento",v:"edit"}]:[]),{t:mine?"Apagar evento":"Apagar evento (admin)",v:"del",danger:true}]);
     if(v==="edit") eventSheet(id);
-    if(v==="del" && await confirmD("Apagar evento?","As presenças deste evento também deixam de contar nas estatísticas.","Apagar",true)) await write(()=>D("events/"+id).delete(),"Evento apagado"); },
+    if(v!=="del") return;
+    if(!await confirmD(mine?"Apagar evento?":`Apagar o evento de ${first(nm(e.createdBy))}?`,"O evento e as presenças deixam de aparecer e de contar nas estatísticas. Não dá para desfazer.","Apagar",true)) return;
+    if(mine||S.isOwner){ await write(()=>D("events/"+id).delete(),"Evento apagado"); return; }
+    // group admin deleting someone else's event: the server checks that you are admin and deletes it within a few minutes
+    const req={...(S.reads[me]?.delReq||{}),[id]:{gid:e.groupId,at:Date.now()}};
+    await write(async()=>{ try{ await D("reads/"+me).update({delReq:req}); }catch{ await D("reads/"+me).set({...(S.reads[me]||{}),delReq:req}); } },"Pedido enviado: o evento é apagado dentro de alguns minutos"); },
   delAward:async id=>{ const a=S.awards[id]; if(!a||!isAdmin(S.groups[a.groupId])){ toast("Só os admins podem apagar prémios"); return; } if(await confirmD(`Apagar “${a.label}”?`,"O prémio e os resultados deixam de aparecer. Não dá para desfazer.","Apagar",true)) await write(()=>D("awards/"+id).delete(),"Prémio apagado"); },
   submitVotes:async()=>{ const me=ME(); const w=curWeek(); const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{};
     doc.weeks[w]={...(doc.weeks[w]||{}),...S.localVotes}; const n=Object.keys(S.localVotes).length;
