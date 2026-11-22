@@ -407,6 +407,8 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .story.paused .sstep{opacity:.92}
 .story .ws-up{color:#5CF09A}.story .ws-down{color:#FF9BAA}.story .ws-eq{color:rgba(255,255,255,.7)}
 .pfcard.locked{opacity:.75}
+.qtop{display:flex;flex-direction:column;gap:6px;width:100%}.qtp{display:flex;align-items:center;gap:8px}.qmed{font-size:17px;width:22px;flex:none;text-align:center}
+.qwho{flex:1;display:flex;flex-wrap:wrap;gap:6px 12px;min-width:0}.qwho>span{display:inline-flex;align-items:center;gap:6px}.qtp small{color:var(--muted);font-size:12px;flex:none}.qtp.p1 b{font-weight:800}.qtp.p2 b,.qtp.p3 b{font-weight:600}
 .ws-tease{position:relative}
 .ws-blur{filter:blur(7px);opacity:.75;pointer-events:none;user-select:none}
 .ws-tease .ws-grid{min-height:300px;grid-auto-rows:1fr}
@@ -987,7 +989,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
     joke:["Os teus números existem 🔢","Estão aqui, mesmo atrás deste cadeado. Só não são para ti esta semana."]});
   S_.push({emo:"🎲",title:"Perguntas da semana",
     html:()=>{ const qr=questionResults(gid,w).filter(q=>q.tot>0);
-      return qr.length?`<div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="margin-bottom:6px;white-space:normal">${esc(q.text)}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${q.winners.map(k=>`<span style="display:inline-flex;align-items:center;gap:6px">${avatar(k,28)}<b>${esc(nm(k))}${k===me?" (tu)":""}</b></span>`).join("")}<span class="muted small">${q.max} ${q.max===1?"voto":"votos"}${q.winners.length>1?" cada":""}</span></div></div></div>`).join("")}</div><p class="s-txt">Ninguém sabe quem votou em quem 🤫</p>`
+      return qr.length?`<div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowtitle" style="white-space:normal;margin-bottom:8px">${esc(q.text)}</div>${qTop(q,me,28)}</div></div>`).join("")}</div><p class="s-txt">Ninguém sabe quem votou em quem 🤫</p>`
         :`<p class="s-txt">Esta semana ninguém respondeu às perguntas.</p>`; },
     joke:["Toda a gente já sabe quem ganhou 🎲","Toda a gente menos tu. E não, não vale a pena perguntar no GAP."]});
   S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
@@ -1716,10 +1718,10 @@ function questionsArchive(g){ const me=ME(); const s=viewSeason(g.id); const cw=
   if(!ws.length&&!cur) return "";
   const blocked=!viewingPast(g.id)&&rankLocked(g.id);
   const body=ws.length?ws.map(w=>{ const ok=!blocked&&weekComplete(g.id,me,w); const rs=questionResults(g.id,w);
-      return `<div class="qweek"><div class="qwk">${esc(weekRange(w))}</div>${ok?rs.map(q=>`<div class="qrow"><div class="qtxt">${esc(q.text)}</div><div class="qwin">${q.winners.length?q.winners.map(k=>`<span>${avatar(k,24)}<b>${esc(first(nm(k)))}${k===me?" (tu)":""}</b></span>`).join("")+`<small class="muted">${q.max} ${q.max===1?"voto":"votos"}</small>`:`<small class="muted">Sem respostas</small>`}</div></div>`).join("")
+      return `<div class="qweek"><div class="qwk">${esc(weekRange(w))}</div>${ok?rs.map(q=>`<div class="qrow"><div class="qtxt">${esc(q.text)}</div><div class="qwin">${q.tot?qTop(q,me,24):`<small class="muted">Sem respostas</small>`}</div></div>`).join("")
         :`<button class="qlock" data-act="tease">${ic("lock")}<span>Não completaste a votação desta semana, por isso não vês estas respostas.</span></button>`}</div>`; }).join("")
     :`<div class="empty" style="padding:18px 16px"><p>As respostas desta semana aparecem aqui na segunda-feira, às 00:00.</p></div>`;
-  return `<div class="section"><div class="label">🎲 Perguntas da semana</div><div class="card">${body}</div><p class="info">Só aparecem os vencedores, nunca quem votou em quem.</p></div>`; }
+  return `<div class="section"><div class="label">🎲 Perguntas da semana</div><div class="card">${body}</div><p class="info">Aparece o top 3 de cada pergunta, nunca quem votou em quem.</p></div>`; }
 
 /* ───────────────────────── screens: GAP ───────────────────────── */
 function gapScreen(){
@@ -2180,7 +2182,12 @@ function weekQuestions(gid,w=curWeek()){ if(!w||w<Q_START) return []; const y=+w
   return [0,1].map(o=>{ const i=idx[((n-1)*2+o)%N]; return {id:"q:"+i,text:QUESTIONS[i]}; }); }
 function questionResults(gid,w){ const g=S.groups[gid]; return weekQuestions(gid,w).map(q=>{ const c={}; let tot=0;
   (g?.members||[]).forEach(k=>{ const v=S.votes[k]?.weeks?.[w]?.[q.id]; if(v){ c[v]=(c[v]||0)+1; tot++; } });
-  const max=Math.max(0,...Object.values(c)); return {...q,tot,winners:Object.keys(c).filter(k=>c[k]===max&&max>0),max}; }); }
+  const max=Math.max(0,...Object.values(c));
+  // top 3 with ties: 1.º, 2.º and 3.º places (who shares a place shares the medal)
+  const counts=[...new Set(Object.values(c))].sort((a,b)=>b-a).slice(0,3);
+  const top=counts.map((n,p)=>({place:p+1,n,who:Object.keys(c).filter(k=>c[k]===n).sort((a,b)=>nm(a).localeCompare(nm(b)))}));
+  return {...q,tot,winners:Object.keys(c).filter(k=>c[k]===max&&max>0),max,top}; }); }
+function qTop(q,me,sz){ return `<div class="qtop">${q.top.map(t=>`<div class="qtp p${t.place}"><span class="qmed">${["🥇","🥈","🥉"][t.place-1]}</span><span class="qwho">${t.who.map(k=>`<span>${avatar(k,sz)}<b>${esc(first(nm(k)))}${k===me?" (tu)":""}</b></span>`).join("")}</span><small class="num">${t.n} ${t.n===1?"voto":"votos"}</small></div>`).join("")}</div>`; }
 /* ───────── Weekly vote: friendship ranking + award votes in ONE place. Nothing is saved until everything is answered. ───────── */
 function weekItems(gid){ return [...groupAwards(gid).map(a=>({id:a.id,label:a.label,emoji:a.emoji||"🏆",desc:a.desc,kind:"award"})),...weekQuestions(gid).map(q=>({id:q.id,label:q.text,emoji:"🎲",desc:"",kind:"q"}))]; }
 // Until 2026-W46 the rule was "ranking only" (awards were a separate vote). From W47 on, the full vote is required.
