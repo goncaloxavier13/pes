@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795462608">
+<meta name="pes-version" content="1795462702">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -725,7 +725,10 @@ function weekMonday(key){
   const [y,w]=key.split("-W").map(Number); const jan4=new Date(Date.UTC(y,0,4));
   const mon=new Date(jan4); mon.setUTCDate(jan4.getUTCDate()-((jan4.getUTCDay()+6)%7)+(w-1)*7); return mon;
 }
-const curWeek = () => weekOf(lisbonYMD());
+// The voting week closes on Sunday at 21:00 (Lisbon): from then on "this week" is already the next one,
+// so votes, locks and Monday's summary all switch at Sunday 21:00 (+3h shift on the clock).
+const WEEK_SHIFT_MS=3*3600e3;
+const curWeek = () => weekOf(lisbonYMD(new Date(Date.now()+WEEK_SHIFT_MS)));
 function weeksBack(n, from=curWeek()){ const out=[]; const m=weekMonday(from); for(let i=n-1;i>=0;i--){ const d=new Date(m); d.setUTCDate(m.getUTCDate()-7*i); out.push(weekOf(utcToYmd(d))); } return out; }
 function weekRange(key){ const m=weekMonday(key); const s=new Date(m); s.setUTCDate(m.getUTCDate()+6);
   const a=`${m.getUTCDate()}`+(m.getUTCMonth()!==s.getUTCMonth()?` ${MONTHS[m.getUTCMonth()]}`:""); return `${a} a ${s.getUTCDate()} ${MONTHS[s.getUTCMonth()]}`; }
@@ -930,7 +933,7 @@ function eventStats(gid,k){
   return {created, attended, invited:past.length, rate:pct(attended,past.length)};
 }
 /* Average friendship ranking: each ranker's most recent ranking up to week w, averaged per person */
-/* Rankings only count once their week has closed (Sunday→Monday 00:00). Stats always stop at the last closed week. */
+/* Rankings only count once their week has closed (Sunday at 21:00). Stats always stop at the last closed week. */
 function lastClosedWeek(){ return weeksBack(2)[0]; }
 function averages(gid, uptoWeek=lastClosedWeek(), s=viewSeason(gid)){
   const g=S.groups[gid]; if(!g) return [];
@@ -1019,7 +1022,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
       <p class="s-txt">Em desenvolvimento 🛠️</p>`,
     joke:["Vêm aí novidades 🛠️","Quais? Isso é informação para quem vota. Tu ficas com a curiosidade."]});
   S_.push({emo:"🤫",title:locked?"Fim… do que não viste":"E por esta semana é tudo",
-    html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">Na próxima segunda, à meia-noite, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
+    html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">No próximo domingo, às 21h, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
     joke:null});
   const lockedEnd=()=>`<div class="s-lock"><div class="s-lemo">🔒</div><b>Voltas a ver tudo quando votares</b><p>Quem não completa a votação de uma semana não vê nada na semana seguinte.</p>
     ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎ · na próxima segunda vês tudo</span>`:`<button class="btn" style="margin-top:10px" data-act="teaseVote">${ic("edit")}Fazer a votação</button>`}</div>`;
@@ -1184,7 +1187,7 @@ function achievementsSheet(gid){
   openSheet({title:"Conquistas",left:"Fechar",live:true,body:()=>{ const list=achievements(gid); const done=list.filter(a=>a.done).length; const cats=[...new Set(list.map(a=>a.cat))];
     return `<div class="ach-head">${achRing(done,list.length,72)}<div><b>${done} de ${list.length}</b><span>conquistas desbloqueadas</span></div></div>
     ${cats.map(c=>`<div class="label" style="margin-top:18px">${esc(c)}</div><div class="ach-grid">${list.filter(a=>a.cat===c).map(a=>`<div class="ach ${a.done?"on":""}"><div class="ach-emo">${a.emo}</div><b>${esc(a.name)}</b><small>${esc(a.desc)}</small>${a.done?`<span class="ach-ok">${ic("check")}Desbloqueada</span>`:`<div class="ach-bar"><i style="width:${Math.round(100*a.val/a.goal)}%"></i></div><span class="ach-p num">${a.val}/${a.goal}</span>`}</div>`).join("")}</div>`).join("")}
-    <p class="info">As semanas só contam depois de fecharem, à meia-noite de domingo.</p>`; }}); }
+    <p class="info">As semanas só contam depois de fecharem, no domingo às 21h.</p>`; }}); }
 function achRing(n,total,size=60){ const r=size/2-5, c=2*Math.PI*r, f=total?n/total:0;
   return `<div class="ach-ring" style="width:${size}px;height:${size}px"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><defs><linearGradient id="achg${size}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD60A"/><stop offset="1" stop-color="#FF9F0A"/></linearGradient></defs><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#achg${size})" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${(c*(1-f)).toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/></svg><span class="num">${n}<small>/${total}</small></span></div>`; }
 
@@ -1200,7 +1203,7 @@ function rankingHistory(gid,weeks=weeksBack(52),s=viewSeason(gid)){
 }
 function myRankingThisWeek(gid){ return S.rankings[ME()]?.weeks?.[curWeek()]?.[gid] || null; }
 /* Rankings are only visible to whoever has submitted this week's friendship ranking (current season only) */
-/* First week of a season (no history yet): rankings are only revealed when the week closes, at midnight Sunday→Monday */
+/* First week of a season (no history yet): rankings are only revealed when the week closes, on Sunday at 21:00 */
 function firstWeekReveal(gid){ if(viewingPast(gid)) return false; const s=currentSeason(gid); return !!(s.startW && curWeek()<=s.startW); }
 function rankLocked(gid){ const g=S.groups[gid]; if(!g||!ME()||(g.members||[]).length<2) return false;
   if(viewingPast(gid)||votingClosed(gid)||seasonPending(gid)) return false;
@@ -1588,17 +1591,17 @@ function dashScreen(){
     const series=top3.map((k,i)=>({key:k,name:first(nm(k))+(k===me?" (tu)":""),color:SERIES[i]}));
     const maxR=Math.max(3,(g.members.length-1));
     const stp=Math.max(1,Math.ceil((maxR-1)/4)); const tk=[]; for(let v=1;v<=maxR;v+=stp) tk.push(v); if(tk[tk.length-1]!==maxR) tk.push(maxR);
-    chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Cada semana só entra nas contas quando fecha, à meia-noite de domingo para segunda. Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
+    chart=`<div class="card pad">${picker}${chartBox({points:hist.map(h=>({w:h.w,label:weekShort(h.w),values:Object.fromEntries(series.map(s=>[s.key,h.av.find(a=>a.k===s.key)?.avg??null]))})),series,from,to,min:1,max:maxR,invert:true,ticks:tk,fmt:v=>"#"+Math.round(v),tipFmt:v=>"#"+v.toFixed(1),aria:"Evolução do ranking médio"})}${legend(series)}</div><p class="info">Posição média semanal (#1 = mais amigo). Cada semana só entra nas contas quando fecha, no domingo às 21h. Toca no gráfico para ver os valores de cada semana. Semanas sem dados ficam em branco.</p>`;
   } else if(seasonPending(g.id)) chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Época nova</h3><p>A evolução recomeça com os rankings da próxima semana.</p></div></div>`;
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
   if(!past&&!reveal&&rankLocked(g.id)){
     const fk=(l)=>`<button class="stat" data-act="tease"><span class="v num">🔒</span><span class="k">${l}</span><span class="s">██████</span></button>`;
     const fsec=(label,h)=>`<div class="section"><div class="label">${label}</div><button class="card lockfake" data-act="tease" aria-label="${label} bloqueado"><div class="ws-blur" aria-hidden="true">${h}</div><span class="lockpin">${ic("lock")}</span></button></div>`;
     const frows=n=>[...Array(n)].map((_,i)=>`<div class="row"><span class="rank">${i+1}</span><span style="width:34px;height:34px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">████████ ████</div></div><span class="num">█.█</span></div>`).join("");
-    const voteBtn=votingClosed(g.id)?"":`<div class="section" style="margin-top:14px"><div class="stats"><button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Voltas a ver tudo segunda às 00:00":voteCtaSub(g)}</span></span></button></div></div>`;
+    const voteBtn=votingClosed(g.id)?"":`<div class="section" style="margin-top:14px"><div class="stats"><button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Voltas a ver tudo domingo às 21h":voteCtaSub(g)}</span></span></button></div></div>`;
     return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${bdayBanner(g)}${seasonBanner(g)}
       <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Dashboard trancado</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p>${(()=>{ const n=(g.members||[]).length, nIn=insideCount(g.id), ct=g.cant&&g.cant.week===curWeek()?g.cant:null;
-        return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar na segunda.`}</span></div>`; })()}
+        return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar no domingo às 21h.`}</span></div>`; })()}
         <small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
       ${voteBtn}${pfCard(g)}
       <div class="section"><div class="label">Resumo da época</div><div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div></div>
@@ -1617,7 +1620,7 @@ function dashScreen(){
         ${stat(st.created,"Eventos criados","nesta época")}
         ${stat(st.attended,"Presenças",`em ${st.invited} ${st.invited===1?"evento":"eventos"}`)}
         ${stat(st.invited?st.rate+"%":"—","Taxa de presença",st.invited?"eventos passados":"sem eventos ainda")}
-        ${locked?stat("🔒","Posição média",reveal?"à meia-noite":"bloqueado esta semana")+stat("🔒","Posição atual",reveal?"à meia-noite":"bloqueado esta semana"):""}
+        ${locked?stat("🔒","Posição média",reveal?"domingo às 21h":"bloqueado esta semana")+stat("🔒","Posição atual",reveal?"domingo às 21h":"bloqueado esta semana"):""}
         ${locked?"":stat(mySIdx>=0?"#"+(mySIdx+1):"—","Posição média",mySIdx>=0?`média ${sav[mySIdx].avg.toFixed(1)} na época`:"sem rankings ainda")}
         ${locked?"":stat(myIdx>=0?"#"+(myIdx+1):"—",past?"Posição final":"Posição atual",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)} ${past?"no fim":"agora"}`:"sem rankings ainda")}
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
@@ -1635,8 +1638,8 @@ function dashScreen(){
       </button></div>`; })()}
 
     ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}${reveal
-        ?`<b>Rankings revelados à meia-noite 🕛</b><span>É a primeira semana da época. Os rankings aparecem de domingo para segunda, às 00:00, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
-        :`<b>Rankings bloqueados</b><span>Não completaste a votação da semana passada, por isso esta semana não vês os rankings.${weekDone(g.id)?" A votação desta semana já está feita ✔︎: voltas a ver a partir de segunda, às 00:00.":" Faz a votação desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${weekDone(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer a votação</span>`}`}</button></div>`:`
+        ?`<b>Rankings revelados domingo às 21h 🕘</b><span>É a primeira semana da época. Os rankings aparecem no domingo às 21h, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
+        :`<b>Rankings bloqueados</b><span>Não completaste a votação da semana passada, por isso esta semana não vês os rankings.${weekDone(g.id)?" A votação desta semana já está feita ✔︎: voltas a ver a partir de domingo às 21h.":" Faz a votação desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${weekDone(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer a votação</span>`}`}</button></div>`:`
     <div class="section"><div class="label">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
       <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
         : `<div class="empty"><p>${seasonPending(g.id)?"Época nova: o ranking recomeça na próxima semana.":"Ainda ninguém submeteu o ranking nesta época."}</p></div>`}</div></div>
@@ -1712,7 +1715,7 @@ function journeyScreen(){
   const rOk=!!myRankingThisWeek(g.id), aN=aw.filter(a=>v[a.id]).length, qN=qs.filter(q=>v[q.id]).length, done=weekDone(g.id);
   const pill=(ok,txt)=>`<span class="jpill ${ok?"ok":""}">${ok?ic("check"):""}${txt}</span>`;
   const voteCard=(past||closed)?"":`<div class="section" style="margin-top:14px"><button class="jvote ${done?"done":""}" data-act="rank">
-      <div class="jvtop"><span class="jvico">${ic(done?"check":"edit")}</span><span style="flex:1;text-align:left"><b>${done?"Votação da semana feita":"Votação da semana"}</b><small>${done?"Podes alterar até domingo, 23:59":`Semana de ${esc(weekRange(w))} · até domingo, 23:59`}</small></span>${ic("right")}</div>
+      <div class="jvtop"><span class="jvico">${ic(done?"check":"edit")}</span><span style="flex:1;text-align:left"><b>${done?"Votação da semana feita":"Votação da semana"}</b><small>${done?"Podes alterar até domingo, 21:00":`Semana de ${esc(weekRange(w))} · até domingo, 23:59`}</small></span>${ic("right")}</div>
       <div class="jvpills">${pill(rOk,"Ranking")}${aw.length?pill(aN===aw.length,`Prémios ${aN}/${aw.length}`):""}${qs.length?pill(qN===qs.length,`Perguntas ${qN}/${qs.length}`):""}</div></button></div>`;
   const awardsSec=aw.length?`<div class="section"><div class="label">Prémios da época</div>
       ${hid?`<div class="card"><div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Ninguém vê votos nem resultados dos prémios até ao jantar${hid.gala?` da Gala ${esc(hid.year)} (${esc(fmtDate(hid.gala))})`:""}. Votas na "Votação da semana".</span></div></div></div><div style="height:10px"></div>`:""}
@@ -1736,7 +1739,7 @@ function questionsArchive(g){ const me=ME(); const s=viewSeason(g.id); const cw=
   const body=ws.length?ws.map(w=>{ const ok=!blocked&&weekComplete(g.id,me,w); const rs=questionResults(g.id,w);
       return `<div class="qweek"><div class="qwk">${esc(weekRange(w))}</div>${ok?rs.map(q=>`<div class="qrow"><div class="qtxt">${esc(q.text)}</div><div class="qwin">${q.tot?qTop(q,me,24):`<small class="muted">Sem respostas</small>`}</div></div>`).join("")
         :`<button class="qlock" data-act="tease">${ic("lock")}<span>Não completaste a votação desta semana, por isso não vês estas respostas.</span></button>`}</div>`; }).join("")
-    :`<div class="empty" style="padding:18px 16px"><p>As respostas desta semana aparecem aqui na segunda-feira, às 00:00.</p></div>`;
+    :`<div class="empty" style="padding:18px 16px"><p>As respostas desta semana aparecem aqui no domingo às 21h.</p></div>`;
   return `<div class="section"><div class="label">🎲 Perguntas da semana</div><div class="card">${body}</div><p class="info">Aparece o top 3 de cada pergunta, nunca quem votou em quem.</p></div>`; }
 
 /* ───────────────────────── screens: GAP ───────────────────────── */
@@ -1986,12 +1989,12 @@ function votePicker(aid){
 }
 /* ───────── FOMO: deadline countdown and "who is inside" ───────── */
 function voteMsLeft(){ const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Lisbon",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()).map(x=>[x.type,x.value]));
-  const dow=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].indexOf(p.weekday); const mins=(+p.hour%24)*60+(+p.minute); return ((6-dow)*1440+(1440-mins))*6e4; }
+  const dow=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].indexOf(p.weekday); const mins=(+p.hour%24)*60+(+p.minute); let m=(6-dow)*1440+(21*60-mins); if(m<=0) m+=7*1440; return m*6e4; } // until Sunday 21:00
 const voteUrgent=()=>voteMsLeft()<36*3600e3;
 function fmtLeft(ms){ const h=Math.floor(ms/3600e3), m=Math.floor(ms%3600e3/6e4); return h>=48?`${Math.floor(h/24)} dias`:h>=1?`${h}h ${String(m).padStart(2,"0")}m`:`${m} min`; }
 function voteCtaSub(g){ const left=voteMsLeft(); const miss=(g.members||[]).filter(k=>!weekDone(g.id,k)).length; const others=Math.max(0,miss-1);
   if(left<72*3600e3) return `⏳ Fecha em ${fmtLeft(left)} · ${others?`faltas tu e mais ${others}`:"só faltas tu!"}`;
-  return "Ranking, prémios e perguntas · até domingo, 23:59"; }
+  return "Ranking, prémios e perguntas · até domingo, 21:00"; }
 function insideCount(gid){ return (S.groups[gid]?.members||[]).filter(k=>weekComplete(gid,k,lastClosedWeek())).length; }
 /* ───────── Preferias Flash: dilemas (A ou B). Em "membros", {A} e {B} são nomes sorteados do grupo. ───────── */
 const PF={
@@ -2105,7 +2108,7 @@ function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const w=cu
   const prev=S.votes[me]?.weeks?.[w]||{}; const ans={}; it.forEach(q=>{ if(prev[q.id]) ans[q.id]=prev[q.id]; });
   let step=it.findIndex(q=>!ans[q.id]); if(step<0) step=it.length;
   const L=openSheet({title:"⚡ Preferias Flash",left:"Fechar",body:()=>{
-    if(step>=it.length) return `<div class="pf-end"><div class="pf-big">⚡</div><b>Feito!</b><p>As tuas escolhas ficam guardadas. Na segunda-feira, o resumo da semana mostra o que cada um escolheu.</p>
+    if(step>=it.length) return `<div class="pf-end"><div class="pf-big">⚡</div><b>Feito!</b><p>As tuas escolhas ficam guardadas. No domingo às 21h, o resumo da semana mostra o que cada um escolheu.</p>
       <div class="card list" style="width:100%;text-align:left">${it.map(q=>`<div class="row"><div class="grow"><div class="rowsub">${q.label}</div><div class="rowtitle" style="white-space:normal">${esc(ans[q.id]==="A"?q.a:q.b)}</div></div></div>`).join("")}</div>
       <p class="info">Só quem joga vê as respostas dos outros no resumo 😏</p></div>`;
     const q=it[step];
@@ -2129,7 +2132,7 @@ function pfSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)
   if(nextW===PF_START) out+=`<div class="card pad cantsum">
     <p>A partir desta semana, todas as <b>quartas-feiras</b> aparece no Dashboard o <b>Preferias Flash</b>: 4 dilemas rápidos, sempre um de cada tipo: ☕ rotina, 🌶️ picante, 🧠 filosofia e 👥 a malta do grupo.</p>
     <p>Só está aberto de <b>quarta às 00:00 até quinta às 23:30</b>. Depois fecha, sem desculpas.</p>
-    <p>Na segunda-feira seguinte, o resumo da semana mostra o que cada um escolheu, com nome e tudo 👀 Mas atenção: <b>quem não jogar não vê as respostas dos outros</b>.</p>
+    <p>No domingo seguinte, às 21h, o resumo da semana mostra o que cada um escolheu, com nome e tudo 👀 Mas atenção: <b>quem não jogar não vê as respostas dos outros</b>.</p>
     <p>⚠️ Quem não completar a votação da semana não pode jogar o Preferias Flash na semana seguinte.</p>
     <div class="cantwho"><span>O primeiro Preferias Flash é já</span><span class="cw"><b>quarta-feira, 25 de novembro ⚡</b></span></div></div>`;
   return out; }
@@ -2151,7 +2154,7 @@ function teaseSheet(){ const g=curGroup(); let i; do{ i=Math.floor(Math.random()
   const done=g&&weekDone(g.id);
   openSheet({title:"",left:"Fechar",short:true,body:()=>`<div class="tease"><div class="tease-emo">🔒</div><b>${t}</b><p>${m}</p>
     <small>${g?`${insideCount(g.id)} de ${(g.members||[]).length} estão lá dentro esta semana. `:""}Quem não completa a votação de uma semana não vê nada na semana seguinte.</small>
-    ${done?`<span class="chip" style="margin-top:10px">Votação desta semana feita ✔︎ · voltas a ver segunda às 00:00</span>`:`<button class="btn" style="margin-top:12px" data-act="teaseVote">${ic("edit")}Fazer a votação</button>`}</div>`}); }
+    ${done?`<span class="chip" style="margin-top:10px">Votação desta semana feita ✔︎ · voltas a ver domingo às 21h</span>`:`<button class="btn" style="margin-top:12px" data-act="teaseVote">${ic("edit")}Fazer a votação</button>`}</div>`}); }
 /* ───────── Weekly fun questions: 2 per week, the answer is always a group member ───────── */
 const QUESTIONS=[
 "Quem é o mais provável de se esquecer do próprio aniversário?","Bateste com o carro: a quem ligas primeiro?","Tens um cão e vais de férias: a quem o deixas?",
@@ -2241,7 +2244,7 @@ function weekItems(gid){ return [...groupAwards(gid).map(a=>({id:a.id,label:a.la
 // Until 2026-W46 the rule was "ranking only" (awards were a separate vote). From W47 on, the full vote is required.
 const FULL_VOTE_FROM="2026-W47";
 // A week's vote is complete = ranking + every award that existed that week + that week's questions
-function weekEndMs(w){ const m=weekMonday(w); return m.getTime()+7*864e5+2*3600e3; }
+function weekEndMs(w){ const m=weekMonday(w); return m.getTime()+7*864e5-3*3600e3; } // Sunday 21:00 (Lisbon, winter)
 function weekComplete(gid,k,w){ if(!S.rankings[k]?.weeks?.[w]?.[gid]) return false; if(w<FULL_VOTE_FROM) return true; const v=S.votes[k]?.weeks?.[w]||{}; const end=weekEndMs(w);
   const aw=groupAwards(gid).filter(a=>!a.createdAt||+new Date(a.createdAt)<end).map(a=>a.id);
   return [...aw,...weekQuestions(gid,w).map(q=>q.id),...regsFor(w).map(r=>r.id)].every(id=>v[id]); }
@@ -2259,7 +2262,7 @@ function rankSheet(startStep=1, focusAward=null){
   const total=aw.length?2:1;
   const okNow=()=> step===1 ? !unr.length : aw.every(a=>votes[a.id]);
   const stepper=()=>`<div class="vstep"><span class="${step===1?"on":"ok"}">${step===1?"1":ic("check")}</span><b>Ranking</b>${total>1?`<i></i><span class="${step===2?"on":""}">2</span><b>Prémios e perguntas</b>`:""}</div>`;
-  const step1=()=>`${stepper()}<div class="banner" style="margin:0 0 16px">${ic("lock")}<span>Semana de ${esc(weekRange(w))}. Podes alterar até domingo às 23:59. Só fica guardado quando responderes a tudo.</span></div>
+  const step1=()=>`${stepper()}<div class="banner" style="margin:0 0 16px">${ic("lock")}<span>Semana de ${esc(weekRange(w))}. Podes alterar até domingo às 21:00. Só fica guardado quando responderes a tudo.</span></div>
       ${!done&&cur?`<p class="hint" style="margin:-6px 4px 12px">Começámos com o teu ranking da semana passada. Ajusta como quiseres.</p>`:""}
       <div class="label"><span>A tua ordem · 1 = mais amigo</span><span class="num" style="text-transform:none">${ranked.length}/${others.length}</span></div>
       <div class="bar" style="margin:0 4px 10px"><i style="width:${pct(ranked.length,others.length)}%"></i></div>
@@ -2285,7 +2288,7 @@ function rankSheet(startStep=1, focusAward=null){
       ${awards.length?`<div class="label" style="margin-top:14px">🏆 Prémios</div><div class="card list">${awards.map(row).join("")}</div>
       <p class="info">🤫 Os votos nos prémios são secretos e só são revelados no jantar da Gala.</p>`:""}
       ${qs.length?`<div class="label" style="margin-top:16px">🎲 Perguntas da semana</div><div class="card list">${qs.map(row).join("")}</div>
-      <p class="info">Os resultados das perguntas aparecem no resumo de segunda-feira, sem se saber quem votou em quem.</p>`:""}
+      <p class="info">Os resultados das perguntas aparecem no resumo de domingo às 21h, sem se saber quem votou em quem.</p>`:""}
       ${regs.length?`<div class="label" style="margin-top:16px">📝 Registos da semana</div><div class="card pad regs">${regs.map(regRow).join("")}</div>
       <p class="info">🕶️ Anónimo: no resumo de segunda aparecem só os textos, entre aspas, sem nomes. Quando a semana fecha, a ligação entre o texto e quem o escreveu é apagada.</p>`:""}
       <div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" data-back style="flex:none">← Ranking</button><button class="btn" style="flex:1" data-submit ${okNow()?"":"disabled"}>${n<aw.length?`Faltam ${aw.length-n} ${aw.length-n===1?"resposta":"respostas"}`:"Submeter tudo"}</button></div>`; };
