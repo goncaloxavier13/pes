@@ -32,10 +32,10 @@ async function send(key, rd, payload) {
   }
 }
 
-// momentos marcados (Lisboa): o cantinho muda às 20:00 (de 2 em 2 dias) e o Preferias Flash sai às 21:30 (lembrete às 20:30).
+// momentos marcados (Lisboa): cantinho (20:00), Preferias Flash (20:30 e 21:30) e prazos do Tribunal (10:00, 15:00, 17:00, 20:00, 21:00).
 // Nesses minutos corre o cantinho.mjs logo, sem esperar pelo agendamento de 5 em 5 minutos.
 const lxHM = () => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()).replace("24:", "00:");
-const MARKS = ["20:00", "20:30", "21:30"]; let lastMark = null;
+const MARKS = ["10:00", "15:00", "17:00", "20:00", "20:30", "21:00", "21:30"]; let lastMark = null;
 while (Date.now() < end) {
   ticks++;
   { const hm = lxHM(); const mk = MARKS.find(m => hm >= m && hm < m.slice(0, 3) + String(+m.slice(3) + 3).padStart(2, "0"));

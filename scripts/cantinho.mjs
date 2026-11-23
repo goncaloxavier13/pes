@@ -263,5 +263,89 @@ for (const [gid, g0] of Object.entries(groups)) {
   }
   newSt.pf = pf;
 }
+// ── ⚖️ Tribunal do Sr. Sid (semanal, semana de calendário seg–dom, horas de Lisboa):
+//    casos até terça 17:00 (anónimos: só o Meritíssimo vê) → veredicto até quinta 20:00 → reações até sexta 20:00
+//    → recurso (≥3 🔁 e mais 🔁 do que 👏) com novo veredicto até domingo 21:00. Registo de penas e finos.
+//    Tudo o que os membros escrevem fica no seu reads/{key} (privado); só este script publica em groups/{id}.trib.
+if (!DRY) { const TR = newSt.trib = newSt.trib || {};
+  const monL = Date.UTC(+weekMonday(wk).toISOString().slice(0, 4), weekMonday(wk).getUTCMonth(), weekMonday(wk).getUTCDate());
+  const subEnd = monL + 864e5 + 17 * 3600e3, verdEnd = monL + 3 * 864e5 + 20 * 3600e3, rxEnd = monL + 4 * 864e5 + 20 * 3600e3, appEnd = monL + 6 * 864e5 + 21 * 3600e3;
+  const loc = t => t + lxOff(t); const hrL = Math.floor((lxNow - monL) / 3600e3); // horas desde segunda 00:00
+  const MER = "Meritíssimo Sr. Sid"; const no3 = (n, y) => `${String(n).padStart(3, "0")}/${y}`;
+  for (const [gid, g] of Object.entries(groups)) { const mem = g.members || []; if (mem.length < 3) continue;
+    const sid = (await db.doc("config/app").get()).data()?.sidKey || mem.find(k => /^sid\b/i.test(people[k]?.name || "")); if (!sid) continue;
+    const pv = prevWeek(wkV); const can = k => k === sid || weekComplete(gid, k, pv); const url = `./?g=${gid}&t=dash&trib=1`;
+    const T = g.trib || {}; const pub = { year: T.year || +wk.slice(0, 4), seq: T.seq || 0, cur: T.cur || null, hist: T.hist || [], pens: T.pens || [], sid };
+    if (pub.year !== +wk.slice(0, 4)) { pub.year = +wk.slice(0, 4); pub.seq = 0; }
+    const ts = TR[gid] = TR[gid] || {}; const tw = ts[wk] = ts[wk] || {}; let changed = !g.trib;
+    const allSend = async (pl, lockedPl) => { for (const k of mem) await send(k, can(k) || !lockedPl ? pl : lockedPl); };
+    const sidRd = reads[sid]?.trib || {};
+    // 0) a semana nova: a rubrica abre (segunda, a partir das 10h; na estreia, logo)
+    if (!pub.cur || pub.cur.w !== wk) { if (pub.cur && pub.cur.w !== wk && !pub.cur.closed) { pub.cur.closed = true; } pub.cur = { w: wk, status: "sub" }; changed = true; }
+    if (!tw.opened && hrL >= 10 && lxNow < subEnd) { tw.opened = 1;
+      await allSend({ title: "⚖️ O Tribunal do Sr. Sid está aberto", body: `Até terça às 17:00, submete casos para o ${MER} julgar. É anónimo: só o Meritíssimo sabe quem acusou 🤫`, tag: "trib-" + wk, url },
+        { title: "⚖️ O Tribunal do Sr. Sid está aberto", body: "A malta já está a acusar… menos tu, que não votaste 🔒", tag: "trib-" + wk, url }); }
+    if (!tw.lastCall && hrL >= 24 + 15 && lxNow < subEnd) { tw.lastCall = 1;
+      for (const k of mem.filter(k => can(k) && k !== sid)) await send(k, { title: "⚖️ Últimas horas para acusar", body: `Os casos para o ${MER} fecham hoje às 17:00.`, tag: "trib-" + wk, url }); }
+    // 1) casos submetidos → caixa do Meritíssimo (com o autor; só ele vê)
+    const inbox = { ...(sidRd.inbox || {}) }; let newCases = 0;
+    for (const k of mem) { const subs = reads[k]?.trib?.sub || {}; for (const [id, c] of Object.entries(subs)) {
+      if (!c || c.gid !== gid || c.w !== wk || inbox[id] || !can(k) || loc(c.at || 0) > subEnd) continue;
+      if (!mem.includes(c.accused) || !c.title) continue;
+      inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 1500), accused: c.accused, from: k, at: c.at }; newCases++;
+      await db.doc("reads/" + sid).set({ trib: { inbox: { [id]: inbox[id] } } }, { merge: true }); } }
+    if (newCases) await send(sid, { title: `⚖️ ${newCases === 1 ? "Chegou um caso novo" : `Chegaram ${newCases} casos novos`}, Meritíssimo`, body: "A justiça aguarda pela sua sabedoria.", tag: "trib-sid-" + wk, url });
+    const weekCases = Object.entries(inbox).filter(([, c]) => c.gid === gid && c.w === wk);
+    if (!tw.sidCall && lxNow >= subEnd && lxNow < verdEnd) { tw.sidCall = 1;
+      await send(sid, weekCases.length ? { title: `⚖️ ${weekCases.length} ${weekCases.length === 1 ? "caso aguarda" : "casos aguardam"} sentença`, body: "Escolha um e profira o veredicto até quinta às 20:00, Meritíssimo.", tag: "trib-sid-" + wk, url }
+        : { title: "⚖️ Semana sem casos", body: "Ninguém acusou ninguém esta semana, Meritíssimo. Paz no reino.", tag: "trib-sid-" + wk, url }); }
+    if (!tw.sidLast && weekCases.length && !pub.cur.no && hrL >= 3 * 24 + 12 && lxNow < verdEnd) { tw.sidLast = 1;
+      await send(sid, { title: "⚖️ A sentença é até às 20:00", body: "O povo aguarda, Meritíssimo.", tag: "trib-sid-" + wk, url }); }
+    const cur = pub.cur;
+    // 2) veredicto
+    const v = sidRd.verdict?.[gid]?.[wk];
+    if (!cur.no && v && inbox[v.caseId] && inbox[v.caseId].w === wk && loc(v.at || 0) <= verdEnd + 60e3 && (v.result === "cond" || v.result === "abs")) {
+      const c = inbox[v.caseId]; pub.seq++;
+      Object.assign(cur, { status: "verdict", no: no3(pub.seq, pub.year), title: c.title, desc: c.desc, accused: c.accused, result: v.result, text: String(v.text || "").slice(0, 1500), penalty: v.result === "cond" ? String(v.penalty || "").slice(0, 300) : "", at: Date.now(), rx: { jf: 0, rec: 0 } });
+      changed = true;
+      await allSend({ title: `⚖️ Processo n.º ${cur.no}: ${v.result === "cond" ? "CONDENADO" : "ABSOLVIDO"}`, body: `O ${MER} proferiu sentença no caso “${c.title}”. Vê o veredicto e reage até sexta às 20:00.`, tag: "trib-" + wk, url },
+        { title: `⚖️ Há sentença no Processo n.º ${cur.no}`, body: "Toda a gente já sabe quem foi condenado… menos tu 🔒", tag: "trib-" + wk, url });
+    }
+    if (!cur.no && cur.status === "sub" && lxNow >= verdEnd) { cur.status = "none"; changed = true;
+      await allSend({ title: "⚖️ Semana sem julgamento", body: weekCases.length ? `O ${MER} faltou à audiência. Os réus agradecem.` : "Ninguém foi acusado esta semana. Que grupo tão exemplar 😇", tag: "trib-" + wk, url }); }
+    // 3) reações (só números em público; quem pediu recurso fica guardado em privado para os finos)
+    if (cur.no && cur.status === "verdict") { let jf = 0; const rec = [];
+      for (const k of mem) { if (k === sid || !can(k)) continue; const r = reads[k]?.trib?.rx?.[gid + "_" + wk]; if (!r || loc(r.at || 0) > rxEnd) continue; if (r.v === "jf") jf++; else if (r.v === "rec") rec.push(k); }
+      if (cur.rx?.jf !== jf || cur.rx?.rec !== rec.length) { cur.rx = { jf, rec: rec.length }; changed = true; } tw.rec = rec;
+      if (lxNow >= rxEnd) {
+        if (rec.length >= 3 && rec.length > jf) { cur.status = "appeal"; changed = true;
+          await allSend({ title: `⚖️ Processo n.º ${cur.no} vai a recurso!`, body: `${rec.length} recursos contra ${jf} “justiça feita”. O ${MER} decide até domingo às 21:00. Quem pediu recurso arrisca um fino 🍺`, tag: "trib-" + wk, url });
+          await send(sid, { title: "⚖️ Recurso aceite, Meritíssimo", body: "Mantém a sentença (e cobra finos) ou revê-a? Decida até domingo às 21:00.", tag: "trib-sid-" + wk, url }); }
+        else { cur.status = "final"; cur.final = cur.result; changed = true;
+          await allSend({ title: `⚖️ Processo n.º ${cur.no}: transitou em julgado`, body: cur.result === "cond" ? "Sem recurso. A pena fica no registo até ser cumprida." : "Sem recurso. O réu sai em liberdade.", tag: "trib-" + wk, url }); }
+      }
+    }
+    // 4) recurso: novo veredicto do Meritíssimo até domingo 21:00
+    if (cur.status === "appeal") { const a = sidRd.appeal?.[gid]?.[wk];
+      if (a && loc(a.at || 0) <= appEnd + 60e3 && (a.decision === "keep" || a.decision === "revise")) {
+        cur.appeal = { decision: a.decision, text: String(a.text || "").slice(0, 1500), at: Date.now() };
+        cur.final = a.decision === "keep" ? cur.result : (cur.result === "cond" ? "abs" : "cond");
+        if (a.decision === "revise" && cur.final === "cond") cur.penalty = String(a.penalty || cur.penalty || "").slice(0, 300);
+        if (a.decision === "keep") for (const k of tw.rec || []) pub.pens.push({ id: `f${cur.no.replace("/", "-")}-${k}`, k, no: cur.no, kind: "fino", text: `Um fino ao ${MER} no próximo evento`, done: false, at: Date.now() });
+        cur.status = "final"; changed = true;
+        await allSend({ title: `⚖️ Recurso do Processo n.º ${cur.no}: ${a.decision === "keep" ? "sentença mantida" : "sentença revista"}`, body: a.decision === "keep" ? `Quem pediu recurso fica a dever um fino ao ${MER} 🍺` : `O resultado inverte-se: ${cur.final === "cond" ? "CONDENADO" : "ABSOLVIDO"}.`, tag: "trib-" + wk, url });
+      } else if (lxNow >= appEnd) { cur.appeal = { decision: "none", at: Date.now() }; cur.final = cur.result; cur.status = "final"; changed = true;
+        await allSend({ title: `⚖️ Processo n.º ${cur.no}: o recurso caducou`, body: `O ${MER} não se pronunciou. A sentença mantém-se, sem finos.`, tag: "trib-" + wk, url }); }
+    }
+    // 5) sentença final → registo de penas e cadastro
+    if (cur.status === "final" && !cur.logged) { cur.logged = true; changed = true;
+      if (cur.final === "cond") pub.pens.push({ id: `p${cur.no.replace("/", "-")}`, k: cur.accused, no: cur.no, kind: "pena", text: cur.penalty || "Pena simbólica", done: false, at: Date.now() });
+      pub.hist = [...pub.hist.filter(h => h.no !== cur.no), { no: cur.no, w: wk, title: cur.title, accused: cur.accused, result: cur.final }]; }
+    // 6) penas cumpridas (só o Meritíssimo marca)
+    for (const [pid, on] of Object.entries(sidRd.done || {})) { const p = pub.pens.find(x => x.id === pid); if (p && !!on !== !!p.done) { p.done = !!on; p.doneAt = on ? Date.now() : null; changed = true;
+      if (on) await send(p.k, { title: "⚖️ Dívida saldada", body: `O ${MER} deu como cumprid${p.kind === "fino" ? "o o teu fino" : "a a tua pena"} do Processo n.º ${p.no}.`, tag: "trib-pen-" + pid, url }); } }
+    if (changed) await db.doc("groups/" + gid).update({ trib: pub });
+  }
+}
 if (!DRY) await stRef.set(newSt);
 console.log(`Feito: ${sent} notificações.`);
