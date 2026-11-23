@@ -76,5 +76,7 @@ out.perfil_claudio = cfg.ownerKey ? "ligado ao dono" : "ainda não ligado (o don
 const cwd = sys.chatwatch || {}; out.vigia_do_chat = cwd.alive ? `ativo há ${Math.round((Date.now() - cwd.alive) / 1000)} s` : "parado";
 if (process.env.PERSON) for (const [gid, g] of Object.entries(groups)) { const k = (g.members || []).find(k => (people[k]?.name || "").split(" ")[0] === process.env.PERSON); if (!k) continue;
   out.pessoa = { fez_ranking_semana_passada: !!rankings[k]?.weeks?.[prev]?.[gid], fez_ranking_esta_semana: !!rankings[k]?.weeks?.[wk]?.[gid], tem_conta: mapped.includes(k), dispositivos_notificacoes: Object.keys(reads[k]?.push?.subs || {}).length, prefs: reads[k]?.push?.prefs || {}, ultima_leitura_ms_atras: Date.now() - Math.max(0, ...Object.values(reads[k]?.chats || reads[k]?.read || {}).map(Number).filter(Boolean)) }; }
+out.cantinhos = {}; for (const [cid, c] of Object.entries(chats)) { if (c.type !== "cantinho") continue; const mm = (await db.collection(`chats/${cid}/msgs`).get()).docs.map(d => d.data()); const cnt = {}; mm.forEach(m => { const t = (m.sec || "q") + (m.kind ? ":" + m.kind : "") + (m.from === "bot" ? ":bot" : ""); cnt[t] = (cnt[t] || 0) + 1; });
+  out.cantinhos[cid] = { periodo: c.period, fechado: !!c.closed, com_acesso: (c.members || []).length, termina: c.endsAt ? new Date(c.endsAt).toISOString().slice(0, 16) : null, mensagens: cnt }; }
 const n = sys.notify || {}; out.notificacoes_ultima_execucao = n.lastRun ? new Date(n.lastRun).toISOString() : null;
 console.log(JSON.stringify(out, null, 2));
