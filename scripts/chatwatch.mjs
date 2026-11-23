@@ -17,6 +17,8 @@ const end = Date.now() + MINUTES * 60e3;
 const stRef = db.doc("system/chatwatch");
 let cursor = (await stRef.get()).data()?.cursor || Date.now() - 15 * 60e3;
 let sent = 0, ticks = 0;
+const ownerKey = (await db.doc("config/app").get()).data()?.ownerKey || null;
+const authorOf = async m => m.as === "claude" && ownerKey && m.from === ownerKey ? "Claude" : await nameOf(m.from);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const peopleCache = {};
 const nameOf = async k => peopleCache[k] ??= ((await db.doc("people/" + k).get()).data()?.name || "Alguém");
@@ -46,8 +48,8 @@ while (Date.now() < end) {
         for (const k of chat.members || []) {
           const rd = (await db.doc("reads/" + k).get()).data();
           const mine = msgs.filter(m => m.from !== k && m.at > (rd?.chats?.[c.id] || 0)); if (!mine.length) continue;
-          const last = mine[mine.length - 1]; const who = first(await nameOf(last.from));
-          await send(k, rd, { title: groupName || await nameOf(last.from),
+          const last = mine[mine.length - 1]; const who = first(await authorOf(last));
+          await send(k, rd, { title: groupName || await authorOf(last),
             body: (mine.length === 1 ? `${groupName ? who + ": " : ""}${last.text}` : `${mine.length} mensagens novas · ${who}: ${last.text}`).slice(0, 180),
             tag: "chat-" + c.id, url: `./?g=${chat.groupId}&t=gap&c=${c.id}` });
         }
