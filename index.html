@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795466480">
+<meta name="pes-version" content="1795468082">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -620,6 +620,19 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .pfcard{width:100%;display:flex;align-items:center;gap:12px;border:0;border-radius:18px;padding:16px;font:inherit;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(135deg,#bf5af2,#5e5ce6 55%,#0a84ff)}
 .pfcard b{display:block;font-size:17px}.pfcard small{display:block;font-size:13.5px;opacity:.9}.pfcard svg{width:20px;height:20px;flex:none}.pfcard .grow{min-width:0}
 .pfcard.done{background:var(--card);color:var(--text)}.pfcard.done small{color:var(--muted);opacity:1}
+.tribcard{width:100%;display:flex;align-items:center;gap:12px;border:0;border-radius:18px;padding:16px;font:inherit;color:#fff;text-align:left;cursor:pointer;background:linear-gradient(135deg,#7a4b1f,#2b1a0b);box-shadow:inset 0 0 0 1px rgba(255,215,150,.18)}
+.tribcard b{display:block;font-size:17px;font-family:Georgia,"Times New Roman",serif;letter-spacing:.2px}.tribcard small{display:block;font-size:13.5px;opacity:.9}.tribcard svg{width:20px;height:20px;flex:none}.tribcard .grow{min-width:0}
+.trib-ico{font-size:32px;line-height:1;flex:none}
+.trhead{text-align:center;margin:0 0 14px}.trhead h2{font-family:Georgia,"Times New Roman",serif;margin:6px 0 2px}.trhead p{color:var(--muted);font-size:14px;margin:0}.trgavel{font-size:46px;line-height:1}
+.trcase{border:1px solid color-mix(in srgb,#c8a064 35%,transparent)}.trno{font-family:Georgia,serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#c8a064}
+.trtitle{font-family:Georgia,"Times New Roman",serif;font-size:21px;margin:4px 0 6px}.trdesc{color:var(--muted);font-size:14.5px;margin:0 0 10px;white-space:pre-line}
+.trwho{display:flex;align-items:center;gap:8px;font-size:14.5px;margin:6px 0 10px}
+.trres{display:inline-block;padding:6px 12px;border-radius:10px;font-weight:800;letter-spacing:.6px;font-size:14px}.trres.cond{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}.trres.abs{background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--green)}.trres.sm{font-size:12px;padding:4px 9px;flex:none}
+.trsent{margin-top:12px;padding:12px;border-radius:12px;background:var(--card2)}.trsent small{color:#c8a064;font-family:Georgia,serif;font-size:12.5px}.trsent p{margin:4px 0 0;white-space:pre-line}
+.trpen{margin-top:10px;font-size:14.5px}
+.trrx{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trrxb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;border-radius:14px;border:0;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
+.trrxb span{font-size:28px}.trrxb b{font-size:15px}.trrxb small{color:var(--muted);font-size:13px}.trrxb.on{box-shadow:inset 0 0 0 2px var(--accent)}.trrxb:disabled{opacity:.75;cursor:default}.trrxb.on:disabled{opacity:1}
+.trform b{font-size:16px}.btn.sm{height:34px;padding:0 12px;font-size:13.5px;border-radius:10px;flex:none}
 .pf-bolt{font-size:30px;line-height:1;flex:none}
 .pf-logo{width:58px;height:58px;object-fit:contain;flex:none;margin:-6px -2px}.pf-head{text-align:center;margin:-4px 0 4px}.pf-logo-big{width:170px;max-width:60%;height:auto}.pf-logo-sum{width:150px;height:auto}
 .pf-prog{display:flex;gap:6px;margin:4px 0 18px}.pf-prog i{flex:1;height:5px;border-radius:3px;background:var(--border)}.pf-prog i.ok{background:var(--accent)}.pf-prog i.on{background:linear-gradient(90deg,#bf5af2,#0a84ff)}
@@ -1506,12 +1519,12 @@ function back(){ S.route.pop(); render(); }
 function setTab(t){ S.tab=t; S.route=[]; render(); }
 function enterGroup(gid,tab="dash"){ if(S.groupId!==gid) S.localVotes={}; S.groupId=gid; lsSet("group",gid); setTab(tab); }
 /* Deep links from push notifications: ?g=<group>&t=<tab>&c=<chat> */
-function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1",news:q.get("news")==="1"}; }catch{ return null; } }
+function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1",news:q.get("news")==="1",trib:q.get("trib")==="1"}; }catch{ return null; } }
 S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceState(null,"",location.pathname); }catch{} }
 navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
 function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
   if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
-  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
+  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -1686,7 +1699,7 @@ function dashScreen(){
       <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Dashboard trancado</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p>${(()=>{ const n=(g.members||[]).length, nIn=insideCount(g.id), ct=g.cant&&g.cant.week===curWeek()?g.cant:null;
         return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar no domingo às 21h.`}</span></div>`; })()}
         <small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
-      ${voteBtn}${pfCard(g)}
+      ${voteBtn}${pfCard(g)}${tribCard(g)}
       <div class="section"><div class="label">Resumo da época</div><div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div></div>
       ${fsec("Resumo da semana",`<div style="padding:16px">${frows(2)}</div>`)}
       ${fsec("Conquistas",`<div style="padding:18px;display:flex;gap:10px">${[...Array(6)].map(()=>`<span style="width:40px;height:40px;border-radius:50%;background:var(--border);display:inline-block"></span>`).join("")}</div>`)}
@@ -1709,7 +1722,7 @@ function dashScreen(){
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
         ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Ranking, prémios e perguntas · toca para alterar":voteCtaSub(g)}</span></span><span class="rcount num" aria-label="${nDone} de ${g.members.length} membros já votaram esta semana"><b>${nDone}/${g.members.length}</b><small>votaram</small></span></button>`}
       </div></div>
-    ${past?"":pfCard(g)}
+    ${past?"":pfCard(g)+tribCard(g)}
     ${past?"":(()=>{ const nb=nudgeBlock(g); return nb?`<div class="section" style="margin-top:12px">${nb}</div>`:""; })()}
     ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const near=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal);
       const nextA=near[0]; const strip=[...got,...near].slice(0,12);
@@ -2293,6 +2306,114 @@ function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const day=
       const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{}; doc.weeks[q.w]={...(doc.weeks[q.w]||{}),[q.id]:v};
       const ok=await write(()=>D("votes/"+me).set(doc),"Preferias Flash feito ⚡"); if(!ok){ b.classList.remove("pick"); return; }
       pick=v; setTimeout(()=>{ L.render(); L.body.scrollTop=0; },180); }); }}); }
+/* ───────── ⚖️ Tribunal do Sr. Sid ─────────
+   Semana de calendário (seg–dom, Lisboa): casos até terça 17:00 → veredicto até quinta 20:00 → reações até sexta 20:00 → recurso até domingo 21:00.
+   Os membros só escrevem no seu reads/{key} (privado). O servidor (cantinho.mjs) passa os casos ao Meritíssimo e publica tudo em groups/{id}.trib. */
+const MER="Meritíssimo Sr. Sid";
+const TR_SUB=1440+17*60, TR_VERD=3*1440+20*60, TR_RX=4*1440+20*60, TR_APP=6*1440+21*60;
+function trMins(){ const t=pfLx(); return ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].indexOf(t.dow)*1440+t.mins; }
+const trWeek=()=>weekOf(lisbonYMD());
+function sidKey(gid){ const g=S.groups[gid]; return g?.trib?.sid||(g?.members||[]).find(k=>/^sid\b/i.test(S.people[k]?.name||""))||null; }
+const isSid=gid=>!!ME()&&sidKey(gid)===ME();
+function trCur(gid){ const t=S.groups[gid]?.trib; const w=trWeek(); return t?.cur?.w===w?t.cur:{w,status:"sub"}; }
+const trRes=r=>r==="cond"?"Condenado":"Absolvido";
+const trLeft=end=>fmtLeft(Math.max(0,(end-trMins())*6e4));
+async function readsMerge(obj){ const me=ME(); const dm=(a,b)=>{ for(const k in b){ if(b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])) a[k]=dm({...(a[k]||{})},b[k]); else if(b[k]===undefined) delete a[k]; else a[k]=b[k]; } return a; };
+  const next=dm({...(S.reads[me]||{})},obj); S.reads={...S.reads,[me]:next};
+  if(S.fb){ const fix=o=>{ const r={}; for(const k in o) r[k]=o[k]===undefined?firebase.firestore.FieldValue.delete():(o[k]&&typeof o[k]==="object"&&!Array.isArray(o[k])?fix(o[k]):o[k]); return r; }; await S.raw.doc("reads/"+me).set(fix(obj),{merge:true}); }
+  else await D("reads/"+me).set(next); }
+function tribStatus(gid){ const c=trCur(gid); const m=trMins(); const sid=isSid(gid);
+  if(c.status==="sub"&&m<TR_SUB) return sid?`Caixa: ${Object.values(S.reads[ME()]?.trib?.inbox||{}).filter(x=>x.gid===gid&&x.w===c.w).length} casos · fecha terça às 17:00`:`Acusa alguém até terça às 17:00 · anónimo 🤫`;
+  if(c.status==="sub") return sid?"Profira a sentença até quinta às 20:00":`O ${MER} está a deliberar… sentença até quinta às 20:00`;
+  if(c.status==="verdict") return `Processo n.º ${c.no}: ${trRes(c.result).toUpperCase()} · reage até sexta às 20:00`;
+  if(c.status==="appeal") return `Processo n.º ${c.no} em recurso · decisão até domingo às 21:00`;
+  if(c.status==="final") return `Processo n.º ${c.no}: ${trRes(c.final).toUpperCase()} · transitou em julgado`;
+  return "Semana sem julgamento"; }
+function tribCard(g){ if((g.members||[]).length<3||!sidKey(g.id)) return ""; const locked=rankLocked(g.id)&&!isSid(g.id);
+  return `<div class="section" style="margin-top:14px"><button class="tribcard" data-act="${locked?"tease":"trib"}"><span class="trib-ico">⚖️</span><span class="grow"><b>Tribunal do Sr. Sid</b><small>${locked?"Não completaste a votação da semana passada: o tribunal não te recebe 🔒":esc(tribStatus(g.id))}</small></span>${ic(locked?"lock":"right")}</button></div>`; }
+function trCaseCard(gid,c,me){ const acc=c.accused;
+  const res=c.status==="final"?c.final:c.result; const rev=c.appeal?.decision==="revise";
+  return `<div class="card pad trcase"><div class="trno">Processo n.º ${esc(c.no)}</div><h3 class="trtitle">${esc(c.title)}</h3>${c.desc?`<p class="trdesc">${esc(c.desc)}</p>`:""}
+    <div class="trwho">${avatar(acc,28)}<span>Acusado: <b>${esc(nm(acc))}</b>${acc===me?" (tu)":""}</span></div>
+    <div class="trres ${res}">${res==="cond"?"🔨 CONDENADO":"🕊️ ABSOLVIDO"}${c.status==="appeal"?" · em recurso":""}${rev?" · sentença revista":""}</div>
+    ${c.text?`<div class="trsent"><small>Sentença do ${MER}</small><p>${esc(c.text)}</p></div>`:""}
+    ${res==="cond"&&c.penalty?`<div class="trpen">⚖️ Pena: <b>${esc(c.penalty)}</b></div>`:""}
+    ${c.appeal&&c.appeal.decision!=="none"?`<div class="trsent"><small>Decisão do recurso</small><p><b>${c.appeal.decision==="keep"?"Sentença mantida":"Sentença revista"}.</b> ${esc(c.appeal.text||"")}</p>${c.appeal.decision==="keep"?`<p class="muted" style="margin-top:4px">Quem pediu recurso deve um fino ao ${MER} 🍺</p>`:""}</div>`:""}
+    ${c.appeal?.decision==="none"?`<div class="trsent"><p class="muted">O recurso caducou: o ${MER} não se pronunciou. A sentença mantém-se, sem finos.</p></div>`:""}</div>`; }
+function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const me=ME(); if(rankLocked(gid)&&!isSid(gid)){ teaseSheet(); return; }
+  const st={accused:null,pick:null,res:null,dec:null,tab:"now"};
+  const L=openSheet({title:"⚖️ Tribunal do Sr. Sid",left:"Fechar",live:true,body:()=>{ const c=trCur(gid); const m=trMins(); const sid=isSid(gid); const T=S.groups[gid]?.trib||{}; const my=S.reads[me]?.trib||{};
+    const tabs=`<div class="seg" style="margin-bottom:14px">${[["now","Esta semana"],["pens","Penas"],["cad","Cadastro"]].map(([k,l])=>`<button data-trtab="${k}" class="${st.tab===k?"on":""}">${l}</button>`).join("")}</div>`;
+    let out=`<div class="trhead"><div class="trgavel">⚖️</div><h2>Tribunal do Sr. Sid</h2><p>Aqui ele é sempre tratado por <b>${MER}</b>.</p></div>`+tabs;
+    if(st.tab==="pens"){ const pens=(T.pens||[]); const open=pens.filter(p=>!p.done), done=pens.filter(p=>p.done);
+      const row=p=>`<div class="row" style="align-items:flex-start">${avatar(p.k,34)}<div class="grow"><div class="rowtitle" style="white-space:normal">${esc(nm(p.k))}</div><div class="rowsub" style="white-space:normal">${p.kind==="fino"?"🍺 Fino":"🔨 Pena"} · Processo n.º ${esc(p.no)} · ${esc(p.text)}</div></div>${sid?`<button class="btn sm ${p.done?"ghost":""}" data-trdone="${p.id}|${p.done?0:1}">${p.done?"Reabrir":"Cumprida"}</button>`:(p.done?`<span class="chip">Cumprida ✓</span>`:"")}</div>`;
+      out+=`<div class="label">Por cumprir (${open.length})</div>${open.length?`<div class="card list">${open.map(row).join("")}</div>`:`<p class="info">Nenhuma pena por cumprir. A justiça descansa 😇</p>`}`;
+      if(done.length) out+=`<div class="label" style="margin-top:16px">Cumpridas (${done.length})</div><div class="card list">${done.map(row).join("")}</div>`;
+      out+=`<p class="info">Só o ${MER} pode dar uma pena ou um fino como cumprido.</p>`; return out; }
+    if(st.tab==="cad"){ const hist=T.hist||[]; const mem=(g.members||[]).slice().sort((a,b)=>nm(a).localeCompare(nm(b)));
+      out+=`<p class="info" style="margin-top:0">Ficha de cadastro de cada membro: todos os casos em que foi acusado, com o resultado final.</p><div class="card list">${mem.map(k=>{ const h=hist.filter(x=>x.accused===k); const nc=h.filter(x=>x.result==="cond").length;
+        return `<button class="row" data-trcad="${k}">${avatar(k,34)}<div class="grow"><div class="rowtitle">${esc(nm(k))}</div><div class="rowsub">${h.length?`${h.length} ${h.length===1?"processo":"processos"} · ${nc} ${nc===1?"condenação":"condenações"}`:"Cadastro limpo"}</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`; }).join("")}</div>`; return out; }
+    // ── esta semana ──
+    if(c.no) out+=trCaseCard(gid,c,me);
+    if(c.status==="verdict"){ const mine=my.rx?.[gid+"_"+c.w]?.v; const can=!sid&&m<TR_RX;
+      out+=`<div class="label" style="margin-top:14px">O povo reage · até sexta às 20:00</div><div class="trrx">${[["jf","👏","Justiça feita"],["rec","🔁","Recurso"]].map(([k,e,l])=>`<button class="trrxb ${mine===k?"on":""}" data-trrx="${k}" ${!can||mine?"disabled":""}><span>${e}</span><b>${l}</b><small>${(c.rx?.[k]||0)}</small></button>`).join("")}</div>
+        <p class="info">${sid?`O ${MER} não vota.`:mine?"Já reagiste. Só podes reagir uma vez.":"Só podes reagir uma vez."} Vai a recurso com pelo menos 3 🔁 e mais 🔁 do que 👏. Se o recurso falhar, quem pediu recurso paga um fino ao ${MER} 🍺</p>`; }
+    if(c.status==="appeal"){ const sent=S.reads[me]?.trib?.appeal?.[gid]?.[c.w];
+      if(sid&&!sent&&m<TR_APP){ out+=`<div class="label" style="margin-top:14px">Decisão do recurso · até domingo às 21:00</div>
+        <div class="card list">${[["keep","Mantém a sentença","Quem pediu recurso fica a dever-lhe um fino 🍺"],["revise","Revê a sentença",`O resultado inverte-se: passa a ${c.result==="cond"?"absolvido":"condenado"}`]].map(([k,t,d])=>`<button class="row" data-trdec="${k}"><span style="font-size:20px">${st.dec===k?"🔘":"⚪️"}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub" style="white-space:normal">${d}</div></div></button>`).join("")}</div>
+        ${st.dec==="revise"&&c.result==="abs"?`<div class="field"><label for="trappen">Pena simbólica</label><input id="trappen" class="input" maxlength="300" placeholder="Ex.: paga os cafés da próxima vez"></div>`:""}
+        <div class="field"><label for="trapptxt">Fundamentação</label><textarea id="trapptxt" class="input" maxlength="1500" rows="4" placeholder="O tribunal, depois de ponderar…"></textarea></div>
+        <button class="btn block" data-trapp ${st.dec?"":"disabled"}>Publicar decisão do recurso</button>`; }
+      else out+=`<p class="info" style="margin-top:12px">${sent?"Decisão enviada. Está a ser publicada…":`O ${MER} vai decidir até domingo às 21:00: mantém a sentença (e quem pediu recurso paga um fino 🍺) ou revê-a.`}</p>`; }
+    if(c.status==="none") out+=`<div class="empty" style="margin-top:20px"><div class="ico">🪑</div><h3>Semana sem julgamento</h3><p>O ${MER} não proferiu sentença esta semana. Na segunda abre um tribunal novo.</p></div>`;
+    if(c.status==="sub"){
+      if(m<TR_SUB){ const subs=Object.entries(my.sub||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w);
+        out+=`<div class="card pad trform"><b>Submeter um caso</b><p class="info" style="margin:4px 0 10px">Até terça às 17:00 (faltam ${trLeft(TR_SUB)}). Pode ser desta semana ou de momentos passados. É anónimo: só o ${MER} vê quem acusou e o que escreveste.</p>
+          <div class="label" style="margin:0 0 6px">Quem é o acusado?</div><div class="chips">${(g.members||[]).slice().sort((a,b)=>nm(a).localeCompare(nm(b))).map(k=>`<button type="button" class="namechip ${st.accused===k?"sel":""}" data-tracc="${k}">${avatar(k,26)}${esc((g.members||[]).filter(o=>first(nm(o))===first(nm(k))).length>1?nm(k):first(nm(k)))}${k===me?" (tu)":""}</button>`).join("")}</div>
+          <div class="field" style="margin-top:12px"><label for="trtitle">Título do caso</label><input id="trtitle" class="input" maxlength="120" placeholder="Ex.: O caso da última fatia"></div>
+          <div class="field"><label for="trdesc">Descrição</label><textarea id="trdesc" class="input" maxlength="1500" rows="4" placeholder="Conta tudo ao Meritíssimo…"></textarea></div>
+          <button class="btn block" data-trsub>Submeter caso</button></div>`;
+        if(subs.length) out+=`<div class="label" style="margin-top:14px">Os teus casos desta semana</div><div class="card list">${subs.map(([id,x])=>`<div class="row"><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub">Contra ${esc(nm(x.accused))}</div></div><button class="btn sm ghost" data-trdel="${id}">Retirar</button></div>`).join("")}</div>`; }
+      if(sid){ const inbox=Object.entries(my.inbox||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w).sort((a,b)=>a[1].at-b[1].at); const sent=my.verdict?.[gid]?.[c.w];
+        out+=`<div class="label" style="margin-top:16px">🔒 Caixa do ${MER} · ${inbox.length} ${inbox.length===1?"caso":"casos"}</div>`;
+        out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔘":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))} · submetido por ${esc(nm(x.from))}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
+        if(sent) out+=`<p class="info">Sentença enviada. Está a ser publicada…</p>`;
+        else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. A sentença abre terça às 17:00, quando fecharem as acusações.</p>`;
+        else if(m<TR_VERD&&inbox.length){ out+=`<div class="card pad trform" style="margin-top:12px"><b>Proferir sentença</b><p class="info" style="margin:4px 0 10px">Escolhe um caso acima. Até quinta às 20:00 (faltam ${trLeft(TR_VERD)}).</p>
+          <div class="seg" style="margin-bottom:10px"><button data-trres="cond" class="${st.res==="cond"?"on":""}">🔨 Condenado</button><button data-trres="abs" class="${st.res==="abs"?"on":""}">🕊️ Absolvido</button></div>
+          <div class="field"><label for="trsent">Sentença</label><textarea id="trsent" class="input" maxlength="1500" rows="4" placeholder="Este tribunal, em nome do povo do El Calderón…"></textarea></div>
+          ${st.res==="cond"?`<div class="field"><label for="trpen">Pena simbólica</label><input id="trpen" class="input" maxlength="300" placeholder="Ex.: paga os cafés no próximo jantar"></div>`:""}
+          <button class="btn block" data-trverd ${st.pick&&st.res?"":"disabled"}>Publicar veredicto</button></div>`; } }
+      else if(m>=TR_SUB) out+=`<div class="empty" style="margin-top:20px"><div class="ico">🧑‍⚖️</div><h3>O ${MER} está a deliberar</h3><p>A sentença sai até quinta às 20:00. Fica atento às notificações.</p></div>`; }
+    return out; },
+  onMount:L=>{ L.body.addEventListener("click",async e=>{ const b=e.target.closest("[data-trtab],[data-tracc],[data-trsub],[data-trdel],[data-trpick],[data-trres],[data-trverd],[data-trrx],[data-trdec],[data-trapp],[data-trdone],[data-trcad]"); if(!b||b.disabled) return;
+    const c=trCur(gid); const keep=()=>{ const v={}; L.body.querySelectorAll("input,textarea").forEach(i=>v[i.id]=i.value); return v; }; const restore=v=>{ for(const id in v){ const i=L.body.querySelector("#"+id); if(i) i.value=v[id]; } };
+    const rr=()=>{ const v=keep(); L.render(); restore(v); };
+    if(b.dataset.trtab){ st.tab=b.dataset.trtab; L.render(); return; }
+    if(b.dataset.tracc){ st.accused=b.dataset.tracc; rr(); return; }
+    if(b.dataset.trpick){ st.pick=b.dataset.trpick; rr(); return; }
+    if(b.dataset.trres){ st.res=b.dataset.trres; rr(); return; }
+    if(b.dataset.trdec){ st.dec=b.dataset.trdec; rr(); return; }
+    if(b.dataset.trcad){ const k=b.dataset.trcad; const h=(S.groups[gid]?.trib?.hist||[]).filter(x=>x.accused===k);
+      openSheet({title:"Ficha de cadastro",left:"Fechar",body:()=>`<div class="trhead">${avatar(k,64)}<h2>${esc(nm(k))}</h2></div>${h.length?`<div class="card list">${h.map(x=>`<div class="row"><div class="grow"><div class="rowsub">Processo n.º ${esc(x.no)}</div><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div></div><span class="trres sm ${x.result}">${trRes(x.result)}</span></div>`).join("")}</div>`:`<p class="info" style="text-align:center">Cadastro limpo. Nunca foi acusado… ou nunca foi apanhado 😏</p>`}`}); return; }
+    if(b.dataset.trsub!==undefined){ if(trMins()>=TR_SUB){ toast("As acusações desta semana já fecharam"); return; } const t=L.body.querySelector("#trtitle").value.trim(), d=L.body.querySelector("#trdesc").value.trim();
+      if(!st.accused){ toast("Escolhe o acusado"); return; } if(!t){ toast("Dá um título ao caso"); return; }
+      const id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+      const ok=await write(()=>readsMerge({trib:{sub:{[id]:{gid,w:c.w,title:t,desc:d,accused:st.accused,at:Date.now()}}}}),"Caso entregue ao Meritíssimo ⚖️"); if(ok){ st.accused=null; L.render(); } return; }
+    if(b.dataset.trdel){ const ok=await write(()=>readsMerge({trib:{sub:{[b.dataset.trdel]:undefined}}}),"Caso retirado"); if(ok) L.render(); return; }
+    if(b.dataset.trverd!==undefined){ const t=L.body.querySelector("#trsent").value.trim(); const pen=L.body.querySelector("#trpen")?.value.trim()||"";
+      if(!t){ toast("Escreva a sentença, Meritíssimo"); return; } if(st.res==="cond"&&!pen){ toast("Falta a pena simbólica"); return; }
+      if(!(await confirmD("Publicar o veredicto?","Depois de publicado, não pode ser alterado.","Publicar"))) return;
+      const ok=await write(()=>readsMerge({trib:{verdict:{[gid]:{[c.w]:{caseId:st.pick,result:st.res,text:t,penalty:pen,at:Date.now()}}}}}),"Veredicto enviado ⚖️ Sai em poucos minutos"); if(ok) L.render(); return; }
+    if(b.dataset.trrx){ if(trMins()>=TR_RX){ toast("As reações já fecharam"); return; } const v=b.dataset.trrx;
+      if(!(await confirmD(v==="jf"?"👏 Justiça feita?":"🔁 Pedir recurso?",v==="rec"?`Só podes reagir uma vez. Se o recurso falhar, ficas a dever um fino ao ${MER} 🍺`:"Só podes reagir uma vez.","Confirmar"))) return;
+      const ok=await write(()=>readsMerge({trib:{rx:{[gid+"_"+c.w]:{v,at:Date.now()}}}}),v==="jf"?"👏 Justiça feita":"🔁 Recurso pedido"); if(ok) L.render(); return; }
+    if(b.dataset.trapp!==undefined){ const t=L.body.querySelector("#trapptxt").value.trim(); const pen=L.body.querySelector("#trappen")?.value.trim()||"";
+      if(!t){ toast("Falta a fundamentação, Meritíssimo"); return; } if(st.dec==="revise"&&c.result==="abs"&&!pen){ toast("Falta a pena simbólica"); return; }
+      if(!(await confirmD("Publicar a decisão do recurso?","Depois de publicada, não pode ser alterada.","Publicar"))) return;
+      const ok=await write(()=>readsMerge({trib:{appeal:{[gid]:{[c.w]:{decision:st.dec,text:t,penalty:pen,at:Date.now()}}}}}),"Decisão enviada ⚖️"); if(ok) L.render(); return; }
+    if(b.dataset.trdone){ const [pid,on]=b.dataset.trdone.split("|"); const ok=await write(()=>readsMerge({trib:{done:{[pid]:on==="1"}}}),on==="1"?"Marcada como cumprida ✓ (atualiza em breve)":"Reaberta"); if(ok) L.render(); return; }
+  }); }}); }
 function pfSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); if(nextW!==PF_START) return "";
   return `<div class="card pad cantsum">
     <div style="text-align:center"><img class="pf-logo-sum" src="${PF_LOGO}" alt="Preferias Flash"></div>
@@ -2571,7 +2692,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
