@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795468887">
+<meta name="pes-version" content="1795469184">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1142,7 +1142,7 @@ function tribStories(fromSheet){ const g=curGroup(); lsSet(TRIB_NEWS,true);
     {emo:"🍺",title:"Cuidado com o recurso",html:()=>p("Pedir recurso tem risco: se o Meritíssimo mantiver a sentença, <b>pagas um fino</b> ao Meritíssimo no próximo evento.")+p("Pensa duas vezes antes de carregar no 🔁 😏")},
     {emo:"📒",title:"Registo de penas",html:()=>p("A app guarda todas as penas e finos por cumprir, com o nome e o número do processo.")+p("<b>Só o Meritíssimo</b> pode dar uma pena ou um fino como cumprido. Nem o condenado escapa.")},
     {emo:"🗂️",title:"Ficha de cadastro",html:()=>p("Cada membro tem a sua ficha: todos os casos em que foi acusado, com o número, o título e o resultado final.")+p("Cadastro limpo é para quem se porta bem… ou para quem nunca foi apanhado 😏")},
-    {emo:"🔒",title:"Quem não vota, não entra",html:()=>p("Quem não completar a votação da semana anterior vê o tribunal e recebe as notificações, mas <b>não acusa, não reage e não lê os veredictos</b>.")+p("<b>As acusações desta semana fecham amanhã, terça, às 17:00.</b>")+(fromSheet?`<button class="btn block" data-sx style="margin-top:14px">Entendido ⚖️</button>`:`<button class="btn block" data-sx data-act="trib" style="margin-top:14px">⚖️ Ir ao tribunal</button>`)},
+    {emo:"🔒",title:"Quem não vota, não entra",html:()=>p("Quem não completar a votação da semana anterior vê o tribunal e recebe as notificações, mas <b>não acusa, não reage e não lê os veredictos</b>.")+p("Só há uma exceção: <b>se fores tu o acusado</b>, podes ver o teu processo e reagir ao veredicto.")+p("<b>As acusações desta semana fecham amanhã, terça, às 17:00.</b>")+(fromSheet?`<button class="btn block" data-sx style="margin-top:14px">Entendido ⚖️</button>`:`<button class="btn block" data-sx data-act="trib" style="margin-top:14px">⚖️ Ir ao tribunal</button>`)},
   ];
   storyPlayer(S_,`${g?esc(g.name)+" · ":""}<span>Tribunal do Sr. Sid</span>`,"Tribunal do Sr. Sid",[["#7A4B1F","#2B1A0B"],["#5B2BE0","#1A0B4D"],["#0A84FF","#06224D"],["#B3261E","#3A0A07"],["#30B07A","#073B2A"],["#FF9F0A","#4D2400"],["#E0A100","#5A2C00"],["#3A3A55","#0B0B16"],["#AF52DE","#2E0C47"],["#7A4B1F","#140B04"]]); }
 function maybeTribNews(){ const g=curGroup(); if(!ME()||layers.length||lsGet(TRIB_NEWS,false)||!g||!sidKey(g.id)) return false; tribStories(); return true; }
@@ -2333,6 +2333,10 @@ function trMins(){ const t=pfLx(); return ["Mon","Tue","Wed","Thu","Fri","Sat","
 const trWeek=()=>weekOf(lisbonYMD());
 function sidKey(gid){ const g=S.groups[gid]; return g?.trib?.sid||(g?.members||[]).find(k=>/^sid\b/i.test(S.people[k]?.name||""))||null; }
 const isSid=gid=>!!ME()&&sidKey(gid)===ME();
+// quem não votou fica de fora do tribunal, exceto o acusado do processo desta semana (vê o seu processo e pode reagir)
+const trAccusedIn=gid=>{ const c=trCur(gid); return !!c.no&&c.accused===ME(); };
+const trLocked=gid=>rankLocked(gid)&&!isSid(gid)&&!trAccusedIn(gid);
+const trOnlyCase=gid=>rankLocked(gid)&&!isSid(gid)&&trAccusedIn(gid);
 function trCur(gid){ const t=S.groups[gid]?.trib; const w=trWeek(); return t?.cur?.w===w?t.cur:{w,status:"sub"}; }
 const trRes=r=>r==="cond"?"Condenado":"Absolvido";
 const trLeft=end=>fmtLeft(Math.max(0,(end-trMins())*6e4));
@@ -2347,7 +2351,7 @@ function tribStatus(gid){ const c=trCur(gid); const m=trMins(); const sid=isSid(
   if(c.status==="appeal") return `Processo n.º ${c.no} em recurso · decisão até domingo às 21:00`;
   if(c.status==="final") return `Processo n.º ${c.no}: ${trRes(c.final).toUpperCase()} · transitou em julgado`;
   return "Semana sem julgamento"; }
-function tribCard(g){ if((g.members||[]).length<3||!sidKey(g.id)) return ""; const locked=rankLocked(g.id)&&!isSid(g.id);
+function tribCard(g){ if((g.members||[]).length<3||!sidKey(g.id)) return ""; const locked=trLocked(g.id);
   return `<div class="section" style="margin-top:14px"><button class="tribcard" data-act="${locked?"tease":"trib"}"><span class="trib-ico">⚖️</span><span class="grow"><b>Tribunal do Sr. Sid</b><small>${locked?"Não completaste a votação da semana passada: o tribunal não te recebe 🔒":esc(tribStatus(g.id))}</small></span>${ic(locked?"lock":"right")}</button></div>`; }
 function trCaseCard(gid,c,me){ const acc=c.accused;
   const res=c.status==="final"?c.final:c.result; const rev=c.appeal?.decision==="revise";
@@ -2358,10 +2362,10 @@ function trCaseCard(gid,c,me){ const acc=c.accused;
     ${res==="cond"&&c.penalty?`<div class="trpen">⚖️ Pena: <b>${esc(c.penalty)}</b></div>`:""}
     ${c.appeal&&c.appeal.decision!=="none"?`<div class="trsent"><small>Decisão do recurso</small><p><b>${c.appeal.decision==="keep"?"Sentença mantida":"Sentença revista"}.</b> ${esc(c.appeal.text||"")}</p>${c.appeal.decision==="keep"?`<p class="muted" style="margin-top:4px">Quem pediu recurso deve um fino ao ${MER} 🍺</p>`:""}</div>`:""}
     ${c.appeal?.decision==="none"?`<div class="trsent"><p class="muted">O recurso caducou: o ${MER} não se pronunciou. A sentença mantém-se, sem finos.</p></div>`:""}</div>`; }
-function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const me=ME(); if(rankLocked(gid)&&!isSid(gid)){ teaseSheet(); return; }
+function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const me=ME(); if(trLocked(gid)){ teaseSheet(); return; }
   const st={accused:null,pick:null,res:null,dec:null,tab:"now"};
   const L=openSheet({title:"⚖️ Tribunal do Sr. Sid",left:"Fechar",live:true,body:()=>{ const c=trCur(gid); const m=trMins(); const sid=isSid(gid); const T=S.groups[gid]?.trib||{}; const my=S.reads[me]?.trib||{};
-    const tabs=`<div class="seg" style="margin-bottom:14px">${[["now","Esta semana"],["pens","Penas"],["cad","Cadastro"]].map(([k,l])=>`<button data-trtab="${k}" class="${st.tab===k?"on":""}">${l}</button>`).join("")}</div>`;
+    const only=trOnlyCase(gid); if(only) st.tab="now"; const tabs=only?`<p class="info" style="text-align:center;margin:0 0 12px">Não completaste a votação da semana passada, mas és o acusado: podes ver o teu processo e reagir ao veredicto.</p>`:`<div class="seg" style="margin-bottom:14px">${[["now","Esta semana"],["pens","Penas"],["cad","Cadastro"]].map(([k,l])=>`<button data-trtab="${k}" class="${st.tab===k?"on":""}">${l}</button>`).join("")}</div>`;
     let out=`<div class="trhead"><div class="trgavel">⚖️</div><h2>Tribunal do Sr. Sid</h2><p>Aqui ele é sempre tratado por <b>${MER}</b>.</p><button class="linkbtn" data-trhow style="margin-top:6px;color:var(--accent);font-weight:600">Como funciona?</button></div>`+tabs;
     if(st.tab==="pens"){ const pens=(T.pens||[]); const open=pens.filter(p=>!p.done), done=pens.filter(p=>p.done);
       const row=p=>`<div class="row" style="align-items:flex-start">${avatar(p.k,34)}<div class="grow"><div class="rowtitle" style="white-space:normal">${esc(nm(p.k))}</div><div class="rowsub" style="white-space:normal">${p.kind==="fino"?"🍺 Fino":"🔨 Pena"} · Processo n.º ${esc(p.no)} · ${esc(p.text)}</div></div>${sid?`<button class="btn sm ${p.done?"ghost":""}" data-trdone="${p.id}|${p.done?0:1}">${p.done?"Reabrir":"Cumprida"}</button>`:(p.done?`<span class="chip">Cumprida ✓</span>`:"")}</div>`;
