@@ -35,7 +35,7 @@ export const PHILO = [
   ["De que é que te orgulhas mais na tua vida?", "Contaste isso a alguém na altura?", "E de que é que gostavas de te orgulhar daqui a cinco anos?"],
   ["Sentes saudades de que fase da tua vida?", "O que é que essa fase tinha que hoje falta?", "Dá para trazer um bocadinho disso de volta? Como?"],
   ["O que é que aprendeste com a tua família que vais passar aos teus filhos?", "E o que é que vais fazer de maneira completamente diferente?", "Quem da família é que mais te marcou?"],
-  ["As redes sociais aproximam-nos ou afastam-nos?", "Quanto tempo achas que passas no telemóvel por dia? Chuta um número.", "Se ficasses uma semana sem telemóvel, o que é que fazias com esse tempo?"],
+  ["As redes sociais aproximam-nos ou afastam-nos?", "Quanto tempo achas que passas no telemóvel por dia? Diz um número a olho.", "Se ficasses uma semana sem telemóvel, o que é que fazias com esse tempo?"],
   ["Sentes-te mais tu na cidade ou no campo?", "Qual é o sítio na natureza onde te sentiste mais em paz?", "E porque é que não vais lá mais vezes?"],
   ["O que é que, para ti, é verdadeiramente bonito?", "Qual foi a coisa mais bonita que viste este ano?", "Achas que a beleza está nas coisas ou em quem olha para elas?"],
   ["O mundo é um sítio justo?", "Qual foi a maior injustiça que já sentiste na pele?", "E se fosses juiz por um dia, que caso escolhias julgar?"],
@@ -170,7 +170,7 @@ export const ROUTINE = [
   ["Qual é o teu programa de sexta à noite ideal?", "E o que fizeste na sexta passada?", "Quem do grupo é o mais difícil de convencer a sair?"],
   ["Qual foi a última mensagem que te fez rir?", "Quem a mandou?", "E qual é o meme do grupo que nunca morre?"],
 ];
-export const BRIDGES = ["Agora uma pergunta diferente:", "Mudando de assunto:", "Vamos para outro lado:", "Hoje o tema é outro:", "Pergunta do dia:"];
+export const BRIDGES = ["Agora uma pergunta diferente:", "Mudemos de assunto:", "Vamos para outro lado:", "Hoje o tema é outro:", "Pergunta do dia:"];
 export const REACTIONS = ["Interessante… 🤔", "Gostei dessa! 👏", "Hmm, isso dá que pensar 🧐", "Uau, não estava à espera 😮", "Fica registado 📝", "Muito bem respondido 😌",
   "Isso explica muita coisa 😄", "Resposta digna de filósofo 🏛️", "O grupo vai adorar ler isto 👀", "Faz todo o sentido 👌", "Ah, então é assim! 😅", "Profundo… 🌊",
   "Respeito 🙌", "Essa vai dar conversa no próximo jantar 🍷", "Nota 10 para a sinceridade 💯", "Estou a ver, estou a ver… 🤓", "Belíssimo 😎", "Não esperava outra coisa de ti 😏",
