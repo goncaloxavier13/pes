@@ -18,7 +18,7 @@ const stRef = db.doc("system/chatwatch");
 let cursor = (await stRef.get()).data()?.cursor || Date.now() - 15 * 60e3;
 let sent = 0, ticks = 0;
 const ownerKey = (await db.doc("config/app").get()).data()?.ownerKey || null;
-const authorOf = async m => m.as === "claude" && ownerKey && m.from === ownerKey ? "Claude" : await nameOf(m.from);
+const authorOf = async m => m.as === "claude" && ownerKey && m.from === ownerKey ? "Cláudio" : await nameOf(m.from);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const peopleCache = {};
 const nameOf = async k => peopleCache[k] ??= ((await db.doc("people/" + k).get()).data()?.name || "Alguém");

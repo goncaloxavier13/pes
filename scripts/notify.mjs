@@ -114,7 +114,7 @@ for (const c of watcherAlive ? [] : (await db.collection("chats").where("lastAt"
     const last = mine[mine.length - 1];
     await send(k, "messages", {
       title: title || name(last.from),
-      body: (w => mine.length === 1 ? `${title ? w + ": " : ""}${last.text}`.slice(0, 180) : `${mine.length} mensagens novas · ${w}: ${last.text}`.slice(0, 180))(last.as === "claude" ? "Claude" : first(last.from)),
+      body: (w => mine.length === 1 ? `${title ? w + ": " : ""}${last.text}`.slice(0, 180) : `${mine.length} mensagens novas · ${w}: ${last.text}`.slice(0, 180))(last.as === "claude" ? "Cláudio" : first(last.from)),
       tag: "chat-" + c.id, url: `./?g=${chat.groupId}&t=gap&c=${c.id}`,
     });
   }
