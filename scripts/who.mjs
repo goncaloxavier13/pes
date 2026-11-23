@@ -54,7 +54,7 @@ function weekQuestions(gid,w){ if(!w||w<Q_START) return []; const y=+w.slice(0,4
   const idx=[...Array(N).keys()]; let seed=hashStr2(gid+"|"+y); for(let i=N-1;i>0;i--){ seed=(Math.imul(seed,1664525)+1013904223)>>>0; const j=seed%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
   return [0,1].map(o=>{ const i=idx[((n-1)*2+o)%N]; return {id:"q:"+i,text:QUESTIONS[i]}; }); }
 const [people, groups, rankings, votes, awards] = await Promise.all(["people", "groups", "rankings", "votes", "awards"].map(all));
-const wk = weekOf(ymd()); const out = {};
+const wk = weekOf(ymd(new Date(Date.now() + 3 * 3600e3))); // a semana de votação fecha ao domingo às 21h const out = {};
 for (const [gid, g] of Object.entries(groups)) {
   const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id); const qs = [...weekQuestions(gid, wk).map(q => q.id), ...(wk >= "2026-W48" ? ["reg:irrit", "reg:expert", "reg:coro", "reg:mom"] : [])];
   out[g.name] = (g.members || []).map(k => { const v = votes[k]?.weeks?.[wk] || {}; const r = !!rankings[k]?.weeks?.[wk]?.[gid];

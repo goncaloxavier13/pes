@@ -135,17 +135,19 @@ if (hourLx() >= 18) {
 
 // 4) votação de domingo: às 18h lembrete e às 22h última chamada (com FOMO)
 const wk = weekOf(ymd());
+// a semana de votação fecha ao domingo às 21h: a partir daí, a "semana de votação" já é a seguinte
+const wkV = weekOf(ymd(new Date(Date.now() + 3 * 3600e3)));
 const FULL_VOTE_FROM = "2026-W47";
 const tsMs = x => x == null ? 0 : typeof x === "number" ? x : x.toMillis ? x.toMillis() : +new Date(x);
 function wkMonday(w) { const y = +w.slice(0, 4), n = +w.slice(6); const j4 = new Date(Date.UTC(y, 0, 4)); const m = new Date(j4); m.setUTCDate(j4.getUTCDate() - ((j4.getUTCDay() + 6) % 7) + (n - 1) * 7); return m; }
 let VR = null; const loadVR = async () => VR || (VR = await Promise.all([all("awards"), all("votes"), all("rankings")]));
 function complete([awards, votes, rankings], gid, k, w) { // mesma regra da app
   if (!rankings[k]?.weeks?.[w]?.[gid]) return false; if (w < FULL_VOTE_FROM) return true;
-  const v = votes[k]?.weeks?.[w] || {}; const end = wkMonday(w).getTime() + 7 * 864e5 + 2 * 3600e3;
+  const v = votes[k]?.weeks?.[w] || {}; const end = wkMonday(w).getTime() + 7 * 864e5 - 3 * 3600e3; // domingo às 21h
   const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid && (!a.createdAt || tsMs(a.createdAt) < end)).map(([id]) => id);
   return [...aw, ...weekQuestions(gid, w).map(q => q.id), ...(w >= "2026-W48" ? ["reg:irrit", "reg:expert", "reg:coro", "reg:mom"] : [])].every(id => v[id]);
 }
-const stage = weekdayLx() === "Sun" ? (hourLx() >= 22 ? "22" : hourLx() >= 18 ? "18" : null) : null;
+const stage = weekdayLx() === "Sun" && hourLx() < 21 ? (hourLx() >= 20 ? "22" : hourLx() >= 17 ? "18" : null) : null; // 17h aviso, 20h última chamada
 if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly === wk + ":22")) {
   const vr = await loadVR();
   for (const [gid, g] of Object.entries(groups)) {
@@ -155,8 +157,8 @@ if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly ===
     for (const k of miss) {
       const others = miss.length - 1;
       const p = stage === "18"
-        ? { title: `⏳ A votação do ${g.name} fecha hoje às 23:59`, body: `Já votaram ${done.length} de ${mem.length}. Se não votares, amanhã ficas sem ranking, sem resumo da semana e sem Cantinho 🔒` }
-        : { title: "🚨 Última chamada: faltam 2 horas", body: others ? `Só faltas tu e mais ${others}. À meia-noite fecha e ficas de fora a semana toda 😬` : `Só faltas TU. O grupo todo já votou… à meia-noite ficas sozinho de fora 😬` };
+        ? { title: `⏳ A votação do ${g.name} fecha hoje às 21h`, body: `Já votaram ${done.length} de ${mem.length}. Se não votares, às 21h ficas sem ranking, sem resumo da semana e sem Cantinho 🔒` }
+        : { title: "🚨 Última chamada: falta 1 hora", body: others ? `Só faltas tu e mais ${others}. Às 21h fecha e ficas de fora a semana toda 😬` : `Só faltas TU. O grupo todo já votou… às 21h ficas sozinho de fora 😬` };
       await send(k, "votes", { ...p, tag: "votes-" + wk, url: `./?g=${gid}&t=dash` });
     }
   }
@@ -165,7 +167,7 @@ if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly ===
 
 // 4a) Registos da semana: quando a semana fecha, os textos passam para uma lista anónima e baralhada no grupo
 //     e são apagados dos votos de cada pessoa (fica só "1" = respondeu, para as regras de acesso continuarem a funcionar)
-{ const pw0 = weekOf(new Date(wkMonday(wk).getTime() - 3 * 864e5).toISOString().slice(0, 10));
+{ const pw0 = weekOf(new Date(wkMonday(wkV).getTime() - 3 * 864e5).toISOString().slice(0, 10));
   if (pw0 >= "2026-W48" && st.regs !== pw0) {
     const vr = await loadVR(); const votesAll = vr[1]; const RK = { "reg:irrit": "irrit", "reg:coro": "coro", "reg:mom": "mom" };
     for (const [gid, g] of Object.entries(groups)) {
@@ -181,16 +183,16 @@ if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly ===
   } }
 
 // 4b) segunda-feira: quem não completou a votação da semana passada fica a saber que ficou de fora (uma vez por semana)
-if (weekdayLx() === "Mon" && st.locked !== wk) {
-  const vr = await loadVR(); const pw = weekOf(new Date(wkMonday(wk).getTime() - 3 * 864e5).toISOString().slice(0, 10));
+if (st.locked !== wkV && (wkV !== wk || weekdayLx() !== "Sun")) {
+  const vr = await loadVR(); const pw = weekOf(new Date(wkMonday(wkV).getTime() - 3 * 864e5).toISOString().slice(0, 10));
   for (const [gid, g] of Object.entries(groups)) {
-    if ((g.galas || []).some(d => weekOf(d) === pw || weekOf(d) === wk)) continue; // semana da Gala: sem castigos
+    if ((g.galas || []).some(d => weekOf(d) === pw || weekOf(d) === wkV)) continue; // semana da Gala: sem castigos
     const mem = g.members || []; if (mem.length < 2) continue;
     const inside = mem.filter(k => complete(vr, gid, k, pw)); if (!inside.length) continue;
     for (const k of mem.filter(k => !inside.includes(k)))
       await send(k, "votes", { title: "🔒 Esta semana ficaste de fora", body: `${inside.length} ${inside.length === 1 ? "amigo já está" : "amigos já estão"} a ver o ranking, o resumo e o Cantinho do ${g.name}. Tu não 😬 Vota esta semana para voltares na próxima segunda.`, tag: "locked-" + wk, url: `./?g=${gid}&t=dash` });
   }
-  st.locked = wk;
+  st.locked = wkV;
 }
 
 const PF={

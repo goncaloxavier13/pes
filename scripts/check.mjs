@@ -55,7 +55,7 @@ function weekQuestions(gid,w){ if(!w||w<Q_START) return []; const y=+w.slice(0,4
 const cfg = (await db.doc("config/app").get()).data() || {};
 const [people, groups, uids, rankings, votes, awards, events, reads, chats, sys] = await Promise.all(["people","groups","uids","rankings","votes","awards","events","reads","chats","system"].map(all));
 function weekEndIso(w) { const [y, n] = [+w.slice(0, 4), +w.slice(6)]; const jan4 = new Date(Date.UTC(y, 0, 4)); const mon = new Date(jan4); mon.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() + 6) % 7) + (n - 1) * 7); return new Date(mon.getTime() + 7 * 864e5 + 2 * 3600e3).toISOString(); }
-const wk = weekOf(ymd()); const prev = weekOf(ymd(new Date(Date.now() - 7 * 864e5)));
+const wk = weekOf(ymd(new Date(Date.now() + 3 * 3600e3))); // a semana de votação fecha ao domingo às 21h const prev = weekOf(ymd(new Date(Date.now() - 7 * 864e5)));
 const out = { semana: wk, pessoas: Object.keys(people).length, contas_ligadas: Object.keys(uids).length, problemas: [] };
 const mapped = Object.values(uids).map(u => u.key || u.person || u.k || u);
 const dupMap = mapped.filter((k, i) => mapped.indexOf(k) !== i).length; if (dupMap) out.problemas.push(`${dupMap} contas ligadas ao mesmo perfil`);

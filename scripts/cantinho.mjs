@@ -20,7 +20,7 @@ function weekOf(s) { const [y, m, d] = s.split("-").map(Number); const dt = new 
   const fy = dt.getUTCFullYear(); const jan4 = new Date(Date.UTC(fy, 0, 4)); const w = 1 + Math.round(((dt - jan4) / 864e5 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7); return `${fy}-W${String(w).padStart(2, "0")}`; }
 function weekMonday(w) { const y = +w.slice(0, 4), n = +w.slice(6); const jan4 = new Date(Date.UTC(y, 0, 4)); const mon = new Date(jan4); mon.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() + 6) % 7) + (n - 1) * 7); return mon; }
 const prevWeek = w => weekOf(new Date(weekMonday(w).getTime() - 3 * 864e5).toISOString().slice(0, 10));
-const weekEndMs = w => weekMonday(w).getTime() + 7 * 864e5 + 2 * 3600e3;
+const weekEndMs = w => weekMonday(w).getTime() + 7 * 864e5 - 3 * 3600e3; // domingo às 21h
 const ms = x => x == null ? 0 : typeof x === "number" ? x : x.toMillis ? x.toMillis() : +new Date(x);
 
 // ── weekly questions (same list and order as the app) ──
