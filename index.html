@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795462702">
+<meta name="pes-version" content="1795463193">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -636,6 +636,16 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .regq{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow:auto}.regq blockquote{margin:0;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.12);font-size:16px;line-height:1.4;font-style:italic}
 .asclaude{flex:none;border:0;background:none;padding:0;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;opacity:.75;cursor:pointer;transition:.15s}
 .asclaude.on{opacity:1;filter:none;box-shadow:0 0 0 2px #D97757}
+.ctabs{flex:none;display:flex;gap:6px;padding:8px 12px;border-bottom:.5px solid var(--border);overflow-x:auto}.ctabs button{flex:1;white-space:nowrap;border:0;border-radius:99px;padding:8px 10px;font:inherit;font-size:13.5px;font-weight:600;background:var(--card);color:var(--muted);cursor:pointer}
+.ctabs button.on{background:linear-gradient(135deg,#ff9f0a,#ff375f);color:#fff}
+.cantsumbar{flex:none;display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:rgba(255,159,10,.15);color:var(--text);font:inherit;font-weight:600;padding:10px;cursor:pointer}.cantsumbar svg{width:16px;height:16px}
+.qzcard{background:var(--card);border-radius:18px;padding:14px;margin:0 0 12px}.qzq{font-weight:700;font-size:17px;margin-bottom:10px}
+.qzopts{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qzo{border:1px solid var(--border);background:var(--card2);color:var(--text);font:inherit;font-size:15px;font-weight:600;border-radius:14px;padding:12px 10px;cursor:pointer;text-align:center}
+.qzo.sel{background:linear-gradient(135deg,#0a84ff,#5e5ce6);color:#fff;border-color:transparent}.qzo:disabled{cursor:default}.qzo.dim{opacity:.6}
+.qzr{grid-column:span 2;border-radius:12px;padding:8px 10px;background:var(--card2)}.qzr.ok{background:rgba(48,209,88,.18)}.qzrt{display:flex;justify-content:space-between;gap:8px}.qzwho{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:13px}.qzwho span{display:inline-flex;align-items:center;gap:4px}
+.qzhead{font-size:19px;font-weight:800;margin:8px 4px 4px}
+.qzwait,.qzfoot{color:var(--muted);font-size:14px;margin:10px 2px 0}.qzother{display:flex;gap:8px;margin-top:10px}.qzother input{flex:1;min-width:0;border-radius:12px;border:1px solid var(--border);background:var(--card2);color:var(--text);font:inherit;padding:10px 12px}
+.csum-hero{display:flex;flex-direction:column;align-items:center;gap:6px;margin:4px 0 16px}.csum-hero b{font-size:20px}.csum-hero small{color:var(--muted)}.cwl{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -833,10 +843,25 @@ function generateDemo(nowMs){
     ["zeca-couceiro","Malta, já reservei para dia 12. Mesa para 11!",2900],["tuna-cardoso","Grande! Onde é?",2890],["zeca-couceiro","No sítio do ano passado, em Alcântara",2880],
     ["sid","Eu levo o amigo secreto organizado",1500],["jorge","Vou chegar um bocadinho atrasado 😅",1490],["joao-t","Clássico. Rei do Atraso garantido",1485],
     ["manel-xavier","Limite do amigo secreto 20€?",300],["frederico-napoles","Por mim 20€ está ótimo",45],["zeca-couceiro","Fechado: 20€. Confirmem presença no evento!",12]]);
-  { const cw=weekOf(lisbonYMD()); chat("cant-g-elcalderon-"+cw,{groupId:"g-elcalderon",type:"cantinho",host:"manel-xavier",week:cw,name:"Cantinho do Manel",members:elc,createdBy:"bot",createdAt:nowMs-DAY},[
-    ["bot","Bem-vindo ao cantinho, Manel 🛋️ Começamos com calma: se pudesses saber a resposta a uma única pergunta sobre o universo, qual escolhias?",1400],
-    ["manel-xavier","Se existe vida noutro planeta. Acho que mudava tudo",1300],
-    ["bot","Mudava tudo como? Achas que íamos ficar mais unidos ou mais assustados?",1290]]); }
+  { const cp=Math.floor(Math.round((Date.UTC(+lisbonYMD().slice(0,4),+lisbonYMD().slice(5,7)-1,+lisbonYMD().slice(8,10))-Date.UTC(2026,10,23))/864e5)/2);
+    const p0=Date.UTC(2026,10,23)+cp*2*DAY; const ext=(id,extra)=>{ const k=Object.keys(docs).filter(x=>x.startsWith(`chats/${id}/msgs/`)).sort(); extra.forEach(([i,o])=>Object.assign(docs[k[i]],o)); };
+    chat("cant-g-elcalderon-p"+cp,{groupId:"g-elcalderon",type:"cantinho",host:"manel-xavier",period:cp,endsAt:p0+2*DAY,name:"Cantinho do Manel",members:elc,createdBy:"bot",createdAt:nowMs-DAY},[
+      ["bot","Bem-vindo ao cantinho, Manel 🛋️ Primeira pergunta: se pudesses saber a resposta a uma única pergunta sobre o universo, qual escolhias?",1400],
+      ["manel-xavier","Se existe vida noutro planeta. Acho que mudava tudo",1300],["bot","Preferias nunca mais beber café ou nunca mais dormir uma sesta?",1290],
+      ["manel-xavier","Hoje acordei a pensar que devíamos fazer uma viagem todos juntos",900],["bot","Fruta preferida?",1380],["manel-xavier","",1000],["bot","Fruta preferida?",990],
+      ["guerra","",800],["sid","",700],["bot","Destino de sonho para férias?",600]]);
+    ext("cant-g-elcalderon-p"+cp,[[0,{sec:"q",q:true}],[1,{sec:"q"}],[2,{sec:"q",q:true}],[3,{sec:"pens"}],[4,{sec:"quiz",kind:"ask",qi:0,choices:["Pera","Maçã","Morango","Banana","Manga"]}],
+      [5,{sec:"quiz",kind:"answered",qi:0}],[6,{sec:"quiz",kind:"vote",qi:0,opts:["Morango","Pera","Maçã","Manga"]}],[7,{sec:"quiz",kind:"guess",qi:0,opt:0}],[8,{sec:"quiz",kind:"guess",qi:0,opt:1}],
+      [9,{sec:"quiz",kind:"ask",qi:4,choices:["Japão","Brasil","Tailândia","Nova Iorque","Islândia"]}]]);
+    // a finished cantinho, to test the summary
+    chat("cant-g-elcalderon-p"+(cp-1),{groupId:"g-elcalderon",type:"cantinho",host:"zeca-couceiro",period:cp-1,endsAt:p0,closed:true,name:"Cantinho do Zeca",members:elc,createdBy:"bot",createdAt:nowMs-3*DAY},[
+      ["bot","Bem-vindo ao cantinho, Zeca 🛋️ Primeira pergunta: qual é a tua definição de sucesso?",4000],["zeca-couceiro","Ter tempo para os amigos",3990],
+      ["zeca-couceiro","Às vezes acho que trabalho demais",3500],["zeca-couceiro","Este grupo é a melhor coisa que tenho",3400],
+      ["bot","Fruta preferida?",3300],["bot","Fruta preferida?",3200],["bot","Prato preferido?",3100],["bot","Prato preferido?",3000]]);
+    ext("cant-g-elcalderon-p"+(cp-1),[[0,{sec:"q",q:true}],[1,{sec:"q"}],[2,{sec:"pens"}],[3,{sec:"pens"}],
+      [4,{sec:"quiz",kind:"ask",qi:0}],[5,{sec:"quiz",kind:"reveal",qi:0,opts:["Pera","Morango","Maçã","Kiwi"],correct:1,answer:"Morango",guesses:{"goncalo-xavier":1,"guerra":0,"sid":1,"tuna-cardoso":2}}],
+      [6,{sec:"quiz",kind:"ask",qi:1}],[7,{sec:"quiz",kind:"reveal",qi:1,opts:["Francesinha","Sushi","Bitoque","Polvo à lagareiro"],correct:3,answer:"Polvo à lagareiro",guesses:{"goncalo-xavier":0,"guerra":3,"sid":0,"tuna-cardoso":0}}]]);
+    docs["chats/cant-g-elcalderon-p"+(cp-1)].rx={m002:{"sid":"❤️","guerra":"❤️"}}; }
   chat("c-tuna",{groupId:"g-elcalderon",type:"direct",name:"",members:[me,"tuna-cardoso"],createdBy:"tuna-cardoso",createdAt:nowMs-20*DAY},[
     ["tuna-cardoso","Viste o resultado de ontem?",3000],[me,"Vi, que jogo!",2990],["tuna-cardoso","Para a semana jogamos outra vez quinta?",1440],[me,"Conta comigo",1430],["tuna-cardoso","Leva a bola nova",95]]);
   chat("c-jogos",{groupId:"g-elcalderon",type:"group",name:"Noite de jogos",members:[me,"zeca-couceiro","francisco-cabral","francisco-guerra","joao-porto"],createdBy:me,createdAt:nowMs-40*DAY},[
@@ -1272,7 +1297,12 @@ async function syncAllGroupChats(){ if(chatSyncBusy||!S.fb||!ME()) return; chatS
 const hiddenAt = cid => S.reads[ME()]?.hidden?.[cid] || 0;
 /* ───────── Cantinho: each week one member chats with an AI host. Only people who completed last week's vote are in it. ───────── */
 const CANT_START="2026-W48";
-function cantinhoOf(gid){ const me=ME(); const e=Object.entries(S.chats).find(([id,c])=>c.type==="cantinho"&&c.groupId===gid&&c.week===curWeek()&&(c.members||[]).includes(me)); return e?{id:e[0],...e[1]}:null; }
+/* Cantinho: a new person every 2 days (period 0 = 23–24 Nov 2026). The server opens/closes them; the app shows the 3 sections and the summary. */
+const CANT_DAY0="2026-11-23";
+const dayIdx=ymd=>Math.round((Date.UTC(+ymd.slice(0,4),+ymd.slice(5,7)-1,+ymd.slice(8,10))-Date.UTC(2026,10,23))/864e5);
+const curPeriod=()=>Math.floor(dayIdx(lisbonYMD())/2);
+function cantinhoOf(gid){ const me=ME(); const cp=curPeriod(); const e=Object.entries(S.chats).find(([id,c])=>c.type==="cantinho"&&c.groupId===gid&&(c.members||[]).includes(me)&&!c.closed&&(c.period===cp||(c.period===undefined&&c.week===curWeek()))); return e?{id:e[0],...e[1]}:null; }
+function pastCantinhos(gid){ const me=ME(); const cp=curPeriod(); return Object.entries(S.chats).filter(([id,c])=>c.type==="cantinho"&&c.groupId===gid&&(c.members||[]).includes(me)&&(c.closed||(c.period!==undefined&&c.period<cp))).map(([id,c])=>({id,...c})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); }
 function cantFirstHost(gid){ return (S.groups[gid]?.members||[]).find(k=>first(nm(k))==="Manel")||null; }
 function chatsOf(gid){ const me=ME(); return Object.entries(S.chats).filter(([id,c])=>c.groupId===gid && c.type!=="cantinho" && (c.members||[]).includes(me) && (!hiddenAt(id) || (c.lastAt||0)>hiddenAt(id))).map(([id,c])=>({id,...c})).sort((a,b)=>(b.lastAt||b.createdAt||0)-(a.lastAt||a.createdAt||0)); }
 const openChatId = () => { const r=topRoute(); return r?.name==="chat"&&document.visibilityState!=="hidden" ? r.arg : null; };
@@ -1423,12 +1453,12 @@ function back(){ S.route.pop(); render(); }
 function setTab(t){ S.tab=t; S.route=[]; render(); }
 function enterGroup(gid,tab="dash"){ if(S.groupId!==gid) S.localVotes={}; S.groupId=gid; lsSet("group",gid); setTab(tab); }
 /* Deep links from push notifications: ?g=<group>&t=<tab>&c=<chat> */
-function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c")}; }catch{ return null; } }
+function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1"}; }catch{ return null; } }
 S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceState(null,"",location.pathname); }catch{} }
 navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
 function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
   if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
-  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; }
+  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -1769,19 +1799,21 @@ function cantinhoSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(
 function cantinhoCard(g){ if(curWeek()<CANT_START||votingClosed(g.id)) return "";
   if(rankLocked(g.id)&&!cantinhoOf(g.id)) return `<div class="section" style="margin-top:12px"><button class="cantcard locked" data-act="tease"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>${g.cant&&g.cant.week===curWeek()&&g.cant.answers?`${g.cant.answers} ${g.cant.answers===1?"resposta":"respostas"} que não podes ler 😬`:"Só para quem completou a votação da semana passada 🔒"}</small></span>${ic("lock")}</button></div>`;
   const c=cantinhoOf(g.id); const me=ME();
-  if(!c) return `<div class="section" style="margin-top:12px"><div class="cantcard wait"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>A sortear quem se senta no cantinho esta semana…</small></span></div></div>`;
+  const past=pastCantinhos(g.id); const pastRow=past.length?`<button class="row" data-act="cantPast" data-arg="${g.id}" style="margin-top:8px;border-radius:14px;background:var(--card)"><span style="font-size:20px">📋</span><div class="grow"><div class="rowtitle">Cantinhos anteriores</div><div class="rowsub">${past.length} ${past.length===1?"resumo":"resumos"} para rever</div></div>${ic("right")}</button>`:"";
+  if(!c) return `<div class="section" style="margin-top:12px"><div class="cantcard wait"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho</b><small>A sortear quem se senta no cantinho…</small></span></div>${pastRow}</div>`;
   const u=isUnread(c); const host=c.host===me;
-  return `<div class="section" style="margin-top:12px"><button class="cantcard" data-act="openChat" data-arg="${c.id}"><span class="cant-emo">🛋️</span><span class="grow"><b>${esc(c.name||"Cantinho")}${host?" (és tu!)":""}</b><small>${c.lastText?`${c.lastFrom===BOT?"🛋️":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:(host?"O Anfitrião vai fazer-te a primeira pergunta":"À espera da primeira pergunta")}</small></span>${u?'<span class="dotu" aria-label="Por ler"></span>':ic("right")}</button></div>`; }
+  return `<div class="section" style="margin-top:12px"><button class="cantcard" data-act="openChat" data-arg="${c.id}"><span class="cant-emo">🛋️</span><span class="grow"><b>${esc(c.name||"Cantinho")}${host?" (és tu!)":""}</b><small>${c.endsAt?`Termina em ${fmtLeft(Math.max(0,c.endsAt-Date.now()))} · `:""}${c.lastText?`${c.lastFrom===BOT?"🛋️":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:(host?"O cantinho é teu durante 2 dias":"À espera da primeira publicação")}</small></span>${u?'<span class="dotu" aria-label="Por ler"></span>':ic("right")}</button>${pastRow}</div>`; }
 /* ───────────────────────── chat screen ───────────────────────── */
 let chatSub=null, chatMsgs=[], chatId=null, chatLoaded=false; const chatMsgsAll=()=>chatMsgs;
 function chatShell(cid){
   const c=S.chats[cid]; if(!c) return navhead("Conversa")+`<div class="center muted">Esta conversa já não existe.</div>`;
-  const cant=c.type==="cantinho"; const canWrite=!cant||c.host===ME();
-  const sub=c.type==="direct"?"Conversa privada":cant?`Cantinho da semana · só ${c.host===ME()?"tu respondes":`o ${first(nm(c.host))} responde`}`:`${(c.members||[]).length} participantes`;
-  return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes","",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
+  const cant=c.type==="cantinho"; const tab=cant?cantTab(cid):null; const ended=cant&&cantEnded(c); const canWrite=!cant||(c.host===ME()&&tab!=="quiz"&&!ended);
+  const sub=c.type==="direct"?"Conversa privada":cant?(ended?"Cantinho terminado":`Cantinho · só ${c.host===ME()?"tu escreves":`o ${first(nm(c.host))} escreve`}`):`${(c.members||[]).length} participantes`;
+  const tabs=cant?`<div class="ctabs" role="tablist">${[["pens","💭 Pensamentos"],["q","❓ Perguntas"],["quiz","🎯 Adivinha"]].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-act="cantTab" data-arg="${cid}|${k}">${l}</button>`).join("")}</div>${ended?`<button class="cantsumbar" data-act="cantSummary" data-arg="${cid}">📋 Ver o resumo deste cantinho ${ic("right")}</button>`:""}`:"";
+  return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes","",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+tabs+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
     <div class="replybar" id="replyBar" hidden><div class="rbt"><b></b><span></span></div><button type="button" id="replyX" aria-label="Cancelar resposta">${ic("x")}</button></div>
-    ${canWrite?`<form class="composer" id="composer">${S.isOwner&&!cant&&c.type!=="direct"?`<button type="button" class="asclaude" id="asClaude" aria-pressed="false" aria-label="Escrever como Cláudio" title="Escrever como Cláudio">${avatar(CLAUDE,28)}</button>`:""}<textarea id="msgInput" rows="1" placeholder="${cant?"Responde ao Anfitrião…":"Mensagem"}" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`
-      :`<div class="cantnote">🛋️ Este é o cantinho do ${esc(first(nm(c.host)))}. Só ele conversa com o Anfitrião, mas podes reagir às mensagens.</div>`}`;
+    ${canWrite?`<form class="composer" id="composer">${S.isOwner&&!cant&&c.type!=="direct"?`<button type="button" class="asclaude" id="asClaude" aria-pressed="false" aria-label="Escrever como Cláudio" title="Escrever como Cláudio">${avatar(CLAUDE,28)}</button>`:""}<textarea id="msgInput" rows="1" placeholder="${cant?(tab==="pens"?"Escreve um pensamento…":"Responde à pergunta…"):"Mensagem"}" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`
+      :`<div class="cantnote">${ended?"🛋️ Este cantinho já terminou.":c.host===ME()?"🎯 Responde em segredo nos cartões acima. O grupo vai tentar adivinhar.":tab==="quiz"?`🎯 Adivinha as respostas do ${esc(first(nm(c.host)))}. Os votos dos outros só aparecem na revelação.`:`🛋️ Este é o cantinho do ${esc(first(nm(c.host)))}. Só ele escreve aqui, mas podes reagir às mensagens.`}</div>`}`;
 }
 function mountChat(cid,scr){
   if(chatId!==cid){ chatSub&&chatSub(); chatMsgs=[]; chatLoaded=false; chatId=cid;
@@ -1789,7 +1821,8 @@ function mountChat(cid,scr){
   else updateChat(cid);
   const ta=scr.querySelector("#msgInput"), btn=scr.querySelector("#sendBtn"), form=scr.querySelector("#composer");
   const box0=scr.querySelector("#msgs");
-  if(!form){ box0.addEventListener("click",e=>{ const rc=e.target.closest(".rxc"); if(rc){ setReaction(cid,rc.dataset.mid,rc.dataset.rx); return; } const b=e.target.closest(".bub[data-mid]"); if(b) msgMenu(cid,b.dataset.mid,b); }); return; }
+  box0.addEventListener("click",e=>quizClick(cid,e));
+  if(!form){ box0.addEventListener("click",e=>{ if(e.target.closest("[data-qz]")) return; const rc=e.target.closest(".rxc"); if(rc){ setReaction(cid,rc.dataset.mid,rc.dataset.rx); return; } const b=e.target.closest(".bub[data-mid]"); if(b) msgMenu(cid,b.dataset.mid,b); }); return; }
   const draft=lsGet("draft:"+cid,""); ta.value=draft; btn.disabled=!draft.trim();
   const fit=()=>{ ta.style.height="auto"; ta.style.height=Math.min(120,ta.scrollHeight)+"px"; };
   ta.addEventListener("input",()=>{ btn.disabled=!ta.value.trim(); fit(); lsSet("draft:"+cid,ta.value); });
@@ -1805,10 +1838,73 @@ function mountChat(cid,scr){
   if(asB) asB.onclick=()=>{ asClaude=!asClaude; asB.classList.toggle("on",asClaude); asB.setAttribute("aria-pressed",asClaude); ta.placeholder=asClaude?"A escrever como Cláudio…":"Mensagem"; toast(asClaude?"A escrever como Cláudio":"A escrever como tu"); ta.focus(); };
   form.addEventListener("submit",async e=>{ e.preventDefault(); const text=ta.value.trim(); if(!text) return; ta.value=""; lsSet("draft:"+cid,""); btn.disabled=true; fit();
     const me=ME(); const at=Date.now(); const rt=replyTo; setReply(cid,null); const as=asClaude&&S.isOwner&&me===S.ownerKey?{as:CLAUDE}:{};
-    const ok=await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add(rt?{from:me,text,at,replyTo:rt,...as}:{from:me,text,at,...as}); await D("chats/"+cid).update({lastAt:at,lastText:text.slice(0,140),lastFrom:me,lastAs:as.as||null}); });
+    const sc=S.chats[cid]?.type==="cantinho"?{sec:cantTab(cid)}:{};
+    const ok=await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add(rt?{from:me,text,at,replyTo:rt,...as,...sc}:{from:me,text,at,...as,...sc}); await D("chats/"+cid).update({lastAt:at,lastText:((sc.sec==="pens"?"💭 ":"")+text).slice(0,140),lastFrom:me,lastAs:as.as||null}); });
     if(!ok){ ta.value=text; btn.disabled=false; if(rt) setReply(cid,{id:rt.id,from:rt.from,text:rt.text}); } ta.focus(); });
   fit();
 }
+/* ───────── Cantinho: sections, "Quanto conheces" quiz and the final summary ───────── */
+S.cantTabs=S.cantTabs||{};
+const cantEnded=c=>!!c.closed||(c.endsAt?Date.now()>=c.endsAt:false);
+function cantTab(cid){ return S.cantTabs[cid]||"q"; }
+function quizHtml(cid,c,all){ const me=ME(); const host=c.host; const hn=esc(first(nm(host))); const z=all.filter(m=>m.sec==="quiz"); const asks=z.filter(m=>m.kind==="ask");
+  if(!asks.length) return `<div class="empty" style="margin-top:40px"><div class="ico">🎯</div><h3>Quanto conheces o ${hn}?</h3><p>A primeira pergunta aparece daqui a pouco.</p></div>`;
+  const others=(c.members||[]).filter(k=>k!==host); const ended=cantEnded(c);
+  return `<div class="qzhead">🎯 Quanto conheces ${me===host?"-te o grupo":"o "+hn}?</div><p class="info" style="margin:0 4px 12px">O ${hn} responde em segredo e o grupo tenta adivinhar entre 4 opções. Revela-se quando todos votarem ou ao fim de 12 horas.</p>`+asks.map(a=>{ const qi=a.qi;
+    const answered=z.find(m=>m.kind==="answered"&&m.qi===qi&&m.from===host); const vote=z.find(m=>m.kind==="vote"&&m.qi===qi); const rev=z.find(m=>m.kind==="reveal"&&m.qi===qi);
+    const guesses={}; z.filter(m=>m.kind==="guess"&&m.qi===qi&&others.includes(m.from)).forEach(m=>guesses[m.from]=m.opt); const nG=Object.keys(guesses).length;
+    let body="";
+    if(rev){ const right=Object.values(rev.guesses||{}).filter(o=>o===rev.correct).length, tot=Object.keys(rev.guesses||{}).length;
+      body=`<div class="qzopts">${rev.opts.map((o,i)=>{ const who=Object.entries(rev.guesses||{}).filter(([k,v])=>v===i).map(([k])=>k);
+        return `<div class="qzr ${i===rev.correct?"ok":""}"><div class="qzrt"><b>${i===rev.correct?"✅ ":""}${esc(o)}</b><small>${who.length}</small></div><div class="qzwho">${who.map(k=>`<span>${avatar(k,20)}${esc(first(nm(k)))}${k===me?" (tu)":""}</span>`).join("")}</div></div>`; }).join("")}</div>
+        <p class="qzfoot">${tot?`Acertaram <b>${right} de ${tot}</b>${guesses[me]!==undefined||rev.guesses?.[me]!==undefined?(rev.guesses?.[me]===rev.correct?" · tu acertaste 🎉":" · tu falhaste 🙈"):""}`:"Ninguém votou"}</p>`; }
+    else if(vote){ const mine=guesses[me];
+      if(me===host) body=`<p class="qzwait">O grupo está a adivinhar… <b>${nG} de ${others.length}</b> já votaram.</p><div class="qzopts">${vote.opts.map(o=>`<div class="qzo dim">${esc(o)}</div>`).join("")}</div>`;
+      else if(!others.includes(me)) body=`<p class="qzwait">A votação está a decorrer.</p>`;
+      else body=`<div class="qzopts">${vote.opts.map((o,i)=>`<button class="qzo ${mine===i?"sel":""}" data-qz="guess" data-qi="${qi}" data-i="${i}" ${mine!==undefined||ended?"disabled":""}>${mine===i?"✓ ":""}${esc(o)}</button>`).join("")}</div>
+        <p class="qzwait">${mine!==undefined?`Votaste. ${nG} de ${others.length} já votaram: os votos aparecem na revelação 🤫`:`${nG} de ${others.length} já votaram.`}</p>`; }
+    else if(me===host){ const secret=S.reads[me]?.quizAns?.[cid]?.[qi];
+      body=answered?`<p class="qzwait">🤫 Respondeste em segredo: <b>${esc(secret||"…")}</b>. A votação abre daqui a pouco.</p>`:ended?`<p class="qzwait">Sem resposta.</p>`
+        :`<div class="qzopts">${(a.choices||[]).map(o=>`<button class="qzo" data-qz="ans" data-qi="${qi}" data-v="${esc(o)}">${esc(o)}</button>`).join("")}</div>
+        <div class="qzother"><input type="text" maxlength="60" placeholder="Outra resposta…" data-qzin="${qi}"><button class="btn" data-qz="ansother" data-qi="${qi}">Responder</button></div>
+        <p class="qzwait">Só tu vês a tua resposta. O grupo vai tentar adivinhar 🎯</p>`; }
+    else body=`<p class="qzwait">🤫 O ${hn} está a responder em segredo…</p>`;
+    return `<div class="qzcard"><div class="qzq">${esc(a.text)}</div>${body}</div>`; }).join(""); }
+async function quizClick(cid,e){ const b=e.target.closest("[data-qz]"); if(!b) return; e.stopPropagation(); const me=ME(); const c=S.chats[cid]; if(!c) return; const qi=+b.dataset.qi; const at=Date.now();
+  const touch=(t)=>D("chats/"+cid).update({lastAt:at,lastText:t,lastFrom:me});
+  if(b.dataset.qz==="guess"){ if(!(c.members||[]).includes(me)||me===c.host) return; b.disabled=true;
+    await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add({from:me,at,sec:"quiz",kind:"guess",qi,opt:+b.dataset.i}); await touch("🎯 Mais um palpite"); },"Palpite registado 🤫"); return; }
+  if(me!==c.host) return;
+  let v=b.dataset.qz==="ans"?b.dataset.v:(document.querySelector(`[data-qzin="${qi}"]`)?.value||"").trim(); v=v.slice(0,60); if(!v){ toast("Escreve a tua resposta"); return; }
+  if(!await confirmD(`Responder “${v}”?`,"Fica em segredo até à revelação. Não dá para mudar depois.","Responder")) return;
+  const reads={...(S.reads[me]||{})}; reads.quizAns={...(reads.quizAns||{}),[cid]:{...(reads.quizAns?.[cid]||{}),[qi]:v}}; S.reads={...S.reads,[me]:reads};
+  await write(async()=>{ if(S.fb) await S.raw.doc("reads/"+me).update({[`quizAns.${cid}.${qi}`]:v}); else await D("reads/"+me).update({quizAns:reads.quizAns});
+    await S.db.collection(`chats/${cid}/msgs`).add({from:me,at,sec:"quiz",kind:"answered",qi}); await touch("🎯 Respondeu em segredo"); },"Resposta guardada em segredo 🤫"); }
+async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const me=ME(); const host=c.host; const hn=first(nm(host));
+  let all=[]; try{ const sn=await S.db.collection(`chats/${cid}/msgs`).orderBy("at","asc").get(); all=sn.docs.map(d=>({id:d.id,...d.data()})); }catch{ toast("Não foi possível abrir o resumo"); return; }
+  const sec=m=>m.sec||"q"; const pens=all.filter(m=>m.from===host&&sec(m)==="pens"&&m.text); const qMsgs=all.filter(m=>sec(m)==="q"); const answers=qMsgs.filter(m=>m.from===host);
+  const reveals=all.filter(m=>m.sec==="quiz"&&m.kind==="reveal"); const per={}; let right=0, tot=0;
+  reveals.forEach(r=>Object.entries(r.guesses||{}).forEach(([k,o])=>{ per[k]=per[k]||{ok:0,n:0}; per[k].n++; tot++; if(o===r.correct){ per[k].ok++; right++; } }));
+  const pct=tot?Math.round(100*right/tot):null; const rank=Object.entries(per).map(([k,v])=>({k,...v,p:v.ok/v.n})).sort((a,b)=>b.p-a.p||b.ok-a.ok);
+  const best=rank.length?rank.filter(x=>x.p===rank[0].p&&x.ok===rank[0].ok):[]; const worstP=rank.length?rank[rank.length-1]:null; const worst=worstP&&rank.length>1?rank.filter(x=>x.p===worstP.p&&x.ok===worstP.ok):[];
+  const surprise=reveals.map(r=>{ const g=Object.values(r.guesses||{}); return {r,n:g.length,p:g.length?g.filter(o=>o===r.correct).length/g.length:1}; }).filter(x=>x.n).sort((a,b)=>a.p-b.p)[0];
+  const rxCount=m=>Object.keys(c.rx?.[m.id]||{}).length; const hl=pens.slice().sort((a,b)=>rxCount(b)-rxCount(a)||b.at-a.at)[0];
+  const pairs=[]; let curQ=null; qMsgs.forEach(m=>{ if(m.from===BOT){ curQ={q:m.text.replace(/^Bem-vindo ao cantinho[^:]*: /,""),a:[]}; pairs.push(curQ); } else if(m.from===host&&curQ) curQ.a.push(m.text); });
+  const who=list=>list.map(x=>`<span class="cw">${avatar(x.k,24)}<b>${esc(first(nm(x.k)))}${x.k===me?" (tu)":""}</b> <small class="muted">${x.ok}/${x.n}</small></span>`).join(" ");
+  openSheet({title:`📋 ${c.name||"Cantinho"}`,left:"Fechar",body:()=>`
+    <div class="csum-hero">${avatar(host,64)}<b>${esc(nm(host))}</b><small>${c.endsAt?`Cantinho de ${esc(shortDate(lisbonYMD(new Date(c.endsAt-2*864e5+3600e3))))} a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))}`:""}</small></div>
+    <div class="stats"><div class="stat"><span class="v num">${pens.length}</span><span class="k">Pensamentos</span><span class="s">frases escritas</span></div><div class="stat"><span class="v num">${answers.length}</span><span class="k">Perguntas</span><span class="s">respondidas</span></div>
+      <div class="stat"><span class="v num">${pct===null?"—":pct+"%"}</span><span class="k">🎯 Quanto o grupo o conhece</span><span class="s">${tot?`${right} acertos em ${tot} palpites`:"sem palpites"}</span></div><div class="stat"><span class="v num">${reveals.length}</span><span class="k">Perguntas do 🎯</span><span class="s">reveladas</span></div></div>
+    <div class="label" style="margin-top:18px">Destaques</div><div class="card list">
+      <div class="row"><span style="font-size:22px">🏆</span><div class="grow"><div class="rowsub">Quem conhece melhor o ${esc(hn)}</div><div class="cwl">${best.length?who(best):"—"}</div></div></div>
+      <div class="row"><span style="font-size:22px">🙈</span><div class="grow"><div class="rowsub">Quem menos o conhece</div><div class="cwl">${worst.length?who(worst):"—"}</div></div></div>
+      <div class="row"><span style="font-size:22px">🤯</span><div class="grow"><div class="rowsub">A maior surpresa</div><div style="white-space:normal">${surprise?`${esc(surprise.r.text)} <b>${esc(surprise.r.answer)}</b> · só ${Math.round(surprise.p*100)}% acertaram`:"—"}</div></div></div>
+      <div class="row"><span style="font-size:22px">💭</span><div class="grow"><div class="rowsub">Pensamento em destaque</div><div style="white-space:normal;font-style:italic">${hl?`“${esc(hl.text)}”`:"—"}</div></div></div></div>
+    ${reveals.length?`<div class="label" style="margin-top:18px">🎯 Quanto conheces o ${esc(hn)}?</div>${reveals.map(r=>{ const g=r.guesses||{}; const n=Object.keys(g).length; const ok=Object.values(g).filter(o=>o===r.correct).length;
+      return `<div class="card pad" style="margin-bottom:10px"><div class="rowsub">${esc(r.text)}</div><div style="margin:4px 0 8px"><b>✅ ${esc(r.answer)}</b> <small class="muted">· ${n?Math.round(100*ok/n):0}% acertaram</small></div>
+        <div class="qzwho">${Object.entries(g).map(([k,o])=>`<span>${avatar(k,20)}${esc(first(nm(k)))}: ${o===r.correct?"✅":"❌ "+esc(r.opts[o]||"")}</span>`).join("")}</div></div>`; }).join("")}`:""}
+    ${pairs.length?`<div class="label" style="margin-top:18px">❓ Perguntas e respostas</div><div class="card list">${pairs.map(p=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="white-space:normal">${esc(p.q)}</div><div style="white-space:normal;margin-top:4px">${p.a.length?p.a.map(t=>esc(t)).join("<br>"):'<span class="muted">Sem resposta</span>'}</div></div></div>`).join("")}</div>`:""}
+    ${pens.length?`<div class="label" style="margin-top:18px">💭 Pensamentos</div><div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div>`:""}`}); }
 /* Reactions (one per person) and replies */
 const RX=["😂","❤️","👍","😮","😢","🔥"];
 const rxOf=(cid,m)=>S.chats[cid]?.rx?.[m.id]||{};
@@ -1836,7 +1932,10 @@ function updateChat(cid){
   const box=document.getElementById("msgs"); if(!box) return; const sc=document.getElementById("msgScroll");
   const atBottom=sc.scrollHeight-sc.scrollTop-sc.clientHeight<80;
   if(!chatLoaded){ return; }
-  const me=ME(); const c=S.chats[cid]||{}; const hid=hiddenAt(cid); const chatMsgs=hid?chatMsgsAll().filter(m=>(m.at||0)>hid):chatMsgsAll();
+  const me=ME(); const c=S.chats[cid]||{}; const hid=hiddenAt(cid); let chatMsgs=hid?chatMsgsAll().filter(m=>(m.at||0)>hid):chatMsgsAll();
+  if(c.type==="cantinho"){ const t=cantTab(cid); if(t==="quiz"){ box.innerHTML=quizHtml(cid,c,chatMsgsAll()); if(!box.dataset.qinit){ sc.scrollTop=sc.scrollHeight; box.dataset.qinit="1"; } return; }
+    chatMsgs=chatMsgs.filter(m=>(m.sec||"q")===t);
+    if(!chatMsgs.length){ box.innerHTML=`<div class="empty" style="margin-top:40px"><div class="ico">${t==="pens"?"💭":"❓"}</div><h3>${t==="pens"?"Ainda sem pensamentos":"Sem perguntas"}</h3><p>${t==="pens"?(c.host===me?"Escreve o que te vai na cabeça. O grupo está a ler 👀":`Quando o ${esc(first(nm(c.host)))} escrever, aparece aqui.`):"O Anfitrião vai fazer a primeira pergunta daqui a pouco."}</p></div>`; return; } }
   if(!chatMsgs.length){ box.innerHTML=c.type==="cantinho"?`<div class="empty" style="margin-top:40px"><div class="ico">🛋️</div><h3>O cantinho está a abrir</h3><p>O Anfitrião vai fazer a primeira pergunta daqui a pouco.</p></div>`:`<div class="empty" style="margin-top:40px"><div class="ico">${ic("chat")}</div><h3>Sem mensagens</h3><p>Diz olá 👋</p></div>`; return; }
   let html="", lastDay="";
   chatMsgs.forEach((m,i)=>{
@@ -2404,7 +2503,10 @@ const A = {
   bdayCelebrate:a=>{ const [gid,k]=a.split("|"); bdayCelebration(gid,k); },
   editBday:()=>bdaySheet(),
   achievements:()=>{ const g=curGroup(); if(g) achievementsSheet(g.id); },
-  tease:()=>teaseSheet(), pfPlay:()=>pfSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  tease:()=>teaseSheet(),
+  cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
+  cantSummary:cid=>cantSummarySheet(cid),
+  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
