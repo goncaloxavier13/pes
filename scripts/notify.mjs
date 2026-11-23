@@ -1,7 +1,7 @@
 // Pês — envia notificações push. Corre no GitHub Actions a cada ~10 minutos.
 // Segredos necessários: FIREBASE_SERVICE_ACCOUNT (JSON da conta de serviço) e VAPID_PRIVATE_KEY.
 import { initializeApp, cert } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import webpush from "web-push";
 
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
@@ -143,7 +143,7 @@ function complete([awards, votes, rankings], gid, k, w) { // mesma regra da app
   if (!rankings[k]?.weeks?.[w]?.[gid]) return false; if (w < FULL_VOTE_FROM) return true;
   const v = votes[k]?.weeks?.[w] || {}; const end = wkMonday(w).getTime() + 7 * 864e5 + 2 * 3600e3;
   const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid && (!a.createdAt || tsMs(a.createdAt) < end)).map(([id]) => id);
-  return [...aw, ...weekQuestions(gid, w).map(q => q.id)].every(id => v[id]);
+  return [...aw, ...weekQuestions(gid, w).map(q => q.id), ...(w >= "2026-W48" ? ["reg:irrit", "reg:coro", "reg:mom"] : [])].every(id => v[id]);
 }
 const stage = weekdayLx() === "Sun" ? (hourLx() >= 22 ? "22" : hourLx() >= 18 ? "18" : null) : null;
 if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly === wk + ":22")) {
@@ -162,6 +162,23 @@ if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly ===
   }
   st.weekly = wk + ":" + stage;
 }
+
+// 4a) Registos da semana: quando a semana fecha, os textos passam para uma lista anónima e baralhada no grupo
+//     e são apagados dos votos de cada pessoa (fica só "1" = respondeu, para as regras de acesso continuarem a funcionar)
+{ const pw0 = weekOf(new Date(wkMonday(wk).getTime() - 3 * 864e5).toISOString().slice(0, 10));
+  if (pw0 >= "2026-W48" && st.regs !== pw0) {
+    const vr = await loadVR(); const votesAll = vr[1]; const RK = { "reg:irrit": "irrit", "reg:coro": "coro", "reg:mom": "mom" };
+    for (const [gid, g] of Object.entries(groups)) {
+      const lists = { irrit: [], coro: [], mom: [] }; const touched = [];
+      for (const k of g.members || []) { const v = votesAll[k]?.weeks?.[pw0] || {};
+        for (const [id, key] of Object.entries(RK)) { const t = v[id]; if (typeof t !== "string" || t === "1") continue; if (t !== "∅" && t.trim()) lists[key].push(t.trim().slice(0, 400)); touched.push([k, id]); } }
+      for (const key in lists) lists[key].sort(() => Math.random() - .5);
+      await db.doc("groups/" + gid).update(new FieldPath("regs", pw0), lists);
+      for (const [k, id] of touched) await db.doc("votes/" + k).update(new FieldPath("weeks", pw0, id), "1");
+      console.log(`${g.name}: registos da semana anonimizados (${touched.length}).`);
+    }
+    st.regs = pw0;
+  } }
 
 // 4b) segunda-feira: quem não completou a votação da semana passada fica a saber que ficou de fora (uma vez por semana)
 if (weekdayLx() === "Mon" && st.locked !== wk) {
@@ -326,6 +343,6 @@ if (nudges.length) {
   st.nudged = { day: today, list: done };
 }
 
-await stRef.set({ lastRun: now, weekly: st.weekly || null, locked: st.locked || null, pf: st.pf || null, bday: st.bday || null, nudged: st.nudged || null }, { merge: true });
+await stRef.set({ lastRun: now, weekly: st.weekly || null, locked: st.locked || null, pf: st.pf || null, regs: st.regs || null, bday: st.bday || null, nudged: st.nudged || null }, { merge: true });
 console.log(`Feito: ${sent} notificações enviadas.`);
 process.exit(0);

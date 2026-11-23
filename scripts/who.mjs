@@ -56,7 +56,7 @@ function weekQuestions(gid,w){ if(!w||w<Q_START) return []; const y=+w.slice(0,4
 const [people, groups, rankings, votes, awards] = await Promise.all(["people", "groups", "rankings", "votes", "awards"].map(all));
 const wk = weekOf(ymd()); const out = {};
 for (const [gid, g] of Object.entries(groups)) {
-  const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id); const qs = weekQuestions(gid, wk).map(q => q.id);
+  const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id); const qs = [...weekQuestions(gid, wk).map(q => q.id), ...(wk >= "2026-W48" ? ["reg:irrit", "reg:coro", "reg:mom"] : [])];
   out[g.name] = (g.members || []).map(k => { const v = votes[k]?.weeks?.[wk] || {}; const r = !!rankings[k]?.weeks?.[wk]?.[gid];
     const pa = aw.filter(id => v[id]).length, pq = qs.filter(id => v[id]).length;
     return { nome: people[k]?.name || k, ranking: r, premios: `${pa}/${aw.length}`, perguntas: `${pq}/${qs.length}`, completo: r && pa === aw.length && pq === qs.length }; });

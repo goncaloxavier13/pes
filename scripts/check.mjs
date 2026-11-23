@@ -65,7 +65,7 @@ for (const [gid, g] of Object.entries(groups)) {
   const noAcc = ms.filter(k => !mapped.includes(k)).length;
   const r = w => ms.filter(k => rankings[k]?.weeks?.[w]?.[gid]).length;
   const full = w => ms.filter(k => rankings[k]?.weeks?.[w]?.[gid] && aw.every(id => votes[k]?.weeks?.[w]?.[id])).length;
-  const qs = weekQuestions(gid, wk).map(q => q.id); const tudo = ms.filter(k => rankings[k]?.weeks?.[wk]?.[gid] && [...aw, ...qs].every(id => votes[k]?.weeks?.[wk]?.[id])).length; const qAns = ms.filter(k => qs.every(id => votes[k]?.weeks?.[wk]?.[id])).length;
+  const qs = [...weekQuestions(gid, wk).map(q => q.id), ...(wk >= "2026-W48" ? ["reg:irrit", "reg:coro", "reg:mom"] : [])]; const tudo = ms.filter(k => rankings[k]?.weeks?.[wk]?.[gid] && [...aw, ...qs].every(id => votes[k]?.weeks?.[wk]?.[id])).length; const qAns = ms.filter(k => qs.every(id => votes[k]?.weeks?.[wk]?.[id])).length;
   const ev = Object.values(events).filter(e => e.groupId === gid).length;
   const push = ms.filter(k => Object.keys(reads[k]?.push?.subs || {}).length).length;
   const bd = ms.filter(k => people[k]?.birthday).length;

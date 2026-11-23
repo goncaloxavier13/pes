@@ -95,7 +95,7 @@ function weekComplete(gid, k, w) {
   if (!rankings[k]?.weeks?.[w]?.[gid]) return false; if (w < FULL_VOTE_FROM) return true;
   const v = votes[k]?.weeks?.[w] || {}; const end = weekEndMs(w);
   const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid && (!a.createdAt || ms(a.createdAt) < end)).map(([id]) => id);
-  return [...aw, ...weekQuestions(gid, w).map(q => q.id)].every(id => v[id]);
+  return [...aw, ...weekQuestions(gid, w).map(q => q.id), ...(w >= "2026-W48" ? ["reg:irrit", "reg:coro", "reg:mom"] : [])].every(id => v[id]);
 }
 
 let sent = 0;
