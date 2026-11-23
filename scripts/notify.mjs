@@ -287,25 +287,7 @@ function weekPFIds(gid, w) { if (w < PF_START) return []; const y = +w.slice(0, 
   return PF_CATS.map(([cat]) => { const N = PF[cat].length; const idx = [...Array(N).keys()]; let seed = hashStr2(gid + "|" + y + "|" + cat);
     for (let i = N - 1; i > 0; i--) { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; const j = seed % (i + 1); [idx[i], idx[j]] = [idx[j], idx[i]]; }
     return `pf:${cat}:${idx[(n - 1) % N]}`; }); }
-// 4c) Preferias Flash diário (a partir de 24 nov): aviso de estreia no 1.º dia às 10h; todos os dias lembra quem ainda não jogou
-//     (às 20h; ao domingo às 19h, porque fecha às 21h). Quem não completou a votação da semana anterior não joga.
-const PF_DAY0 = "2026-11-24";
-{ const day = ymd(), h = hourLx(), sun = weekdayLx() === "Sun";
-  const stagePF = day === PF_DAY0 && h >= 10 && h < 20 ? "open" : (h >= (sun ? 19 : 20) && h < (sun ? 21 : 23)) ? "last" : null;
-  if (day >= PF_DAY0 && stagePF && st.pf !== day + ":" + stagePF) {
-    const vr = await loadVR(); const votesAll = vr[1]; const id = "pf:" + day, w = weekOf(day); const pw = weekOf(new Date(wkMonday(wkV).getTime() - 3 * 864e5).toISOString().slice(0, 10));
-    for (const [gid, g] of Object.entries(groups)) {
-      if ((g.galas || []).some(d => d < day && weekOf(d) === wk)) continue;
-      const mem = g.members || []; if (mem.length < 2) continue;
-      const can = mem.filter(k => complete(vr, gid, k, pw)); const played = k => !!votesAll[k]?.weeks?.[w]?.[id];
-      for (const k of can) {
-        if (stagePF === "open") await send(k, "votes", { title: "⚡ Preferias Flash: agora é todos os dias!", body: "Um dilema novo por dia, das 00:00 às 23:30. No domingo, o resumo mostra o que cada um escolheu, mas só nos dias em que jogaste 😏", tag: "pf-" + day, url: `./?g=${gid}&t=dash` });
-        else if (!played(k)) await send(k, "votes", { title: `⚡ O Preferias Flash de hoje fecha às ${sun ? "21:00" : "23:30"}`, body: `Já jogaram ${can.filter(played).length} de ${can.length}. Se não jogares, no domingo não vês o que a malta escolheu hoje 👀`, tag: "pf-" + day, url: `./?g=${gid}&t=dash` });
-      }
-    }
-    st.pf = day + ":" + stagePF;
-  }
-}
+// 4c) Preferias Flash: os avisos (lançamento às 21:30 e lembrete às 20:30) estão no cantinho.mjs
 
 // 5) aniversários (a partir das 9h; uma vez por dia)
 const today = ymd(), md = today.slice(5);

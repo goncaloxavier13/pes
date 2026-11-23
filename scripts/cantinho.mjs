@@ -87,10 +87,13 @@ if (!DRY) {
 
 const today = ymd(); const wk = weekOf(today); const wkV = weekOf(ymd(new Date(Date.now() + 3 * 3600e3))); // semana de votação (fecha domingo 21h)
 // ── períodos de 2 dias: o período 0 é 23–24 nov 2026 (o cantinho do Manel) ──
-const DAY0 = Date.UTC(2026, 10, 23); const dayNum = s => Math.round((Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) - DAY0) / 864e5);
-const period = Math.floor(dayNum(process.env.DRY_DAY || today) / 2);
-if (period < 0) { console.log("O cantinho ainda não começou."); process.exit(0); }
-const periodStart = p => ymd(new Date(DAY0 + p * 2 * 864e5 + 12 * 3600e3)); const periodEndMs = p => DAY0 + (p + 1) * 2 * 864e5; // ~00:00 Lisboa (inverno)
+// ── períodos de 2 dias que mudam às 20:00 (Lisboa): o período 0 vai de 23 nov 20:00 a 25 nov 20:00 (o cantinho do Manel) ──
+const lxOff = (t = Date.now()) => { const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(new Date(t)).map(x => [x.type, x.value]));
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) - Math.floor(t / 1000) * 1000; };
+const lxNow = process.env.DRY_DAY ? Date.UTC(+process.env.DRY_DAY.slice(0, 4), +process.env.DRY_DAY.slice(5, 7) - 1, +process.env.DRY_DAY.slice(8, 10), 21) : Date.now() + lxOff();
+const P0 = Date.UTC(2026, 10, 23, 20), PLEN = 2 * 864e5;
+const period = Math.floor((lxNow - P0) / PLEN);
+const periodEndMs = p => { const local = P0 + (p + 1) * PLEN; return local - lxOff(local); }; // 20:00 em Lisboa
 
 const all = async c => Object.fromEntries((await db.collection(c).get()).docs.map(d => [d.id, d.data()]));
 const [people, groups, rankings, votes, awards, events, reads] = await Promise.all(["people", "groups", "rankings", "votes", "awards", "events", "reads"].map(all));
@@ -178,6 +181,7 @@ for (const [gid, g0] of Object.entries(groups)) {
     if (DRY) continue;
   }
   if (chat.closed) continue;
+  if (!DRY && chat.endsAt !== periodEndMs(period)) { chat.endsAt = periodEndMs(period); await ref.update({ endsAt: chat.endsAt }); } // muda às 20:00
   const host = chat.host; const others = (chat.members || []).filter(k => k !== host);
   const msgs = (await db.collection(`chats/${cid}/msgs`).orderBy("at", "asc").get()).docs.map(d => ({ id: d.id, ...d.data() }));
   const sec = m => m.sec || (m.from === BOT ? "q" : "q");
@@ -231,6 +235,33 @@ for (const [gid, g0] of Object.entries(groups)) {
   if (!DRY) { const posts = msgs.filter(m => m.from === host && (sec(m) === "pens" || sec(m) === "q")).length; const prevC = g.cant || {};
     if (prevC.period !== period || prevC.answers !== posts || prevC.inside !== (chat.members || []).length)
       await db.doc("groups/" + gid).update({ cant: { week: wkV, period, answers: posts, inside: (chat.members || []).length } }); }
+}
+// ── ⚡ Preferias Flash: um dilema por dia, lançado às 21:30 (Lisboa) e aberto até ao lançamento seguinte.
+//    No lançamento saem os resultados do dilema anterior (na app, só para quem jogou). Notifica todos os membros.
+//    Às 20:30 lembra quem ainda não jogou o dilema que está a acabar.
+{ const PF_DAY0 = "2026-11-23"; const d0 = new Date(lxNow); const mins = d0.getUTCHours() * 60 + d0.getUTCMinutes(); const todayL = d0.toISOString().slice(0, 10);
+  const addD = (s, n) => new Date(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10) + n)).toISOString().slice(0, 10);
+  const ed = mins >= 21 * 60 + 30 ? todayL : addD(todayL, -1); const prevEd = addD(ed, -1);
+  const played = (k, e) => !!votes[k]?.weeks?.[weekOf(e)]?.["pf:" + e];
+  const pf = newSt.pf || {};
+  if (ed >= PF_DAY0 && pf.launched !== ed && mins >= 21 * 60 + 30 && mins < 23 * 60 + 59) {
+    for (const [gid, g] of Object.entries(groups)) { const mem = g.members || []; if (mem.length < 2) continue;
+      if ((g.galas || []).some(d => d < today && weekOf(d) === wk)) continue;
+      const pv = prevWeek(wkV); const url = `./?g=${gid}&t=dash`;
+      for (const k of mem) { const can = weekComplete(gid, k, pv); const hadPrev = prevEd >= PF_DAY0;
+        await send(k, !can ? { title: "⚡ Saiu o Preferias Flash de hoje", body: "Toda a gente já está a escolher… menos tu 🔒 Quem não completou a votação não joga.", tag: "pf-" + ed, url }
+          : { title: "⚡ Saiu o Preferias Flash de hoje!", body: hadPrev ? (played(k, prevEd) ? "Dilema novo, e já saíram os resultados de ontem 👀" : "Dilema novo. Os resultados de ontem já saíram, mas não jogaste, por isso não os vês 😏") : "Um dilema novo todos os dias às 21:30. Amanhã à mesma hora saem os resultados (só para quem jogou) 😏", tag: "pf-" + ed, url }); }
+    }
+    pf.launched = ed; console.log("Preferias Flash lançado.");
+  }
+  if (ed >= PF_DAY0 && pf.reminded !== ed && mins >= 20 * 60 + 30 && mins < 21 * 60 + 30) {
+    for (const [gid, g] of Object.entries(groups)) { const mem = g.members || []; if (mem.length < 2) continue; const pv = prevWeek(wkV);
+      const can = mem.filter(k => weekComplete(gid, k, pv)); const done = can.filter(k => played(k, ed));
+      for (const k of can.filter(k => !played(k, ed))) await send(k, { title: "⚡ O Preferias Flash fecha às 21:30", body: `Já jogaram ${done.length} de ${can.length}. Se não jogares, não vês o que a malta escolheu 👀`, tag: "pf-" + ed, url: `./?g=${gid}&t=dash` });
+    }
+    pf.reminded = ed;
+  }
+  newSt.pf = pf;
 }
 if (!DRY) await stRef.set(newSt);
 console.log(`Feito: ${sent} notificações.`);
