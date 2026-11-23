@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795423576">
+<meta name="pes-version" content="1795428404">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -630,6 +630,10 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .pfr{border-radius:12px;padding:10px 12px;margin-top:6px}.pfr.a{background:rgba(255,55,95,.12)}.pfr.b{background:rgba(10,132,255,.12)}
 .pfr-top{display:flex;gap:10px;align-items:flex-start;font-size:14.5px}.pfr-top span{flex:1}.pfr-who{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:13px}.pfr-who span{display:inline-flex;align-items:center;gap:5px}
 .pflock{display:flex;flex-direction:column;gap:6px;width:100%;border:0;font:inherit;color:var(--text);text-align:left;cursor:pointer}.pflock span{color:var(--muted);font-size:14px}
+.regs{display:flex;flex-direction:column;gap:16px}.reg textarea{width:100%;margin-top:8px;border-radius:12px;border:1px solid var(--border);background:var(--card2);color:var(--text);font:inherit;font-size:15px;padding:10px 12px;resize:vertical;min-height:64px}
+.reg textarea:disabled{opacity:.45}.regnone{margin-top:8px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;border-radius:99px;padding:6px 12px;cursor:pointer}
+.regnone.on{background:rgba(48,209,88,.15);border-color:transparent;color:var(--green)}.regnone svg{width:14px;height:14px}
+.regq{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow:auto}.regq blockquote{margin:0;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.12);font-size:16px;line-height:1.4;font-style:italic}
 </style>
 </head>
 <body>
@@ -992,6 +996,10 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
       return qr.length?`<div class="card list">${qr.map(q=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowtitle" style="white-space:normal;margin-bottom:8px">${esc(q.text)}</div>${qTop(q,me,28)}</div></div>`).join("")}</div><p class="s-txt">Ninguém sabe quem votou em quem 🤫</p>`
         :`<p class="s-txt">Esta semana ninguém respondeu às perguntas.</p>`; },
     joke:["Toda a gente já sabe quem ganhou 🎲","Toda a gente menos tu. E não, não vale a pena perguntar no GAP."]});
+  regsFor(w).forEach((r,ri)=>S_.push({emo:r.emoji,title:r.title,sub:"Registos da semana · anónimo",
+    html:()=>{ const t=regAnswers(gid,w,r); return t.length?`<div class="regq">${t.map(x=>`<blockquote>“${esc(x)}”</blockquote>`).join("")}</div><p class="s-txt">Ninguém sabe quem escreveu o quê 🕶️</p>`
+      :`<p class="s-txt">${["Semana calma… ninguém irritou ninguém 😇","Nenhum coro registado esta semana 🤐","Ninguém registou nenhum momento esta semana 📭"][ri]}</p>`; },
+    joke:[["Alguém irritou alguém 😤","Quem? Só sabe quem votou. Tu ficas a imaginar se foste tu."],["Houve coros esta semana 💋","Os pormenores ficam para quem votou. Tu ficas com a curiosidade."],["Houve momentos épicos 📸","Toda a gente se lembra deles. Tu não estavas lá… pelo menos aqui."]][ri]}));
   S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
     html:()=>pfSummary(gid,w)||`<p class="s-txt">Não houve Preferias Flash esta semana.</p>`,
     joke:["Preferias votar ou ficar de fora? 😏","Já escolheste. E, por isso, esta semana também não jogas o Preferias Flash."]});
@@ -2189,14 +2197,25 @@ function questionResults(gid,w){ const g=S.groups[gid]; return weekQuestions(gid
   return {...q,tot,winners:Object.keys(c).filter(k=>c[k]===max&&max>0),max,top}; }); }
 function qTop(q,me,sz){ return `<div class="qtop">${q.top.map(t=>`<div class="qtp p${t.place}"><span class="qmed">${["🥇","🥈","🥉"][t.place-1]}</span><span class="qwho">${t.who.map(k=>`<span>${avatar(k,sz)}<b>${esc(first(nm(k)))}${k===me?" (tu)":""}</b></span>`).join("")}</span><small class="num">${t.n} ${t.n===1?"voto":"votos"}</small></div>`).join("")}</div>`; }
 /* ───────── Weekly vote: friendship ranking + award votes in ONE place. Nothing is saved until everything is answered. ───────── */
-function weekItems(gid){ return [...groupAwards(gid).map(a=>({id:a.id,label:a.label,emoji:a.emoji||"🏆",desc:a.desc,kind:"award"})),...weekQuestions(gid).map(q=>({id:q.id,label:q.text,emoji:"🎲",desc:"",kind:"q"}))]; }
+/* Registos da semana: 3 free-text answers, shown anonymously in Monday's summary. When the week closes the server
+   moves the texts into an anonymous, shuffled list (groups/{gid}.regs) and erases them from each person's votes. */
+const REG_START="2026-W48", REG_NONE="∅";
+const REGS=[{id:"reg:irrit",key:"irrit",emoji:"😤",label:"Quem foi a pessoa que mais te irritou esta semana?",title:"Quem mais irritou"},
+  {id:"reg:coro",key:"coro",emoji:"💋",label:"Há algum coro que queiras registar esta semana?",title:"Coros da semana"},
+  {id:"reg:mom",key:"mom",emoji:"📸",label:"Algum momento digno de ser recordado?",title:"Momentos para recordar"}];
+const regsFor=w=>w>=REG_START?REGS:[];
+function regAnswers(gid,w,r){ const g=S.groups[gid]; const saved=g?.regs?.[w]?.[r.key]; if(Array.isArray(saved)) return saved;
+  // before the server anonymises the week: same texts, in a fixed shuffled order (never by person)
+  const t=(g?.members||[]).map(k=>S.votes[k]?.weeks?.[w]?.[r.id]).filter(v=>typeof v==="string"&&v!==REG_NONE&&v!=="1"&&v.trim());
+  return t.map(x=>[hashStr2(x+"|"+w),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]); }
+function weekItems(gid){ return [...groupAwards(gid).map(a=>({id:a.id,label:a.label,emoji:a.emoji||"🏆",desc:a.desc,kind:"award"})),...weekQuestions(gid).map(q=>({id:q.id,label:q.text,emoji:"🎲",desc:"",kind:"q"})),...regsFor(curWeek()).map(r=>({...r,desc:"",kind:"reg"}))]; }
 // Until 2026-W46 the rule was "ranking only" (awards were a separate vote). From W47 on, the full vote is required.
 const FULL_VOTE_FROM="2026-W47";
 // A week's vote is complete = ranking + every award that existed that week + that week's questions
 function weekEndMs(w){ const m=weekMonday(w); return m.getTime()+7*864e5+2*3600e3; }
 function weekComplete(gid,k,w){ if(!S.rankings[k]?.weeks?.[w]?.[gid]) return false; if(w<FULL_VOTE_FROM) return true; const v=S.votes[k]?.weeks?.[w]||{}; const end=weekEndMs(w);
   const aw=groupAwards(gid).filter(a=>!a.createdAt||+new Date(a.createdAt)<end).map(a=>a.id);
-  return [...aw,...weekQuestions(gid,w).map(q=>q.id)].every(id=>v[id]); }
+  return [...aw,...weekQuestions(gid,w).map(q=>q.id),...regsFor(w).map(r=>r.id)].every(id=>v[id]); }
 function weekDone(gid,k=ME()){ const w=curWeek(); return !!S.rankings[k]?.weeks?.[w]?.[gid] && weekItems(gid).every(a=>S.votes[k]?.weeks?.[w]?.[a.id]); }
 function rankSheet(startStep=1, focusAward=null){
   const g=curGroup(); const me=ME(); const others=g.members.filter(k=>k!==me); const w=curWeek(); const aw=weekItems(g.id);
@@ -2206,8 +2225,8 @@ function rankSheet(startStep=1, focusAward=null){
   let ranked = cur? Object.entries(cur).filter(([k])=>others.includes(k)).sort((a,b)=>a[1]-b[1]).map(([k])=>k) : [];
   let unr = others.filter(k=>!ranked.includes(k)).sort((a,b)=>nm(a).localeCompare(nm(b)));
   const done=!!myRankingThisWeek(g.id);
-  const votes={}; aw.forEach(a=>{ const v=S.votes[me]?.weeks?.[w]?.[a.id]; if(v&&others.includes(v)) votes[a.id]=v; });
-  let step=(startStep===2&&!unr.length&&aw.length)?2:1; let open=focusAward||(aw.find(a=>!votes[a.id])?.id)||null;
+  const votes={}; aw.forEach(a=>{ const v=S.votes[me]?.weeks?.[w]?.[a.id]; if(v&&(a.kind==="reg"?typeof v==="string":others.includes(v))) votes[a.id]=v; });
+  let step=(startStep===2&&!unr.length&&aw.length)?2:1; let open=focusAward||(aw.find(a=>a.kind!=="reg"&&!votes[a.id])?.id)||null;
   const total=aw.length?2:1;
   const okNow=()=> step===1 ? !unr.length : aw.every(a=>votes[a.id]);
   const stepper=()=>`<div class="vstep"><span class="${step===1?"on":"ok"}">${step===1?"1":ic("check")}</span><b>Ranking</b>${total>1?`<i></i><span class="${step===2?"on":""}">2</span><b>Prémios e perguntas</b>`:""}</div>`;
@@ -2224,13 +2243,19 @@ function rankSheet(startStep=1, focusAward=null){
     const row=a=>{ const v=votes[a.id]; const isOpen=open===a.id;
         return `<button class="row vaw ${isOpen?"open":""}" data-aw="${a.id}" aria-expanded="${isOpen}"><span style="font-size:24px;width:32px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle" ${a.kind==="q"?'style="white-space:normal;line-height:1.3"':""}>${esc(a.label)}</div><div class="rowsub">${v?`O teu voto: ${esc(nm(v))}`:esc(a.desc||"Escolhe uma pessoa")}</div></div>${v?`<span style="color:var(--green)">${ic("check",'style="width:20px;height:20px"')}</span>`:`<span class="vdot" aria-label="Por votar"></span>`}</button>
         ${isOpen?`<div class="vpick">${others.slice().sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const f=first(nm(k)); const dup=others.filter(o=>first(nm(o))===f).length>1; return `<button class="namechip ${v===k?"sel":""}" data-pick="${a.id}|${k}">${avatar(k,26)}${esc(dup?nm(k):f)}</button>`; }).join("")}</div>`:""}`; };
-    const awards=aw.filter(a=>a.kind==="award"), qs=aw.filter(a=>a.kind==="q");
+    const awards=aw.filter(a=>a.kind==="award"), qs=aw.filter(a=>a.kind==="q"), regs=aw.filter(a=>a.kind==="reg");
+    const regRow=a=>{ const v=votes[a.id]; const none=v===REG_NONE;
+      return `<div class="reg"><div class="rowtitle" style="white-space:normal;line-height:1.3">${a.emoji} ${esc(a.label)}</div>
+        <textarea data-reg="${a.id}" rows="2" maxlength="400" placeholder="${none?"Sem nada a registar":"Escreve aqui… ninguém vai saber que foste tu"}" ${none?"disabled":""}>${none?"":esc(v||"")}</textarea>
+        <button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button></div>`; };
     return `${stepper()}<div class="label"><span>Responde a tudo</span><span class="num" style="text-transform:none">${n}/${aw.length}</span></div>
       <div class="bar" style="margin:0 4px 10px"><i style="width:${pct(n,aw.length)}%"></i></div>
       ${awards.length?`<div class="label" style="margin-top:14px">🏆 Prémios</div><div class="card list">${awards.map(row).join("")}</div>
       <p class="info">🤫 Os votos nos prémios são secretos e só são revelados no jantar da Gala.</p>`:""}
       ${qs.length?`<div class="label" style="margin-top:16px">🎲 Perguntas da semana</div><div class="card list">${qs.map(row).join("")}</div>
       <p class="info">Os resultados das perguntas aparecem no resumo de segunda-feira, sem se saber quem votou em quem.</p>`:""}
+      ${regs.length?`<div class="label" style="margin-top:16px">📝 Registos da semana</div><div class="card pad regs">${regs.map(regRow).join("")}</div>
+      <p class="info">🕶️ Anónimo: no resumo de segunda aparecem só os textos, entre aspas, sem nomes. Quando a semana fecha, a ligação entre o texto e quem o escreveu é apagada.</p>`:""}
       <div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" data-back style="flex:none">← Ranking</button><button class="btn" style="flex:1" data-submit ${okNow()?"":"disabled"}>${n<aw.length?`Faltam ${aw.length-n} ${aw.length-n===1?"resposta":"respostas"}`:"Submeter tudo"}</button></div>`; };
   const L=openSheet({title:"Votação da semana",right:step===1&&total>1?"Seguinte":"Submeter",rightDisabled:!okNow(),
     body:()=>step===1?step1():step2(),
@@ -2242,11 +2267,16 @@ function rankSheet(startStep=1, focusAward=null){
       else if(t.hasAttribute("data-back")){ step=1; }
       else if(t.hasAttribute("data-submit")){ L.right.click(); return; }
       else if(t.dataset.aw){ open=open===t.dataset.aw?null:t.dataset.aw; }
-      else if(t.dataset.pick){ const [aid,k]=t.dataset.pick.split("|"); votes[aid]=k; open=aw.find(a=>!votes[a.id])?.id||null; }
+      else if(t.dataset.pick){ const [aid,k]=t.dataset.pick.split("|"); votes[aid]=k; open=aw.find(a=>a.kind!=="reg"&&!votes[a.id])?.id||null; }
+      else if(t.dataset.regnone){ const id=t.dataset.regnone; if(votes[id]===REG_NONE) delete votes[id]; else votes[id]=REG_NONE; }
       else return;
-      L.render(); L.right.textContent=step===1&&total>1?"Seguinte":"Submeter"; setRight(L,okNow()); L.body.scrollTop=t.dataset.pick||t.dataset.back?0:L.body.scrollTop; }); },
+      const keep=L.body.scrollTop; L.render(); L.right.textContent=step===1&&total>1?"Seguinte":"Submeter"; setRight(L,okNow()); L.body.scrollTop=t.dataset.back?0:keep; });
+      // free text: update without re-rendering (keeps the keyboard open)
+      L.body.addEventListener("input",e=>{ const ta=e.target.closest("textarea[data-reg]"); if(!ta) return; const v=ta.value.trim(); if(v) votes[ta.dataset.reg]=v.slice(0,400); else delete votes[ta.dataset.reg];
+        const n=aw.filter(a=>votes[a.id]).length; const sb=L.body.querySelector("[data-submit]"); if(sb){ sb.disabled=!okNow(); sb.textContent=n<aw.length?`Faltam ${aw.length-n} ${aw.length-n===1?"resposta":"respostas"}`:"Submeter tudo"; }
+        const cnt=L.body.querySelector(".label .num"); if(cnt) cnt.textContent=`${n}/${aw.length}`; const bar=L.body.querySelector(".bar i"); if(bar) bar.style.width=pct(n,aw.length)+"%"; setRight(L,okNow()); }); },
     onRight:async L=>{ if(!okNow()) return;
-      if(step===1&&total>1){ step=2; open=aw.find(a=>!votes[a.id])?.id||null; L.render(); L.body.scrollTop=0; L.right.textContent="Submeter"; setRight(L,okNow()); return; }
+      if(step===1&&total>1){ step=2; open=aw.find(a=>a.kind!=="reg"&&!votes[a.id])?.id||null; L.render(); L.body.scrollTop=0; L.right.textContent="Submeter"; setRight(L,okNow()); return; }
       setRight(L,false); const r={}; ranked.forEach((k,i)=>r[k]=i+1);
       const rdoc=S.rankings[me]?JSON.parse(JSON.stringify(S.rankings[me])):{weeks:{}}; rdoc.weeks=rdoc.weeks||{}; rdoc.weeks[w]={...(rdoc.weeks[w]||{}),[g.id]:r};
       const vdoc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; vdoc.weeks=vdoc.weeks||{}; vdoc.weeks[w]={...(vdoc.weeks[w]||{}),...votes};
