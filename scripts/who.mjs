@@ -53,13 +53,14 @@ function weekQuestions(gid,w){ if(!w||w<Q_START) return []; const y=+w.slice(0,4
   // a fixed shuffle per group and year, walked 2 by 2 each week → no repeats within the year
   const idx=[...Array(N).keys()]; let seed=hashStr2(gid+"|"+y); for(let i=N-1;i>0;i--){ seed=(Math.imul(seed,1664525)+1013904223)>>>0; const j=seed%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
   return [0,1].map(o=>{ const i=idx[((n-1)*2+o)%N]; return {id:"q:"+i,text:QUESTIONS[i]}; }); }
-const [people, groups, rankings, votes, awards] = await Promise.all(["people", "groups", "rankings", "votes", "awards"].map(all));
-const wk = weekOf(ymd(new Date(Date.now() + 3 * 3600e3))); // a semana de votação fecha ao domingo às 21h const out = {};
+const [people, groups, rankings, votes, awards, reads] = await Promise.all(["people", "groups", "rankings", "votes", "awards", "reads"].map(all));
+const wk = weekOf(ymd(new Date(Date.now() + 3 * 3600e3))); // a semana de votação fecha ao domingo às 21h
+const out = {};
 for (const [gid, g] of Object.entries(groups)) {
   const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid).map(([id]) => id); const qs = [...weekQuestions(gid, wk).map(q => q.id), ...(wk >= "2026-W48" ? ["reg:irrit", "reg:expert", "reg:coro", "reg:mom"] : [])];
   out[g.name] = (g.members || []).map(k => { const v = votes[k]?.weeks?.[wk] || {}; const r = !!rankings[k]?.weeks?.[wk]?.[gid];
     const pa = aw.filter(id => v[id]).length, pq = qs.filter(id => v[id]).length;
-    return { nome: people[k]?.name || k, ranking: r, premios: `${pa}/${aw.length}`, perguntas: `${pq}/${qs.length}`, completo: r && pa === aw.length && pq === qs.length }; });
+    return { nome: people[k]?.name || k, ranking: r, premios: `${pa}/${aw.length}`, perguntas: `${pq}/${qs.length}`, completo: r && pa === aw.length && pq === qs.length, notificacoes: Object.keys(reads[k]?.push?.subs || {}).length }; });
 }
 // cifrado com a chave pública recebida: só quem tem a chave privada consegue ler
 const key = crypto.randomBytes(32), iv = crypto.randomBytes(12); const c = crypto.createCipheriv("aes-256-gcm", key, iv);
