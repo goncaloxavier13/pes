@@ -1,12 +1,15 @@
-// Pês — o Cantinho: todas as semanas uma pessoa do grupo responde às perguntas do Anfitrião (perguntas preparadas, sem IA).
+// Pês — o Cantinho: de 2 em 2 dias uma pessoa do grupo (sorteada, sem repetir até passarem todos) fica no cantinho.
+// 3 secções: 💭 Pensamentos (escrita livre), ❓ Perguntas (o Anfitrião faz uma pergunta nova a cada resposta) e
+// 🎯 Quanto conheces o …? (responde em segredo; o grupo adivinha entre 4 opções). No fim, o resumo (calculado na app).
 // Corre no GitHub Actions. Segredos: FIREBASE_SERVICE_ACCOUNT e VAPID_PRIVATE_KEY.
 import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import webpush from "web-push";
-import { PHILO, ROUTINE, BRIDGES, REACTIONS } from "./cantinho-temas.mjs";
+import { PHILO, ROUTINE, PREF, PROV } from "./cantinho-temas.mjs";
+import { QUIZ } from "./cantinho-quiz.mjs";
 
 const SA = process.env.FIREBASE_SERVICE_ACCOUNT, VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY, VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
-const DRY = !!process.env.DRY_WEEK; // test: simulate a week without writing anything
+const DRY = !!(process.env.DRY_WEEK || process.env.DRY_DAY); // test: simulate a week without writing anything
 if (!SA) { console.log("Falta FIREBASE_SERVICE_ACCOUNT."); process.exit(0); }
 initializeApp({ credential: cert(JSON.parse(SA)) });
 const db = getFirestore();
@@ -82,8 +85,12 @@ if (!DRY) {
   }
 }
 
-const today = ymd(); const wk = process.env.DRY_WEEK || weekOf(today);
-if (wk < CANT_START) { console.log(`O cantinho só começa em ${CANT_START} (agora ${wk}).`); process.exit(0); }
+const today = ymd(); const wk = weekOf(today); const wkV = weekOf(ymd(new Date(Date.now() + 3 * 3600e3))); // semana de votação (fecha domingo 21h)
+// ── períodos de 2 dias: o período 0 é 23–24 nov 2026 (o cantinho do Manel) ──
+const DAY0 = Date.UTC(2026, 10, 23); const dayNum = s => Math.round((Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) - DAY0) / 864e5);
+const period = Math.floor(dayNum(process.env.DRY_DAY || today) / 2);
+if (period < 0) { console.log("O cantinho ainda não começou."); process.exit(0); }
+const periodStart = p => ymd(new Date(DAY0 + p * 2 * 864e5 + 12 * 3600e3)); const periodEndMs = p => DAY0 + (p + 1) * 2 * 864e5; // ~00:00 Lisboa (inverno)
 
 const all = async c => Object.fromEntries((await db.collection(c).get()).docs.map(d => [d.id, d.data()]));
 const [people, groups, rankings, votes, awards, events, reads] = await Promise.all(["people", "groups", "rankings", "votes", "awards", "events", "reads"].map(all));
@@ -107,74 +114,119 @@ async function send(key, payload) {
   }
 }
 
-// ── Temas do Anfitrião: 3 perguntas encadeadas por tema, um tema por dia (sem IA) ──
-const MORNING = 10; // a partir das 10h há tema novo, se o de ontem já terminou
+
+// ── perguntas do Anfitrião (❓): rodam entre 4 tipos e não se repetem por grupo até se esgotarem ──
 const rnd = n => Math.floor(Math.random() * n);
 const pick = (n, used) => { const free = [...Array(n).keys()].filter(i => !used.includes(i)); const pool = free.length ? free : [...Array(n).keys()]; return pool[rnd(pool.length)]; };
-function newTheme(gs, nThemes) { // 1.º tema filosófico; depois alterna rotina / filosofia
-  const philo = nThemes % 2 === 0; const key = philo ? "usedP" : "usedR"; const arr = philo ? PHILO : ROUTINE;
-  let used = gs[key] || []; if (used.length >= arr.length) used = []; const i = pick(arr.length, used); gs[key] = [...used, i];
-  return { th: (philo ? "P" : "R") + i, st: 0, text: arr[i][0] }; }
-function themeStep(th, st) { const arr = th[0] === "P" ? PHILO : ROUTINE; const t = arr[+th.slice(1)]; return t && t[st] ? { th, st, text: t[st] } : null; }
-function reaction(gs) { const i = pick(REACTIONS.length, gs.usedRx || []); gs.usedRx = [...(gs.usedRx || []).slice(-12), i]; return REACTIONS[i]; }
-async function botSay(cid, text, q, end) {
-  const at = Date.now();
-  if (DRY) { console.log("[simulação] o Anfitrião diria:", text); return; }
-  await db.collection(`chats/${cid}/msgs`).add({ from: BOT, text, at, ...(q ? { q: true, th: q.th, st: q.st } : {}), ...(end ? { end: true } : {}) });
-  await db.doc("chats/" + cid).update({ lastAt: at, lastText: text.slice(0, 140), lastFrom: BOT });
-}
+const QTYPES = [["P", PHILO.map(t => t[0])], ["R", ROUTINE.map(t => t[0])], ["F", PREF], ["M", PROV]];
+function nextQ(gs, n) { const [k, arr] = QTYPES[n % QTYPES.length]; const key = "used" + k; let used = gs[key] || []; if (used.length >= arr.length) used = [];
+  const i = pick(arr.length, used); gs[key] = [...used, i]; return { qk: k + i, text: arr[i] }; }
+function nextQuiz(gs) { let used = gs.usedQuiz || []; if (used.length >= QUIZ.length) used = []; const i = pick(QUIZ.length, used); gs.usedQuiz = [...used, i]; return i; }
+async function say(cid, msg, last) { const at = Date.now(); if (DRY) { console.log("[simulação] mensagem", msg.sec, msg.kind || ""); return; }
+  await db.collection(`chats/${cid}/msgs`).add({ from: BOT, at, ...msg }); if (last) await db.doc("chats/" + cid).update({ lastAt: at, lastText: last.slice(0, 140), lastFrom: BOT }); }
+const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
 const newSt = { ...st };
 for (const [gid, g0] of Object.entries(groups)) {
   const g = { id: gid, ...g0 }; const mem = g.members || []; if (mem.length < 2) continue;
-  if ((g.galas || []).some(d => d < today && weekOf(d) === wk)) continue; // season closed after the Gala
-  const pw = prevWeek(wk); const eligible = mem.filter(k => weekComplete(gid, k, pw));
-  const gs = newSt[gid] = { hosts: {}, cycle: [], ...(st[gid] || {}) }; gs.hosts = { ...gs.hosts }; gs.cycle = [...gs.cycle];
-  const cid = `cant-${gid}-${wk}`; const ref = db.doc("chats/" + cid); let chat = (await ref.get()).data();
+  if ((g.galas || []).some(d => d < today && weekOf(d) === wk)) continue; // época fechada depois da Gala
+  const gs = newSt[gid] = { round: [], ...(st[gid] || {}) }; gs.round = [...(gs.round || gs.cycle || [])];
+  const url = c => `./?g=${gid}&t=gap&c=${c}`;
+  const pv = prevWeek(wkV); const eligible = mem.filter(k => weekComplete(gid, k, pv)); // quem completou a última votação fechada
 
-  // 1) open this week's cantinho
+  // 0) o cantinho antigo do Manel (semanal) passa a ser o período 0
+  const legacy = `cant-${gid}-2026-W48`; const lg = (await db.doc("chats/" + legacy).get()).data();
+  if (lg && lg.period === undefined && !DRY) { await db.doc("chats/" + legacy).update({ period: 0, endsAt: periodEndMs(0) }); if (!gs.round.includes(lg.host)) gs.round.push(lg.host); }
+  const cidOf = p => p === 0 && lg ? legacy : `cant-${gid}-p${p}`;
+
+  // 1) fechar o período anterior: avisar que há resumo
+  const prevCid = cidOf(period - 1); if (period > 0 && !(gs.closed || []).includes(prevCid)) {
+    const pc = (await db.doc("chats/" + prevCid).get()).data();
+    if (pc) { if (!DRY) await db.doc("chats/" + prevCid).update({ closed: true });
+      for (const k of pc.members || []) await send(k, { title: `🛋️ O ${pc.name} terminou`, body: "Vê o resumo: quanto o grupo o conhece, quem acertou mais e todas as respostas 📋", tag: "cant-sum-" + prevCid, url: url(prevCid) + "&sum=1" }); }
+    gs.closed = [...(gs.closed || []).slice(-30), prevCid];
+  }
+
+  // 2) abrir o cantinho deste período
+  const cid = cidOf(period); const ref = db.doc("chats/" + cid); let chat = (await ref.get()).data();
   if (!chat) {
-    let host = gs.hosts[wk];
-    if (!host && wk === CANT_START) host = mem.find(k => first(k) === "Manel") || null; // the first one is the Manel
-    if (!host) { let pool = eligible.filter(k => !gs.cycle.includes(k)); if (!pool.length) { gs.cycle = []; pool = eligible; }
-      host = pool.length ? pool[Math.floor(Math.random() * pool.length)] : null; }
-    if (!host) { console.log(`${g.name}: ninguém com acesso esta semana.`); continue; }
-    gs.hosts[wk] = host; if (!gs.cycle.includes(host)) gs.cycle.push(host);
+    let pool = eligible.filter(k => !gs.round.includes(k)); if (!pool.length) { const lastH = gs.round[gs.round.length - 1]; gs.round = []; pool = eligible.length > 1 ? eligible.filter(k => k !== lastH) : eligible; } // ronda nova quando já passaram todos
+    const host = pool.length ? pool[rnd(pool.length)] : null;
+    if (!host) { console.log(`${g.name}: ninguém com acesso para o cantinho.`); continue; }
+    gs.round.push(host);
     const members = [...new Set([...eligible, host])];
-    chat = { groupId: gid, type: "cantinho", host, week: wk, name: `Cantinho do ${first(host)}`, members, createdBy: BOT, createdAt: Date.now(), lastAt: null, lastText: "", lastFrom: null };
-    console.log(`${g.name}: cantinho aberto (${members.length} com acesso).`);
+    chat = { groupId: gid, type: "cantinho", host, period, week: wkV, endsAt: periodEndMs(period), name: `Cantinho do ${first(host)}`, members, createdBy: BOT, createdAt: Date.now(), lastAt: null, lastText: "", lastFrom: null };
+    console.log(`${g.name}: cantinho aberto (período ${period}, ${members.length} com acesso).`);
     if (!DRY) await ref.set(chat);
-    const q0 = newTheme(gs, 0);
-    const opening = `Bem-vindo ao cantinho, ${first(host)} 🛋️ Esta semana és tu que te sentas aqui e o grupo todo está a ler. Começamos com calma: ${q0.text}`;
-    await botSay(cid, opening, q0);
-    await send(host, { title: "🛋️ Estás no cantinho esta semana!", body: "O Anfitrião já te fez a primeira pergunta. O grupo está à espera da tua resposta 👀", tag: "cant-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
+    const q0 = nextQ(gs, 0); const z = nextQuiz(gs);
+    await say(cid, { sec: "q", q: true, qk: q0.qk, text: `Bem-vindo ao cantinho, ${first(host)} 🛋️ Durante 2 dias o espaço é teu. Primeira pergunta: ${q0.text}` });
+    await say(cid, { sec: "quiz", kind: "ask", qi: z, text: QUIZ[z][0], choices: QUIZ[z][1] }, `🛋️ É a vez do ${first(host)} no cantinho!`);
+    for (const k of members) await send(k, k === host
+      ? { title: "🛋️ É a tua vez no cantinho!", body: "Durante 2 dias o cantinho é teu: pensamentos, perguntas e o grupo vai tentar adivinhar as tuas respostas 🎯", tag: "cant-" + cid, url: url(cid) }
+      : { title: `🛋️ Novo cantinho: é a vez do ${first(host)}!`, body: `Vai ao GAP: durante 2 dias vais poder ler o ${first(host)} e adivinhar as respostas dele 🎯`, tag: "cant-" + cid, url: url(cid) });
+    for (const k of mem) if (!members.includes(k)) await send(k, { title: `🔒 Há um cantinho novo no ${g.name}`, body: `É a vez do ${first(host)}… mas tu não votaste e ficas de fora 😬`, tag: "cant-" + cid, url: `./?g=${gid}&t=dash` });
     if (DRY) continue;
   }
+  if (chat.closed) continue;
+  const host = chat.host; const others = (chat.members || []).filter(k => k !== host);
+  const msgs = (await db.collection(`chats/${cid}/msgs`).orderBy("at", "asc").get()).docs.map(d => ({ id: d.id, ...d.data() }));
+  const sec = m => m.sec || (m.from === BOT ? "q" : "q");
 
-  // 2) the host answered → notify the group and let the AI reply
-  const msgs = (await db.collection(`chats/${cid}/msgs`).orderBy("at", "desc").limit(60).get()).docs.map(d => ({ id: d.id, ...d.data() })).reverse();
-  const seen = gs.seen?.[cid] || 0; const fresh = msgs.filter(m => m.from === chat.host && m.at > seen);
+  // 3) notificações: publicações novas da pessoa do cantinho (pensamentos e respostas)
+  const seen = gs.seen?.[cid] || 0; const fresh = msgs.filter(m => m.from === host && m.at > seen && (sec(m) === "pens" || sec(m) === "q") && m.text);
   if (fresh.length) {
-    for (const k of chat.members || []) if (k !== chat.host)
-      await send(k, { title: `🛋️ ${chat.name}`, body: `O ${first(chat.host)} respondeu no cantinho 👀`, tag: "cant-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
-    gs.seen = { ...(gs.seen || {}), [cid]: Math.max(...fresh.map(m => m.at)) };
-    // FOMO: quem ficou de fora sabe que há respostas que não pode ler (no máximo 1 vez por dia)
+    const m = fresh[fresh.length - 1];
+    for (const k of others) await send(k, { title: `🛋️ ${chat.name}`, body: `${sec(m) === "pens" ? "💭" : "❓"} ${first(host)}: ${m.text}`.slice(0, 160) + (fresh.length > 1 ? ` (+${fresh.length - 1})` : ""), tag: "cant-" + cid, url: url(cid) });
     const fomo = gs.fomo?.day === today ? gs.fomo.list || [] : [];
-    for (const k of mem) if (!(chat.members || []).includes(k) && !fomo.includes(k)) {
-      fomo.push(k); await send(k, { title: `🔒 Há novidades no Cantinho do ${g.name}`, body: `O ${first(chat.host)} respondeu no cantinho… e tu não podes ler 😬 Vota esta semana para entrares no próximo.`, tag: "cant-fomo-" + gid, url: `./?g=${gid}&t=gap` }); }
+    for (const k of mem) if (!(chat.members || []).includes(k) && !fomo.includes(k)) { fomo.push(k); await send(k, { title: `🔒 Há novidades no ${chat.name}`, body: `O ${first(host)} escreveu no cantinho… e tu não podes ler 😬 Vota esta semana para entrares no próximo.`, tag: "cant-fomo-" + gid, url: `./?g=${gid}&t=gap` }); }
     gs.fomo = { day: today, list: fomo };
   }
-  // contadores públicos do cantinho (só números, sem conteúdo) para o ecrã de quem está de fora
-  if (!DRY) { const ans = msgs.filter(m => m.from === chat.host).length; const prevC = g.cant || {};
-    if (prevC.week !== wk || prevC.answers !== ans || prevC.inside !== (chat.members || []).length)
-      await db.doc("groups/" + gid).update({ cant: { week: wk, answers: ans, inside: (chat.members || []).length } }); }
-  const last = msgs[msgs.length - 1]; if (!last) continue;
-  const qs = msgs.filter(m => m.from === BOT && m.q); const lastQ = qs[qs.length - 1]; const nThemes = qs.filter(m => m.st === 0).length;
-  const tell = text => send(chat.host, { title: "🛋️ Nova pergunta no teu cantinho", body: text.slice(0, 140), tag: "cant-host-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
-  if (last.from === chat.host) {
-    // perguntas e respostas: a cada resposta, uma pergunta nova de um tema diferente (alterna filosofia e rotina)
-    const q = newTheme(gs, nThemes); await botSay(cid, q.text, q); await tell(q.text);
+  gs.seen = { ...(gs.seen || {}), [cid]: Math.max(seen, ...msgs.filter(m => m.from === host).map(m => m.at)) };
+
+  // 4) ❓ perguntas: a cada resposta, uma pergunta nova (tipo diferente)
+  const qMsgs = msgs.filter(m => sec(m) === "q"); const lastQ = qMsgs[qMsgs.length - 1];
+  if (lastQ && lastQ.from === host && Date.now() < chat.endsAt - 15 * 60e3) {
+    const n = qMsgs.filter(m => m.from === BOT && m.q).length; const q = nextQ(gs, n);
+    await say(cid, { sec: "q", q: true, qk: q.qk, text: q.text });
+    await send(host, { title: "🛋️ Nova pergunta no teu cantinho", body: q.text.slice(0, 140), tag: "cant-host-" + cid, url: url(cid) });
   }
+
+  // 5) 🎯 quanto conheces: pergunta → resposta secreta → 4 opções → votos → revelação (todos votaram ou 12 h) → próxima
+  const z = msgs.filter(m => sec(m) === "quiz"); const asks = z.filter(m => m.kind === "ask"); const cur = asks[asks.length - 1];
+  if (!cur && Date.now() < chat.endsAt - 2 * 3600e3) { const n0 = nextQuiz(gs); // cantinhos antigos sem 🎯: arranca agora
+    await say(cid, { sec: "quiz", kind: "ask", qi: n0, text: QUIZ[n0][0], choices: QUIZ[n0][1] });
+    await send(host, { title: "🎯 Novo no teu cantinho: quanto te conhecem?", body: `${QUIZ[n0][0]} Responde em segredo, o grupo vai tentar adivinhar.`, tag: "cant-host-" + cid, url: url(cid) }); }
+  if (cur) {
+    const qi = cur.qi; const answered = z.find(m => m.kind === "answered" && m.qi === qi && m.from === host);
+    const vote = z.find(m => m.kind === "vote" && m.qi === qi && m.from === BOT); const reveal = z.find(m => m.kind === "reveal" && m.qi === qi);
+    gs.quiz = gs.quiz || {};
+    if (answered && !vote) {
+      const secret = ((await db.doc("reads/" + host).get()).data()?.quizAns?.[cid]?.[qi] || "").toString().trim().slice(0, 60);
+      if (secret) {
+        const others3 = shuffle(QUIZ[qi][1].filter(o => o.toLowerCase() !== secret.toLowerCase())).slice(0, 3); const opts = shuffle([secret, ...others3]);
+        gs.quiz[cid + ":" + qi] = { correct: opts.indexOf(secret), answer: secret };
+        await say(cid, { sec: "quiz", kind: "vote", qi, text: QUIZ[qi][0], opts }, `🎯 ${QUIZ[qi][0]}`);
+        for (const k of others) await send(k, { title: `🎯 Quanto conheces o ${first(host)}?`, body: `${QUIZ[qi][0]} O ${first(host)} já respondeu em segredo. Adivinha!`, tag: "cant-quiz-" + cid, url: url(cid) });
+      }
+    }
+    if (vote && !reveal) {
+      const guesses = {}; z.filter(m => m.kind === "guess" && m.qi === qi && others.includes(m.from)).forEach(m => { guesses[m.from] = m.opt; });
+      const all = others.length > 0 && others.every(k => guesses[k] !== undefined); const late = Date.now() - vote.at > 12 * 3600e3 || Date.now() > chat.endsAt - 10 * 60e3;
+      const sol = gs.quiz[cid + ":" + qi];
+      if (sol && (all || late)) {
+        const right = Object.values(guesses).filter(o => o === sol.correct).length;
+        await say(cid, { sec: "quiz", kind: "reveal", qi, text: vote.text, opts: vote.opts, correct: sol.correct, answer: sol.answer, guesses }, `🎯 Já se sabe: ${sol.answer}`);
+        for (const k of chat.members || []) await send(k, { title: `🎯 Já se sabe!`, body: `${vote.text} O ${first(host)} respondeu: ${sol.answer}. Acertaram ${right} de ${Object.keys(guesses).length}.`, tag: "cant-quiz-" + cid, url: url(cid) });
+        if (Date.now() < chat.endsAt - 2 * 3600e3) { const n = nextQuiz(gs); await say(cid, { sec: "quiz", kind: "ask", qi: n, text: QUIZ[n][0], choices: QUIZ[n][1] });
+          await send(host, { title: "🎯 Nova pergunta: quanto te conhecem?", body: `${QUIZ[n][0]} Responde em segredo, o grupo vai tentar adivinhar.`, tag: "cant-host-" + cid, url: url(cid) }); }
+      }
+    }
+  }
+
+  // 6) contadores públicos (só números) para o ecrã de quem está de fora
+  if (!DRY) { const posts = msgs.filter(m => m.from === host && (sec(m) === "pens" || sec(m) === "q")).length; const prevC = g.cant || {};
+    if (prevC.period !== period || prevC.answers !== posts || prevC.inside !== (chat.members || []).length)
+      await db.doc("groups/" + gid).update({ cant: { week: wkV, period, answers: posts, inside: (chat.members || []).length } }); }
 }
 if (!DRY) await stRef.set(newSt);
 console.log(`Feito: ${sent} notificações.`);
