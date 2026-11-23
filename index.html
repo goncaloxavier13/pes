@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795446265">
+<meta name="pes-version" content="1795447086">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -650,7 +650,7 @@ const BOT="bot"; const BOT_NAME="Anfitrião do Cantinho";
    Everyone sees it as Claude; nobody else can fake it because a message's "from" is always its real author. */
 const CLAUDE="claude";
 const isClaudeMsg=m=>m&&m.as===CLAUDE&&!!S.ownerKey&&m.from===S.ownerKey;
-const nm = k => k===BOT ? BOT_NAME : k===CLAUDE ? "Claude" : (S.people[k]?.name || "Alguém");
+const nm = k => k===BOT ? BOT_NAME : k===CLAUDE ? "Cláudio" : (S.people[k]?.name || "Alguém");
 const DEFAULT_AWARDS = [
   {key:"the_best",label:"The Best",emoji:"🏆",desc:"Melhor membro do ano",order:1},
   {key:"fdgp",label:"Prémio FDGP",emoji:"😈",desc:"O membro mais egoísta",order:2},
@@ -896,7 +896,7 @@ const isAdmin = g => !!g && (g.admins||[]).includes(ME());
 const photo = k => S.people[k]?.photo || null;
 
 function avatar(k,size=36,cls=""){
-  if(k===CLAUDE) return `<span class="av ${cls}" style="width:${size}px;height:${size}px;background:#D97757;color:#fff" title="Claude"><svg viewBox="0 0 24 24" width="${Math.round(size*.62)}" height="${Math.round(size*.62)}" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></g></svg></span>`;
+  if(k===CLAUDE) return `<span class="av ${cls}" style="width:${size}px;height:${size}px;background:#D97757;color:#fff" title="Cláudio"><svg viewBox="0 0 24 24" width="${Math.round(size*.62)}" height="${Math.round(size*.62)}" aria-hidden="true"><g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></g></svg></span>`;
   if(k===BOT) return `<span class="av ${cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.55)}px;background:linear-gradient(135deg,#ff9f0a,#ff375f)" title="${BOT_NAME}">🛋️</span>`;
   const p=photo(k); const n=nm(k)||"?";
   const st=`width:${size}px;height:${size}px;font-size:${Math.round(size*.36)}px;background:hsl(${hue(k)} 45% 52%)`;
@@ -1748,7 +1748,7 @@ function gapScreen(){
     ${cs.length?`<div class="card list">${cs.map(c=>{ const u=isUnread(c); const other=c.type==="direct"?(c.members||[]).find(k=>k!==me):null;
       return `<div class="chatwrap">${S.gapEdit?`<button class="chatdel" data-act="deleteChat" data-arg="${c.id}" aria-label="Apagar conversa ${esc(chatTitle(c))}">${ic("trash")}</button>`:""}<button class="row chatrow" data-act="${S.gapEdit?"deleteChat":"openChat"}" data-arg="${c.id}">${other?avatar(other,48):`<span class="gphoto" style="width:48px;height:48px;border-radius:50%">${ic("users")}</span>`}
         <div class="grow"><div style="display:flex;gap:8px;align-items:baseline"><span class="rowtitle" style="flex:1;${u?"font-weight:700":""}">${esc(chatTitle(c))}</span><span class="small ${u?"":"muted"}" style="${u?"color:var(--accent);font-weight:600":""}">${esc(ago(c.lastAt))}</span></div>
-        <div class="rowsub" style="${u?"color:var(--text)":""}">${c.lastText?`${c.lastAs===CLAUDE&&c.lastFrom===S.ownerKey?"Claude":c.lastFrom===me?"Tu":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:"Sem mensagens"}</div></div>${u?'<span class="dotu" aria-label="Por ler"></span>':""}</button></div>`; }).join("")}</div>`
+        <div class="rowsub" style="${u?"color:var(--text)":""}">${c.lastText?`${c.lastAs===CLAUDE&&c.lastFrom===S.ownerKey?"Cláudio":c.lastFrom===me?"Tu":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:"Sem mensagens"}</div></div>${u?'<span class="dotu" aria-label="Por ler"></span>':""}</button></div>`; }).join("")}</div>`
     : `<div class="card"><div class="empty"><div class="ico">${ic("chat")}</div><h3>Ainda sem conversas</h3><p>Começa uma conversa privada ou de grupo.</p><button class="btn" style="margin-top:8px" data-act="newChat">${ic("compose")}Nova conversa</button></div></div>`}
     <p class="info">Só os participantes veem cada conversa. Apagar uma conversa só a apaga para ti: se chegar uma mensagem nova, volta a aparecer.</p></div></div>`;
 }
@@ -1776,7 +1776,7 @@ function chatShell(cid){
   const sub=c.type==="direct"?"Conversa privada":cant?`Cantinho da semana · só ${c.host===ME()?"tu respondes":`o ${first(nm(c.host))} responde`}`:`${(c.members||[]).length} participantes`;
   return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes","",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
     <div class="replybar" id="replyBar" hidden><div class="rbt"><b></b><span></span></div><button type="button" id="replyX" aria-label="Cancelar resposta">${ic("x")}</button></div>
-    ${canWrite?`<form class="composer" id="composer">${S.isOwner&&!cant&&c.type!=="direct"?`<button type="button" class="asclaude" id="asClaude" aria-pressed="false" aria-label="Escrever como Claude" title="Escrever como Claude">${avatar(CLAUDE,28)}</button>`:""}<textarea id="msgInput" rows="1" placeholder="${cant?"Responde ao Anfitrião…":"Mensagem"}" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`
+    ${canWrite?`<form class="composer" id="composer">${S.isOwner&&!cant&&c.type!=="direct"?`<button type="button" class="asclaude" id="asClaude" aria-pressed="false" aria-label="Escrever como Cláudio" title="Escrever como Cláudio">${avatar(CLAUDE,28)}</button>`:""}<textarea id="msgInput" rows="1" placeholder="${cant?"Responde ao Anfitrião…":"Mensagem"}" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`
       :`<div class="cantnote">🛋️ Este é o cantinho do ${esc(first(nm(c.host)))}. Só ele conversa com o Anfitrião, mas podes reagir às mensagens.</div>`}`;
 }
 function mountChat(cid,scr){
@@ -1798,7 +1798,7 @@ function mountChat(cid,scr){
     const b=e.target.closest(".bub[data-mid]"); if(b) msgMenu(cid,b.dataset.mid,b); });
   box.addEventListener("keydown",e=>{ const b=e.target.closest(".bub[data-mid]"); if(b&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); msgMenu(cid,b.dataset.mid,b); } });
   const asB=scr.querySelector("#asClaude"); let asClaude=false;
-  if(asB) asB.onclick=()=>{ asClaude=!asClaude; asB.classList.toggle("on",asClaude); asB.setAttribute("aria-pressed",asClaude); ta.placeholder=asClaude?"A escrever como Claude…":"Mensagem"; ta.focus(); };
+  if(asB) asB.onclick=()=>{ asClaude=!asClaude; asB.classList.toggle("on",asClaude); asB.setAttribute("aria-pressed",asClaude); ta.placeholder=asClaude?"A escrever como Cláudio…":"Mensagem"; ta.focus(); };
   form.addEventListener("submit",async e=>{ e.preventDefault(); const text=ta.value.trim(); if(!text) return; ta.value=""; lsSet("draft:"+cid,""); btn.disabled=true; fit();
     const me=ME(); const at=Date.now(); const rt=replyTo; setReply(cid,null); const as=asClaude&&S.isOwner&&me===S.ownerKey?{as:CLAUDE}:{};
     const ok=await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add(rt?{from:me,text,at,replyTo:rt,...as}:{from:me,text,at,...as}); await D("chats/"+cid).update({lastAt:at,lastText:text.slice(0,140),lastFrom:me,lastAs:as.as||null}); });
