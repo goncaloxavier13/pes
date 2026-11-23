@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795447086">
+<meta name="pes-version" content="1795447367">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -634,7 +634,7 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .reg textarea:disabled{opacity:.45}.regnone{margin-top:8px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border);background:none;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;border-radius:99px;padding:6px 12px;cursor:pointer}
 .regnone.on{background:rgba(48,209,88,.15);border-color:transparent;color:var(--green)}.regnone svg{width:14px;height:14px}
 .regq{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow:auto}.regq blockquote{margin:0;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.12);font-size:16px;line-height:1.4;font-style:italic}
-.asclaude{flex:none;border:0;background:none;padding:0;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;opacity:.45;filter:grayscale(1);cursor:pointer;transition:.15s}
+.asclaude{flex:none;border:0;background:none;padding:0;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;opacity:.75;cursor:pointer;transition:.15s}
 .asclaude.on{opacity:1;filter:none;box-shadow:0 0 0 2px #D97757}
 </style>
 </head>
@@ -1798,7 +1798,7 @@ function mountChat(cid,scr){
     const b=e.target.closest(".bub[data-mid]"); if(b) msgMenu(cid,b.dataset.mid,b); });
   box.addEventListener("keydown",e=>{ const b=e.target.closest(".bub[data-mid]"); if(b&&(e.key==="Enter"||e.key===" ")){ e.preventDefault(); msgMenu(cid,b.dataset.mid,b); } });
   const asB=scr.querySelector("#asClaude"); let asClaude=false;
-  if(asB) asB.onclick=()=>{ asClaude=!asClaude; asB.classList.toggle("on",asClaude); asB.setAttribute("aria-pressed",asClaude); ta.placeholder=asClaude?"A escrever como Cláudio…":"Mensagem"; ta.focus(); };
+  if(asB) asB.onclick=()=>{ asClaude=!asClaude; asB.classList.toggle("on",asClaude); asB.setAttribute("aria-pressed",asClaude); ta.placeholder=asClaude?"A escrever como Cláudio…":"Mensagem"; toast(asClaude?"A escrever como Cláudio":"A escrever como tu"); ta.focus(); };
   form.addEventListener("submit",async e=>{ e.preventDefault(); const text=ta.value.trim(); if(!text) return; ta.value=""; lsSet("draft:"+cid,""); btn.disabled=true; fit();
     const me=ME(); const at=Date.now(); const rt=replyTo; setReply(cid,null); const as=asClaude&&S.isOwner&&me===S.ownerKey?{as:CLAUDE}:{};
     const ok=await write(async()=>{ await S.db.collection(`chats/${cid}/msgs`).add(rt?{from:me,text,at,replyTo:rt,...as}:{from:me,text,at,...as}); await D("chats/"+cid).update({lastAt:at,lastText:text.slice(0,140),lastFrom:me,lastAs:as.as||null}); });
