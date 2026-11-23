@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795447367">
+<meta name="pes-version" content="1795462608">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1006,8 +1006,8 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   regsFor(w).forEach((r,ri)=>S_.push({emo:r.emoji,title:r.title,sub:"Registos da semana · anónimo",
     html:()=>{ if(r.pick){ const q=regPickTop(gid,w,r); if(q.tot) return `<div class="card pad">${qTop(q,me,28)}</div><p class="s-txt">Ninguém sabe quem votou em quem 🕶️</p>`; }
       const t=r.pick?[]:regAnswers(gid,w,r); return t.length?`<div class="regq">${t.map(x=>`<blockquote>“${esc(x)}”</blockquote>`).join("")}</div><p class="s-txt">Ninguém sabe quem escreveu o quê 🕶️</p>`
-      :`<p class="s-txt">${["Semana calma… ninguém irritou ninguém 😇","Nenhum coro registado esta semana 🤐","Ninguém registou nenhum momento esta semana 📭"][ri]}</p>`; },
-    joke:[["Alguém irritou alguém 😤","Quem? Só sabe quem votou. Tu ficas a imaginar se foste tu."],["Houve coros esta semana 💋","Os pormenores ficam para quem votou. Tu ficas com a curiosidade."],["Houve momentos épicos 📸","Toda a gente se lembra deles. Tu não estavas lá… pelo menos aqui."]][ri]}));
+      :`<p class="s-txt">${r.empty||({irrit:"Semana calma… ninguém irritou ninguém 😇",coro:"Nenhum coro registado esta semana 🤐",mom:"Ninguém registou nenhum momento esta semana 📭"})[r.key]}</p>`; },
+    joke:r.joke||({irrit:["Alguém irritou alguém 😤","Quem? Só sabe quem votou. Tu ficas a imaginar se foste tu."],coro:["Houve coros esta semana 💋","Os pormenores ficam para quem votou. Tu ficas com a curiosidade."],mom:["Houve momentos épicos 📸","Toda a gente se lembra deles. Tu não estavas lá… pelo menos aqui."]})[r.key]}));
   S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
     html:()=>pfSummary(gid,w)||`<p class="s-txt">Não houve Preferias Flash esta semana.</p>`,
     joke:["Preferias votar ou ficar de fora? 😏","Já escolheste. E, por isso, esta semana também não jogas o Preferias Flash."]});
@@ -2213,9 +2213,23 @@ const REG_START="2026-W48", REG_NONE="∅";
 const REGS=[{id:"reg:irrit",key:"irrit",emoji:"😤",label:"Quem foi a pessoa que mais te irritou esta semana?",title:"Quem mais irritou",pick:true},
   {id:"reg:coro",key:"coro",emoji:"💋",label:"Há algum coro que queiras registar esta semana?",title:"Coros da semana"},
   {id:"reg:mom",key:"mom",emoji:"📸",label:"Algum momento digno de ser recordado?",title:"Momentos para recordar"}];
-const regsFor=w=>w>=REG_START?REGS:[];
+/* "Quem percebe mais de…?": a new topic every week (same shuffled order for everyone, no repeats within a year) */
+const EXPERT_TOPICS=["futebol","política","medicina","geopolítica","vinhos","carros","cozinha","cinema","finanças","moda","história","música","tecnologia","economia","arte","literatura",
+  "filosofia","psicologia","relações amorosas","mulheres","homens","viagens","desporto","fórmula 1","ténis","basquetebol","imobiliário","investimentos","criptomoedas","marketing",
+  "direito","religião","astronomia","ciência","química","biologia","matemática","videojogos","séries","fotografia","arquitetura","decoração","jardinagem","animais","natureza",
+  "ginásio","nutrição","dietas","cerveja","cocktails","whisky","café","gastronomia portuguesa","sushi","churrasco","doces","bricolage","mecânica","eletricidade","informática",
+  "inteligência artificial","redes sociais","influencers","televisão","reality shows","futebol português","Champions League","Mundial","Jogos Olímpicos","surf","ski","golfe",
+  "caça e pesca","agricultura","vinho do Porto","Lisboa","Portugal","Espanha","Estados Unidos","Brasil","África","Ásia","guerras","Segunda Guerra Mundial","monarquia",
+  "eleições","impostos","burocracia","bancos","empreendedorismo","liderança","negociação","festas","noite","ressacas","engate","casamentos","bebés","educação","línguas",
+  "teoria da conspiração","astrologia","ovnis","crimes","polícias e ladrões","fado","Eurovisão","banda desenhada","Disney","anime","xadrez","póquer","apostas","lotaria"];
+const EXP_START="2026-W48";
+function expertTopic(w){ const y=+w.slice(0,4), n=+w.slice(6); const N=EXPERT_TOPICS.length; const idx=[...Array(N).keys()]; let seed=hashStr2("expert|"+y);
+  for(let i=N-1;i>0;i--){ seed=(Math.imul(seed,1664525)+1013904223)>>>0; const j=seed%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; } return EXPERT_TOPICS[idx[(n-1)%N]]; }
+const regsFor=w=>{ if(w<REG_START) return []; if(w<EXP_START) return REGS; const t=expertTopic(w);
+  return [REGS[0],{id:"reg:expert",key:"expert",emoji:"🧠",label:`Quem do grupo percebe mais de ${t}?`,title:`Quem percebe mais de ${t}`,pick:true,noNone:true,
+    empty:`Ninguém votou no especialista em ${t} 🤷`,joke:[`Há um especialista em ${t} 🧠`,"O grupo já sabe quem é. Tu, por não teres votado, ficas na ignorância."]},...REGS.slice(1)]; };
 // "pick" registos (Quem mais irritou) are answered with a group member (never yourself) or "Sem nada a registar"
-const regOk=(r,v,gid,me)=>typeof v==="string"&&!!v.trim()&&(!r.pick||v===REG_NONE||v==="1"||((S.groups[gid]?.members||[]).includes(v)&&v!==me));
+const regOk=(r,v,gid,me)=>typeof v==="string"&&!!v.trim()&&(!r.pick||(v===REG_NONE&&!r.noNone)||v==="1"||((S.groups[gid]?.members||[]).includes(v)&&v!==me));
 function regPickTop(gid,w,r){ const ms=S.groups[gid]?.members||[]; const c={}; regAnswers(gid,w,r).filter(k=>ms.includes(k)).forEach(k=>c[k]=(c[k]||0)+1);
   const counts=[...new Set(Object.values(c))].sort((a,b)=>b-a).slice(0,3);
   return {tot:Object.keys(c).length,top:counts.map((n,p)=>({place:p+1,n,who:Object.keys(c).filter(k=>c[k]===n).sort((a,b)=>nm(a).localeCompare(nm(b)))}))}; }
@@ -2262,7 +2276,7 @@ function rankSheet(startStep=1, focusAward=null){
     const regRow=a=>{ const v=votes[a.id]; const none=v===REG_NONE;
       if(a.pick) return `<div class="reg"><div class="rowtitle" style="white-space:normal;line-height:1.3">${a.emoji} ${esc(a.label)}</div>
         <div class="chips" style="margin-top:10px">${others.slice().sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const f=first(nm(k)); const dup=others.filter(o=>first(nm(o))===f).length>1; return `<button type="button" class="namechip ${v===k?"sel":""}" data-regpick="${a.id}|${k}" aria-pressed="${v===k}">${avatar(k,26)}${esc(dup?nm(k):f)}</button>`; }).join("")}</div>
-        <button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button></div>`;
+        ${a.noNone?"":`<button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button>`}</div>`;
       return `<div class="reg"><div class="rowtitle" style="white-space:normal;line-height:1.3">${a.emoji} ${esc(a.label)}</div>
         <textarea data-reg="${a.id}" rows="2" maxlength="400" placeholder="${none?"Sem nada a registar":"Escreve aqui… ninguém vai saber que foste tu"}" ${none?"disabled":""}>${none?"":esc(v||"")}</textarea>
         <button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button></div>`; };
