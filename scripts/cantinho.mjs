@@ -274,9 +274,10 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
   const MER = "Meritíssimo Sr. Sid"; const no3 = (n, y) => `${String(n).padStart(3, "0")}/${y}`;
   for (const [gid, g] of Object.entries(groups)) { const mem = g.members || []; if (mem.length < 3) continue;
     const sid = (await db.doc("config/app").get()).data()?.sidKey || mem.find(k => /^sid\b/i.test(people[k]?.name || "")); if (!sid) continue;
-    const pv = prevWeek(wkV); const can = k => k === sid || weekComplete(gid, k, pv); const url = `./?g=${gid}&t=dash&trib=1`;
+    const pv = prevWeek(wkV); const canBase = k => k === sid || weekComplete(gid, k, pv); const url = `./?g=${gid}&t=dash&trib=1`;
     const T = g.trib || {}; const pub = { year: T.year || +wk.slice(0, 4), seq: T.seq || 0, cur: T.cur || null, hist: T.hist || [], pens: T.pens || [], sid };
     if (pub.year !== +wk.slice(0, 4)) { pub.year = +wk.slice(0, 4); pub.seq = 0; }
+    const can = k => canBase(k) || (!!pub.cur?.no && pub.cur.w === wk && pub.cur.accused === k); // o acusado entra sempre no seu processo, mesmo sem ter votado
     const ts = TR[gid] = TR[gid] || {}; const tw = ts[wk] = ts[wk] || {}; let changed = !g.trib;
     const allSend = async (pl, lockedPl) => { for (const k of mem) await send(k, can(k) || !lockedPl ? pl : lockedPl); };
     const sidRd = reads[sid]?.trib || {};
@@ -286,11 +287,11 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
       await allSend({ title: "⚖️ O Tribunal do Sr. Sid está aberto", body: `Até terça às 17:00, submete casos para o ${MER} julgar. É anónimo: só o Meritíssimo sabe quem acusou 🤫`, tag: "trib-" + wk, url },
         { title: "⚖️ O Tribunal do Sr. Sid está aberto", body: "A malta já está a acusar… menos tu, que não votaste 🔒", tag: "trib-" + wk, url }); }
     if (!tw.lastCall && hrL >= 24 + 15 && lxNow < subEnd) { tw.lastCall = 1;
-      for (const k of mem.filter(k => can(k) && k !== sid)) await send(k, { title: "⚖️ Últimas horas para acusar", body: `Os casos para o ${MER} fecham hoje às 17:00.`, tag: "trib-" + wk, url }); }
+      for (const k of mem.filter(k => canBase(k) && k !== sid)) await send(k, { title: "⚖️ Últimas horas para acusar", body: `Os casos para o ${MER} fecham hoje às 17:00.`, tag: "trib-" + wk, url }); }
     // 1) casos submetidos → caixa do Meritíssimo (com o autor; só ele vê)
     const inbox = { ...(sidRd.inbox || {}) }; let newCases = 0;
     for (const k of mem) { const subs = reads[k]?.trib?.sub || {}; for (const [id, c] of Object.entries(subs)) {
-      if (!c || c.gid !== gid || c.w !== wk || inbox[id] || !can(k) || loc(c.at || 0) > subEnd) continue;
+      if (!c || c.gid !== gid || c.w !== wk || inbox[id] || !canBase(k) || loc(c.at || 0) > subEnd) continue;
       if (!mem.includes(c.accused) || !c.title) continue;
       inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 1500), accused: c.accused, from: k, at: c.at }; newCases++;
       await db.doc("reads/" + sid).set({ trib: { inbox: { [id]: inbox[id] } } }, { merge: true }); } }
