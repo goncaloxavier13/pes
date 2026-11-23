@@ -143,7 +143,7 @@ function complete([awards, votes, rankings], gid, k, w) { // mesma regra da app
   if (!rankings[k]?.weeks?.[w]?.[gid]) return false; if (w < FULL_VOTE_FROM) return true;
   const v = votes[k]?.weeks?.[w] || {}; const end = wkMonday(w).getTime() + 7 * 864e5 + 2 * 3600e3;
   const aw = Object.entries(awards).filter(([, a]) => a.groupId === gid && (!a.createdAt || tsMs(a.createdAt) < end)).map(([id]) => id);
-  return [...aw, ...weekQuestions(gid, w).map(q => q.id), ...(w >= "2026-W48" ? ["reg:irrit", "reg:coro", "reg:mom"] : [])].every(id => v[id]);
+  return [...aw, ...weekQuestions(gid, w).map(q => q.id), ...(w >= "2026-W48" ? ["reg:irrit", "reg:expert", "reg:coro", "reg:mom"] : [])].every(id => v[id]);
 }
 const stage = weekdayLx() === "Sun" ? (hourLx() >= 22 ? "22" : hourLx() >= 18 ? "18" : null) : null;
 if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly === wk + ":22")) {
