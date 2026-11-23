@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795468429">
+<meta name="pes-version" content="1795468887">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1091,12 +1091,12 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
 }
 /* ───────── Novidades em formato de story (Instagram): abre pela notificação (?news=1) e uma vez por aparelho ───────── */
 const NEWS_ID="news:2026-11-23";
-function storyPlayer(S_,head,label,COLORS){
+function storyPlayer(S_,head,label,COLORS,onEnd){
   let i=0, t0=0, elapsed=0, dur=6000, paused=false, raf=0, held=false, holdT=0, skipClick=false;
   const L=pushLayer(`<div class="story" role="dialog" aria-modal="true" aria-label="${esc(label)}">
     <div class="sbars">${S_.map(()=>"<i><b></b></i>").join("")}</div>
     <div class="shead"><span class="s-g">${head}</span><button class="gclose" data-sx data-x aria-label="Fechar">${ic("close")}</button></div>
-    <div class="sstage"></div></div>`, ()=>cancelAnimationFrame(raf));
+    <div class="sstage"></div></div>`, ()=>{ cancelAnimationFrame(raf); if(onEnd) setTimeout(onEnd,350); });
   const root=L.el.querySelector(".story"), stage=L.el.querySelector(".sstage"), bars=[...L.el.querySelectorAll(".sbars b")];
   const show=()=>{ const s=S_[i]; const c=COLORS[i%COLORS.length]; root.style.setProperty("--s1",c[0]); root.style.setProperty("--s2",c[1]);
     stage.innerHTML=`<div class="sstep"><div class="s-emo">${s.emo}</div><div class="s-title">${s.title}</div>${s.sub?`<div class="s-sub">${s.sub}</div>`:""}${s.html()}</div>`; stage.scrollTop=0;
@@ -1127,7 +1127,7 @@ function newsStories(){ const g=curGroup(); lsSet(NEWS_ID,true);
     {emo:"📈",title:"Activity score",html:()=>p("Agora conta toda a tua participação nas últimas 8 semanas:")+li([["🗳️","Votação completa",""],["📅","Presença em eventos",""],["🛋️","Cantinho",""],["💬","Conversa, reações e eventos criados",""],["⚡","Preferias Flash",""]])+p("Toca no teu score no Dashboard para veres as contas.")},
     {emo:"🔒",title:"A regra de ouro",html:()=>p("Quem não completa a votação da semana continua a receber as notificações e a ver os botões todos…")+p("<b>…mas não consegue ver nada.</b> Nem rankings, nem cantinho, nem Preferias Flash, nem resultados 😈")+`<button class="btn block" data-sx style="margin-top:14px">Bora 🔥</button>`},
   ];
-  storyPlayer(S_,`${g?esc(g.name)+" · ":""}<span>Novidades</span>`,"Novidades",[["#5B2BE0","#1A0B4D"],["#7A1FD6","#0A2A6B"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#FF375F","#4D0717"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#E0A100","#5A2C00"],["#0A84FF","#1A0B4D"],["#3A3A55","#0B0B16"]]); }
+  storyPlayer(S_,`${g?esc(g.name)+" · ":""}<span>Novidades</span>`,"Novidades",[["#5B2BE0","#1A0B4D"],["#7A1FD6","#0A2A6B"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#FF375F","#4D0717"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#E0A100","#5A2C00"],["#0A84FF","#1A0B4D"],["#3A3A55","#0B0B16"]],()=>{ if(!layers.length) maybeTribNews(); }); }
 const TRIB_NEWS="news:trib1";
 function tribStories(fromSheet){ const g=curGroup(); lsSet(TRIB_NEWS,true);
   const li=items=>`<div class="card list ws-future">${items.map(([e,t,d])=>`<div class="row" style="align-items:flex-start"><span style="font-size:24px;flex:none">${e}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${t}</div>${d?`<div class="rowsub" style="white-space:normal">${d}</div>`:""}</div></div>`).join("")}</div>`;
