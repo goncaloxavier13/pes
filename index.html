@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795465620">
+<meta name="pes-version" content="1795466067">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1076,6 +1076,46 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   L.key=ev=>{ if(ev.key==="ArrowRight"||ev.key===" ") go(i+1); if(ev.key==="ArrowLeft") go(i-1); if(ev.key==="Escape") popLayer(L); };
   show(); raf=requestAnimationFrame(tick);
 }
+/* ───────── Novidades em formato de story (Instagram): abre pela notificação (?news=1) e uma vez por aparelho ───────── */
+const NEWS_ID="news:2026-11-23";
+function storyPlayer(S_,head,label,COLORS){
+  let i=0, t0=0, elapsed=0, dur=6000, paused=false, raf=0, held=false, holdT=0, skipClick=false;
+  const L=pushLayer(`<div class="story" role="dialog" aria-modal="true" aria-label="${esc(label)}">
+    <div class="sbars">${S_.map(()=>"<i><b></b></i>").join("")}</div>
+    <div class="shead"><span class="s-g">${head}</span><button class="gclose" data-sx data-x aria-label="Fechar">${ic("close")}</button></div>
+    <div class="sstage"></div></div>`, ()=>cancelAnimationFrame(raf));
+  const root=L.el.querySelector(".story"), stage=L.el.querySelector(".sstage"), bars=[...L.el.querySelectorAll(".sbars b")];
+  const show=()=>{ const s=S_[i]; const c=COLORS[i%COLORS.length]; root.style.setProperty("--s1",c[0]); root.style.setProperty("--s2",c[1]);
+    stage.innerHTML=`<div class="sstep"><div class="s-emo">${s.emo}</div><div class="s-title">${s.title}</div>${s.sub?`<div class="s-sub">${s.sub}</div>`:""}${s.html()}</div>`; stage.scrollTop=0;
+    bars.forEach((b,j)=>b.style.width=j<i?"100%":"0%");
+    dur=Math.min(20000,Math.max(5000,4000+stage.textContent.trim().length*45)); elapsed=0; t0=performance.now(); };
+  const go=k=>{ if(k<0) k=0; if(k>=S_.length){ elapsed=dur; return; } i=k; show(); };
+  const tick=now=>{ if(!L.el.isConnected) return; if(paused||document.hidden) t0=now; else { elapsed+=now-t0; t0=now; }
+    bars[i].style.width=`${Math.min(100,elapsed/dur*100)}%`; if(elapsed>=dur&&i<S_.length-1) go(i+1); raf=requestAnimationFrame(tick); };
+  root.addEventListener("pointerdown",e=>{ if(e.target.closest("button,a")) return; clearTimeout(holdT); holdT=setTimeout(()=>{ held=true; paused=true; root.classList.add("paused"); },220); });
+  const release=()=>{ clearTimeout(holdT); if(held){ held=false; paused=false; root.classList.remove("paused"); skipClick=true; setTimeout(()=>skipClick=false,350); } };
+  root.addEventListener("pointerup",release); root.addEventListener("pointercancel",release);
+  root.addEventListener("click",e=>{ if(e.target.closest("[data-sx]")){ popLayer(L); return; } if(e.target.closest("button,a,[data-act]")) return; if(skipClick){ skipClick=false; return; }
+    const r=root.getBoundingClientRect(); if(e.clientX-r.left<r.width*0.3) go(i-1); else if(i<S_.length-1) go(i+1); });
+  L.key=ev=>{ if(ev.key==="ArrowRight"||ev.key===" ") go(i+1); if(ev.key==="ArrowLeft") go(i-1); if(ev.key==="Escape") popLayer(L); };
+  show(); raf=requestAnimationFrame(tick); return L; }
+function newsStories(){ const g=curGroup(); lsSet(NEWS_ID,true);
+  const li=items=>`<div class="card list ws-future">${items.map(([e,t,d])=>`<div class="row" style="align-items:flex-start"><span style="font-size:24px;flex:none">${e}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${t}</div>${d?`<div class="rowsub" style="white-space:normal">${d}</div>`:""}</div></div>`).join("")}</div>`;
+  const p=t=>`<p class="s-txt" style="font-size:16px;color:#fff;opacity:.92">${t}</p>`;
+  const S_=[
+    {emo:"✨",title:"Há novidades na Pês",sub:"Toca para avançar",html:()=>li([["⚡","Preferias Flash","todos os dias às 21:30"],["🛋️","Cantinho novo","de 2 em 2 dias, com 3 secções"],["🎯","Adivinha","quanto conheces a pessoa do cantinho?"],["🧠","Quem percebe mais de…?","um tema novo todas as semanas"],["🗳️","Votação","fecha ao domingo às 21h"],["📈","Activity score","agora conta tudo"]])},
+    {emo:`<img src="${PF_LOGO}" alt="Preferias Flash" style="width:190px;max-width:70%">`,title:"Preferias Flash",sub:"Todos os dias às 21:30",html:()=>p("Sai um dilema novo no Dashboard. Escolhes uma de duas opções e pronto: demora 5 segundos.")+p("Fica aberto até às 21:30 do dia seguinte. Nessa altura sai o dilema novo <b>e os resultados do anterior</b>, com nome e tudo 👀")+p("Só vê os resultados quem jogou 😏")+p("<b>O primeiro sai hoje às 21:30.</b>")},
+    {emo:"🛋️",title:"O Cantinho mudou",sub:"De 2 em 2 dias, às 20:00",html:()=>p("A cada 2 dias, às 20:00, é sorteada uma pessoa do grupo para o cantinho. Ninguém repete até passarem todos.")+p("Toda a gente recebe notificação quando muda.")+p("Quem não completou a votação não pode ser sorteado, não vê e não participa 🔒")+p("O cantinho do Manel acaba <b>quarta-feira às 20:00</b>. Quem será o próximo?")},
+    {emo:"🛋️",title:"3 secções no cantinho",html:()=>li([["💭","Pensamentos","escrita livre, só da pessoa do cantinho"],["❓","Perguntas","a cada resposta, aparece uma pergunta nova"],["🎯","Adivinha","responde em segredo e o grupo tenta adivinhar entre 4 opções"]])},
+    {emo:"🎯",title:"Quanto o conheces?",html:()=>p("No Adivinha, a pessoa do cantinho responde em segredo e cada um vota na resposta que acha certa.")+p("Ninguém sabe quem acertou até ao fim: <b>tudo se revela quando o cantinho muda de pessoa</b> 🤫")},
+    {emo:"📋",title:"O resumo do cantinho",html:()=>li([["🎯","% de acertos","quanto o grupo conhece a pessoa"],["🏆","Quem conhece melhor","e quem não faz ideia"],["😱","A maior surpresa","a resposta que ninguém esperava"],["💬","O pensamento da semana","o que teve mais reações"],["📖","Todas as respostas","perguntas e adivinhas"]])+p("Só vê quem esteve no cantinho.")},
+    {emo:"🧠",title:"Quem percebe mais de…?",html:()=>p("Na votação de cada semana há um tema sorteado: vinhos, carros, futebol, cozinha…")+p("Escolhes quem do grupo percebe mais disso. O vencedor aparece no resumo de domingo.")},
+    {emo:"🗳️",title:"A votação fecha ao domingo às 21h",html:()=>p("Avisos às 17h e às 20h. Às 21h fecha e sai logo o resumo da semana.")+p("Votação completa = ranking + prémios + perguntas + registos.")},
+    {emo:"📈",title:"Activity score",html:()=>p("Agora conta toda a tua participação nas últimas 8 semanas:")+li([["🗳️","Votação completa",""],["📅","Presença em eventos",""],["🛋️","Cantinho",""],["💬","Conversa, reações e eventos criados",""],["⚡","Preferias Flash",""]])+p("Toca no teu score no Dashboard para veres as contas.")},
+    {emo:"🔒",title:"A regra de ouro",html:()=>p("Quem não completa a votação da semana continua a receber as notificações e a ver os botões todos…")+p("<b>…mas não consegue ver nada.</b> Nem rankings, nem cantinho, nem Preferias Flash, nem resultados 😈")+`<button class="btn block" data-sx style="margin-top:14px">Bora 🔥</button>`},
+  ];
+  storyPlayer(S_,`${g?esc(g.name)+" · ":""}<span>Novidades</span>`,"Novidades",[["#5B2BE0","#1A0B4D"],["#7A1FD6","#0A2A6B"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#FF375F","#4D0717"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#E0A100","#5A2C00"],["#0A84FF","#1A0B4D"],["#3A3A55","#0B0B16"]]); }
+function maybeNews(){ if(!ME()||layers.length||lsGet(NEWS_ID,false)) return false; newsStories(); return true; }
 /* One-time announcement: notifications are now available (shown once per device, unless already enabled) */
 function maybeNotifAnnouncement(force){ if(!force){ if(!S.fb||!ME()||layers.length) return false; if(lsGet("ann:notif1",false)) return false;
   lsSet("ann:notif1",true); if(pushState().on) return false; }
@@ -1466,12 +1506,12 @@ function back(){ S.route.pop(); render(); }
 function setTab(t){ S.tab=t; S.route=[]; render(); }
 function enterGroup(gid,tab="dash"){ if(S.groupId!==gid) S.localVotes={}; S.groupId=gid; lsSet("group",gid); setTab(tab); }
 /* Deep links from push notifications: ?g=<group>&t=<tab>&c=<chat> */
-function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1"}; }catch{ return null; } }
+function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1",news:q.get("news")==="1"}; }catch{ return null; } }
 S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceState(null,"",location.pathname); }catch{} }
 navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
 function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
   if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
-  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); }
+  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -1486,7 +1526,7 @@ function applyTheme(){
 function render(){ if(S.swiping){ S.renderPending=true; return; } if(S.isOwner&&S.cfgRef&&!S.preview){ const mk=myRealMember(); if(mk&&S.ownerKey!==mk){ S.ownerKey=mk; S.cfgRef.update({ownerKey:mk}).catch(()=>{}); } } chartSpecs=new Map(); chartSeq=0; renderInner(); }
 function renderInner(){
   applyLink();
-  if(!S.wsChecked && ME() && curGroup() && (!S.fb || (S.peopleOk && S.loaded.has("ready")))){ S.wsChecked=true; setTimeout(()=>{ try{ if(!maybeBirthday() && !maybeNotifAnnouncement()) maybeWeeklySummary(); }catch(e){ console.warn(e); } },900); }
+  if(!S.wsChecked && ME() && curGroup() && (!S.fb || (S.peopleOk && S.loaded.has("ready")))){ S.wsChecked=true; setTimeout(()=>{ try{ if(!maybeBirthday() && !maybeNotifAnnouncement() && !maybeNews()) maybeWeeklySummary(); }catch(e){ console.warn(e); } },900); }
   const r=topRoute(); const key = r ? r.name+":"+(r.arg||"") : "tab:"+S.tab;
   const old=app.querySelector(".screen .scroll[data-key]"); if(old) scrollMem[old.dataset.key]=old.scrollTop;
   if (r?.name==="chat" && ME() && app.querySelector(`.screen[data-chat="${r.arg}"]`)) { updateChat(r.arg); markRead(r.arg); return; }
