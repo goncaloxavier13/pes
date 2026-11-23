@@ -1004,7 +1004,8 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
         :`<p class="s-txt">Esta semana ninguém respondeu às perguntas.</p>`; },
     joke:["Toda a gente já sabe quem ganhou 🎲","Toda a gente menos tu. E não, não vale a pena perguntar no GAP."]});
   regsFor(w).forEach((r,ri)=>S_.push({emo:r.emoji,title:r.title,sub:"Registos da semana · anónimo",
-    html:()=>{ const t=regAnswers(gid,w,r); return t.length?`<div class="regq">${t.map(x=>`<blockquote>“${esc(x)}”</blockquote>`).join("")}</div><p class="s-txt">Ninguém sabe quem escreveu o quê 🕶️</p>`
+    html:()=>{ if(r.pick){ const q=regPickTop(gid,w,r); if(q.tot) return `<div class="card pad">${qTop(q,me,28)}</div><p class="s-txt">Ninguém sabe quem votou em quem 🕶️</p>`; }
+      const t=r.pick?[]:regAnswers(gid,w,r); return t.length?`<div class="regq">${t.map(x=>`<blockquote>“${esc(x)}”</blockquote>`).join("")}</div><p class="s-txt">Ninguém sabe quem escreveu o quê 🕶️</p>`
       :`<p class="s-txt">${["Semana calma… ninguém irritou ninguém 😇","Nenhum coro registado esta semana 🤐","Ninguém registou nenhum momento esta semana 📭"][ri]}</p>`; },
     joke:[["Alguém irritou alguém 😤","Quem? Só sabe quem votou. Tu ficas a imaginar se foste tu."],["Houve coros esta semana 💋","Os pormenores ficam para quem votou. Tu ficas com a curiosidade."],["Houve momentos épicos 📸","Toda a gente se lembra deles. Tu não estavas lá… pelo menos aqui."]][ri]}));
   S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
@@ -2209,10 +2210,15 @@ function qTop(q,me,sz){ return `<div class="qtop">${q.top.map(t=>`<div class="qt
 /* Registos da semana: 3 free-text answers, shown anonymously in Monday's summary. When the week closes the server
    moves the texts into an anonymous, shuffled list (groups/{gid}.regs) and erases them from each person's votes. */
 const REG_START="2026-W48", REG_NONE="∅";
-const REGS=[{id:"reg:irrit",key:"irrit",emoji:"😤",label:"Quem foi a pessoa que mais te irritou esta semana?",title:"Quem mais irritou"},
+const REGS=[{id:"reg:irrit",key:"irrit",emoji:"😤",label:"Quem foi a pessoa que mais te irritou esta semana?",title:"Quem mais irritou",pick:true},
   {id:"reg:coro",key:"coro",emoji:"💋",label:"Há algum coro que queiras registar esta semana?",title:"Coros da semana"},
   {id:"reg:mom",key:"mom",emoji:"📸",label:"Algum momento digno de ser recordado?",title:"Momentos para recordar"}];
 const regsFor=w=>w>=REG_START?REGS:[];
+// "pick" registos (Quem mais irritou) are answered with a group member (never yourself) or "Sem nada a registar"
+const regOk=(r,v,gid,me)=>typeof v==="string"&&!!v.trim()&&(!r.pick||v===REG_NONE||v==="1"||((S.groups[gid]?.members||[]).includes(v)&&v!==me));
+function regPickTop(gid,w,r){ const ms=S.groups[gid]?.members||[]; const c={}; regAnswers(gid,w,r).filter(k=>ms.includes(k)).forEach(k=>c[k]=(c[k]||0)+1);
+  const counts=[...new Set(Object.values(c))].sort((a,b)=>b-a).slice(0,3);
+  return {tot:Object.keys(c).length,top:counts.map((n,p)=>({place:p+1,n,who:Object.keys(c).filter(k=>c[k]===n).sort((a,b)=>nm(a).localeCompare(nm(b)))}))}; }
 function regAnswers(gid,w,r){ const g=S.groups[gid]; const saved=g?.regs?.[w]?.[r.key]; if(Array.isArray(saved)) return saved;
   // before the server anonymises the week: same texts, in a fixed shuffled order (never by person)
   const t=(g?.members||[]).map(k=>S.votes[k]?.weeks?.[w]?.[r.id]).filter(v=>typeof v==="string"&&v!==REG_NONE&&v!=="1"&&v.trim());
@@ -2225,7 +2231,7 @@ function weekEndMs(w){ const m=weekMonday(w); return m.getTime()+7*864e5+2*3600e
 function weekComplete(gid,k,w){ if(!S.rankings[k]?.weeks?.[w]?.[gid]) return false; if(w<FULL_VOTE_FROM) return true; const v=S.votes[k]?.weeks?.[w]||{}; const end=weekEndMs(w);
   const aw=groupAwards(gid).filter(a=>!a.createdAt||+new Date(a.createdAt)<end).map(a=>a.id);
   return [...aw,...weekQuestions(gid,w).map(q=>q.id),...regsFor(w).map(r=>r.id)].every(id=>v[id]); }
-function weekDone(gid,k=ME()){ const w=curWeek(); return !!S.rankings[k]?.weeks?.[w]?.[gid] && weekItems(gid).every(a=>S.votes[k]?.weeks?.[w]?.[a.id]); }
+function weekDone(gid,k=ME()){ const w=curWeek(); return !!S.rankings[k]?.weeks?.[w]?.[gid] && weekItems(gid).every(a=>{ const v=S.votes[k]?.weeks?.[w]?.[a.id]; return a.kind==="reg"?regOk(a,v,gid,k):!!v; }); }
 function rankSheet(startStep=1, focusAward=null){
   const g=curGroup(); const me=ME(); const others=g.members.filter(k=>k!==me); const w=curWeek(); const aw=weekItems(g.id);
   if(votingClosed(g.id)){ toast("Época fechada. Volta segunda-feira."); return; }
@@ -2234,7 +2240,7 @@ function rankSheet(startStep=1, focusAward=null){
   let ranked = cur? Object.entries(cur).filter(([k])=>others.includes(k)).sort((a,b)=>a[1]-b[1]).map(([k])=>k) : [];
   let unr = others.filter(k=>!ranked.includes(k)).sort((a,b)=>nm(a).localeCompare(nm(b)));
   const done=!!myRankingThisWeek(g.id);
-  const votes={}; aw.forEach(a=>{ const v=S.votes[me]?.weeks?.[w]?.[a.id]; if(v&&(a.kind==="reg"?typeof v==="string":others.includes(v))) votes[a.id]=v; });
+  const votes={}; aw.forEach(a=>{ const v=S.votes[me]?.weeks?.[w]?.[a.id]; if(v&&(a.kind==="reg"?(regOk(a,v,g.id,me)&&v!=="1"):others.includes(v))) votes[a.id]=v; });
   let step=(startStep===2&&!unr.length&&aw.length)?2:1; let open=focusAward||(aw.find(a=>a.kind!=="reg"&&!votes[a.id])?.id)||null;
   const total=aw.length?2:1;
   const okNow=()=> step===1 ? !unr.length : aw.every(a=>votes[a.id]);
@@ -2254,6 +2260,9 @@ function rankSheet(startStep=1, focusAward=null){
         ${isOpen?`<div class="vpick">${others.slice().sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const f=first(nm(k)); const dup=others.filter(o=>first(nm(o))===f).length>1; return `<button class="namechip ${v===k?"sel":""}" data-pick="${a.id}|${k}">${avatar(k,26)}${esc(dup?nm(k):f)}</button>`; }).join("")}</div>`:""}`; };
     const awards=aw.filter(a=>a.kind==="award"), qs=aw.filter(a=>a.kind==="q"), regs=aw.filter(a=>a.kind==="reg");
     const regRow=a=>{ const v=votes[a.id]; const none=v===REG_NONE;
+      if(a.pick) return `<div class="reg"><div class="rowtitle" style="white-space:normal;line-height:1.3">${a.emoji} ${esc(a.label)}</div>
+        <div class="chips" style="margin-top:10px">${others.slice().sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const f=first(nm(k)); const dup=others.filter(o=>first(nm(o))===f).length>1; return `<button type="button" class="namechip ${v===k?"sel":""}" data-regpick="${a.id}|${k}" aria-pressed="${v===k}">${avatar(k,26)}${esc(dup?nm(k):f)}</button>`; }).join("")}</div>
+        <button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button></div>`;
       return `<div class="reg"><div class="rowtitle" style="white-space:normal;line-height:1.3">${a.emoji} ${esc(a.label)}</div>
         <textarea data-reg="${a.id}" rows="2" maxlength="400" placeholder="${none?"Sem nada a registar":"Escreve aqui… ninguém vai saber que foste tu"}" ${none?"disabled":""}>${none?"":esc(v||"")}</textarea>
         <button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button></div>`; };
@@ -2277,6 +2286,7 @@ function rankSheet(startStep=1, focusAward=null){
       else if(t.hasAttribute("data-submit")){ L.right.click(); return; }
       else if(t.dataset.aw){ open=open===t.dataset.aw?null:t.dataset.aw; }
       else if(t.dataset.pick){ const [aid,k]=t.dataset.pick.split("|"); votes[aid]=k; open=aw.find(a=>a.kind!=="reg"&&!votes[a.id])?.id||null; }
+      else if(t.dataset.regpick){ const [id,k]=t.dataset.regpick.split("|"); if(votes[id]===k) delete votes[id]; else votes[id]=k; }
       else if(t.dataset.regnone){ const id=t.dataset.regnone; if(votes[id]===REG_NONE) delete votes[id]; else votes[id]=REG_NONE; }
       else return;
       const keep=L.body.scrollTop; L.render(); L.right.textContent=step===1&&total>1?"Seguinte":"Submeter"; setRight(L,okNow()); L.body.scrollTop=t.dataset.back?0:keep; });
