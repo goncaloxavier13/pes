@@ -126,6 +126,16 @@ async function say(cid, msg, last) { const at = Date.now(); if (DRY) { console.l
   await db.collection(`chats/${cid}/msgs`).add({ from: BOT, at, ...msg }); if (last) await db.doc("chats/" + cid).update({ lastAt: at, lastText: last.slice(0, 140), lastFrom: BOT }); }
 const shuffle = a => { const b = [...a]; for (let i = b.length - 1; i > 0; i--) { const j = rnd(i + 1); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
+async function revealAll(cid, chat, gs, msgs) {
+  msgs = msgs || (await db.collection(`chats/${cid}/msgs`).orderBy("at", "asc").get()).docs.map(d => ({ id: d.id, ...d.data() }));
+  const z = msgs.filter(m => m.sec === "quiz"); const others = (chat.members || []).filter(k => k !== chat.host); gs.quiz = gs.quiz || {}; let n = 0;
+  for (const vote of z.filter(m => m.kind === "vote" && m.from === BOT)) { const qi = vote.qi; if (z.some(m => m.kind === "reveal" && m.qi === qi)) continue;
+    const sol = gs.quiz[cid + ":" + qi]; if (!sol) continue;
+    const guesses = {}; z.filter(m => m.kind === "guess" && m.qi === qi && others.includes(m.from)).forEach(m => { guesses[m.from] = m.opt; });
+    await say(cid, { sec: "quiz", kind: "reveal", qi, text: vote.text, opts: vote.opts, correct: sol.correct, answer: sol.answer, guesses }); n++; }
+  if (n) console.log(`Revelações no fim do cantinho: ${n}.`);
+}
+
 const newSt = { ...st };
 for (const [gid, g0] of Object.entries(groups)) {
   const g = { id: gid, ...g0 }; const mem = g.members || []; if (mem.length < 2) continue;
@@ -142,7 +152,7 @@ for (const [gid, g0] of Object.entries(groups)) {
   // 1) fechar o período anterior: avisar que há resumo
   const prevCid = cidOf(period - 1); if (period > 0 && !(gs.closed || []).includes(prevCid)) {
     const pc = (await db.doc("chats/" + prevCid).get()).data();
-    if (pc) { if (!DRY) await db.doc("chats/" + prevCid).update({ closed: true });
+    if (pc) { await revealAll(prevCid, pc, gs); if (!DRY) await db.doc("chats/" + prevCid).update({ closed: true });
       for (const k of pc.members || []) await send(k, { title: `🛋️ O ${pc.name} terminou`, body: "Vê o resumo: quanto o grupo o conhece, quem acertou mais e todas as respostas 📋", tag: "cant-sum-" + prevCid, url: url(prevCid) + "&sum=1" }); }
     gs.closed = [...(gs.closed || []).slice(-30), prevCid];
   }
@@ -191,7 +201,7 @@ for (const [gid, g0] of Object.entries(groups)) {
     await send(host, { title: "🛋️ Nova pergunta no teu cantinho", body: q.text.slice(0, 140), tag: "cant-host-" + cid, url: url(cid) });
   }
 
-  // 5) 🎯 quanto conheces: pergunta → resposta secreta → 4 opções → votos → revelação (todos votaram ou 12 h) → próxima
+  // 5) 🎯 quanto conheces: pergunta → resposta secreta → 4 opções → votos; tudo se revela no fim do cantinho
   const z = msgs.filter(m => sec(m) === "quiz"); const asks = z.filter(m => m.kind === "ask"); const cur = asks[asks.length - 1];
   if (!cur && Date.now() < chat.endsAt - 2 * 3600e3) { const n0 = nextQuiz(gs); // cantinhos antigos sem 🎯: arranca agora
     await say(cid, { sec: "quiz", kind: "ask", qi: n0, text: QUIZ[n0][0], choices: QUIZ[n0][1] });
@@ -209,19 +219,13 @@ for (const [gid, g0] of Object.entries(groups)) {
         for (const k of others) await send(k, { title: `🎯 Quanto conheces o ${first(host)}?`, body: `${QUIZ[qi][0]} O ${first(host)} já respondeu em segredo. Adivinha!`, tag: "cant-quiz-" + cid, url: url(cid) });
       }
     }
-    if (vote && !reveal) {
-      const guesses = {}; z.filter(m => m.kind === "guess" && m.qi === qi && others.includes(m.from)).forEach(m => { guesses[m.from] = m.opt; });
-      const all = others.length > 0 && others.every(k => guesses[k] !== undefined); const late = Date.now() - vote.at > 12 * 3600e3 || Date.now() > chat.endsAt - 10 * 60e3;
-      const sol = gs.quiz[cid + ":" + qi];
-      if (sol && (all || late)) {
-        const right = Object.values(guesses).filter(o => o === sol.correct).length;
-        await say(cid, { sec: "quiz", kind: "reveal", qi, text: vote.text, opts: vote.opts, correct: sol.correct, answer: sol.answer, guesses }, `🎯 Já se sabe: ${sol.answer}`);
-        for (const k of chat.members || []) await send(k, { title: `🎯 Já se sabe!`, body: `${vote.text} O ${first(host)} respondeu: ${sol.answer}. Acertaram ${right} de ${Object.keys(guesses).length}.`, tag: "cant-quiz-" + cid, url: url(cid) });
-        if (Date.now() < chat.endsAt - 2 * 3600e3) { const n = nextQuiz(gs); await say(cid, { sec: "quiz", kind: "ask", qi: n, text: QUIZ[n][0], choices: QUIZ[n][1] });
-          await send(host, { title: "🎯 Nova pergunta: quanto te conhecem?", body: `${QUIZ[n][0]} Responde em segredo, o grupo vai tentar adivinhar.`, tag: "cant-host-" + cid, url: url(cid) }); }
-      }
-    }
+    // próxima pergunta logo a seguir (as revelações ficam todas para o fim do cantinho)
+    const nAsks = asks.length;
+    if (vote && nAsks < 15 && Date.now() < chat.endsAt - 2 * 3600e3) { const n = nextQuiz(gs); await say(cid, { sec: "quiz", kind: "ask", qi: n, text: QUIZ[n][0], choices: QUIZ[n][1] });
+      await send(host, { title: "🎯 Nova pergunta: quanto te conhecem?", body: `${QUIZ[n][0]} Responde em segredo, o grupo vai tentar adivinhar.`, tag: "cant-host-" + cid, url: url(cid) }); }
   }
+  // no fim do período, revela tudo (o resumo é calculado a partir daqui)
+  if (Date.now() >= chat.endsAt - 5 * 60e3) await revealAll(cid, chat, gs, msgs);
 
   // 6) contadores públicos (só números) para o ecrã de quem está de fora
   if (!DRY) { const posts = msgs.filter(m => m.from === host && (sec(m) === "pens" || sec(m) === "q")).length; const prevC = g.cant || {};
