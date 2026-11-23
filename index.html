@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795466067">
+<meta name="pes-version" content="1795466480">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -130,11 +130,11 @@ p{margin:0}
 .tab svg{width:24px;height:24px}
 .tab.on{color:var(--accent)}
 .tab.hometab{color:#fff}
-.tab.hometab .hbub{flex:none;width:56px;height:56px;min-width:56px;min-height:56px;aspect-ratio:1/1;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;margin-top:-26px;box-sizing:border-box;border:4px solid var(--card);box-shadow:0 3px 10px rgba(0,0,0,.18);background-clip:padding-box}
+.tab.hometab .hbub{flex:none;width:50px;height:50px;min-width:50px;min-height:50px;aspect-ratio:1/1;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;margin-top:-26px;box-sizing:border-box;box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 45%,transparent),0 1px 3px rgba(0,0,0,.25)}
 .tab.hometab .hbub svg{width:24px;height:24px;display:block}
 .tab.hometab span:last-child{color:var(--muted)}
 .tab.hometab.on span:last-child{color:var(--accent);font-weight:600}
-.tab.hometab .badge{top:-24px;left:calc(50% + 10px)}
+.tab.hometab .badge{top:-26px;left:calc(50% + 12px)}
 .gline{display:flex;align-items:center;gap:8px;min-width:0}
 .seasonpill{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 9px 0 10px;border-radius:12px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:600;white-space:nowrap;flex:none}
 .seasonpill svg{width:14px;height:14px}
@@ -1798,7 +1798,7 @@ function journeyScreen(){
   const rOk=!!myRankingThisWeek(g.id), aN=aw.filter(a=>v[a.id]).length, qN=qs.filter(q=>v[q.id]).length, done=weekDone(g.id);
   const pill=(ok,txt)=>`<span class="jpill ${ok?"ok":""}">${ok?ic("check"):""}${txt}</span>`;
   const voteCard=(past||closed)?"":`<div class="section" style="margin-top:14px"><button class="jvote ${done?"done":""}" data-act="rank">
-      <div class="jvtop"><span class="jvico">${ic(done?"check":"edit")}</span><span style="flex:1;text-align:left"><b>${done?"Votação da semana feita":"Votação da semana"}</b><small>${done?"Podes alterar até domingo, 21:00":`Semana de ${esc(weekRange(w))} · até domingo, 23:59`}</small></span>${ic("right")}</div>
+      <div class="jvtop"><span class="jvico">${ic(done?"check":"edit")}</span><span style="flex:1;text-align:left"><b>${done?"Votação da semana feita":"Votação da semana"}</b><small>${done?"Podes alterar até domingo, 21:00":`Semana de ${esc(weekRange(w))} · até domingo, 21:00`}</small></span>${ic("right")}</div>
       <div class="jvpills">${pill(rOk,"Ranking")}${aw.length?pill(aN===aw.length,`Prémios ${aN}/${aw.length}`):""}${qs.length?pill(qN===qs.length,`Perguntas ${qN}/${qs.length}`):""}</div></button></div>`;
   const awardsSec=aw.length?`<div class="section"><div class="label">Prémios da época</div>
       ${hid?`<div class="card"><div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Ninguém vê votos nem resultados dos prémios até ao jantar${hid.gala?` da Gala ${esc(hid.year)} (${esc(fmtDate(hid.gala))})`:""}. Votas na "Votação da semana".</span></div></div></div><div style="height:10px"></div>`:""}
@@ -1852,7 +1852,7 @@ function cantinhoSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(
 function cantinhoCard(g){ if(curWeek()<CANT_START||votingClosed(g.id)) return "";
   if(rankLocked(g.id)&&!cantinhoOf(g.id)) return `<div class="section" style="margin-top:12px"><button class="cantcard locked" data-act="tease"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho da semana</b><small>${g.cant&&g.cant.week===curWeek()&&g.cant.answers?`${g.cant.answers} ${g.cant.answers===1?"resposta":"respostas"} que não podes ler 😬`:"Só para quem completou a votação da semana passada 🔒"}</small></span>${ic("lock")}</button></div>`;
   const c=cantinhoOf(g.id); const me=ME();
-  const past=pastCantinhos(g.id); const pastRow=past.length?`<button class="row" data-act="cantPast" data-arg="${g.id}" style="margin-top:8px;border-radius:14px;background:var(--card)"><span style="font-size:20px">📋</span><div class="grow"><div class="rowtitle">Cantinhos anteriores</div><div class="rowsub">${past.length} ${past.length===1?"resumo":"resumos"} para rever</div></div>${ic("right")}</button>`:"";
+  const past=pastCantinhos(g.id); const pastRow=past.length?`<div class="card list" style="margin-top:8px"><button class="row" data-act="cantPast" data-arg="${g.id}"><span style="font-size:20px;flex:none">📋</span><div class="grow"><div class="rowtitle">Cantinhos anteriores</div><div class="rowsub">${past.length} ${past.length===1?"resumo":"resumos"} para rever</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button></div>`:"";
   if(!c) return `<div class="section" style="margin-top:12px"><div class="cantcard wait"><span class="cant-emo">🛋️</span><span class="grow"><b>Cantinho</b><small>A sortear quem se senta no cantinho…</small></span></div>${pastRow}</div>`;
   const u=isUnread(c); const host=c.host===me;
   return `<div class="section" style="margin-top:12px"><button class="cantcard" data-act="openChat" data-arg="${c.id}"><span class="cant-emo">🛋️</span><span class="grow"><b>${esc(c.name||"Cantinho")}${host?" (és tu!)":""}</b><small>${c.endsAt?`Termina em ${fmtLeft(Math.max(0,c.endsAt-Date.now()))} · `:""}${c.lastText?`${c.lastFrom===BOT?"🛋️":esc(first(nm(c.lastFrom)))}: ${esc(c.lastText)}`:(host?"O cantinho é teu durante 2 dias":"À espera da primeira publicação")}</small></span>${u?'<span class="dotu" aria-label="Por ler"></span>':ic("right")}</button>${pastRow}</div>`; }
