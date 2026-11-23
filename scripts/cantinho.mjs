@@ -170,16 +170,10 @@ for (const [gid, g0] of Object.entries(groups)) {
       await db.doc("groups/" + gid).update({ cant: { week: wk, answers: ans, inside: (chat.members || []).length } }); }
   const last = msgs[msgs.length - 1]; if (!last) continue;
   const qs = msgs.filter(m => m.from === BOT && m.q); const lastQ = qs[qs.length - 1]; const nThemes = qs.filter(m => m.st === 0).length;
-  const tell = text => send(chat.host, { title: "🛋️ O Anfitrião respondeu", body: text.slice(0, 140), tag: "cant-host-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
+  const tell = text => send(chat.host, { title: "🛋️ Nova pergunta no teu cantinho", body: text.slice(0, 140), tag: "cant-host-" + cid, url: `./?g=${gid}&t=gap&c=${cid}` });
   if (last.from === chat.host) {
-    // a pessoa respondeu: reação + pergunta seguinte do mesmo tema; no fim do tema, fecha o dia
-    const nx = lastQ && !msgs.some(m => m.from === BOT && m.end && m.at > lastQ.at) ? themeStep(lastQ.th, (lastQ.st || 0) + 1) : null;
-    if (nx) { const t = `${reaction(gs)} ${nx.text}`; await botSay(cid, t, nx); await tell(t); }
-    else { const closed = lastQ && msgs.some(m => m.from === BOT && m.end && m.at > lastQ.at);
-      await botSay(cid, closed ? reaction(gs) : `${reaction(gs)} Por hoje ficamos por aqui 🛋️ Amanhã há tema novo no cantinho.`, null, !closed); }
-  } else if (last.from === BOT && !last.q && ymd(new Date(last.at)) < today && hourLx() >= MORNING) {
-    // dia novo e o tema de ontem terminou: tema novo
-    const q = newTheme(gs, nThemes); const t = `Bom dia, ${first(chat.host)} ☀️ ${BRIDGES[rnd(BRIDGES.length)]} ${q.text}`; await botSay(cid, t, q); await tell(t);
+    // perguntas e respostas: a cada resposta, uma pergunta nova de um tema diferente (alterna filosofia e rotina)
+    const q = newTheme(gs, nThemes); await botSay(cid, q.text, q); await tell(q.text);
   }
 }
 if (!DRY) await stRef.set(newSt);
