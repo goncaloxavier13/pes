@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795465064">
+<meta name="pes-version" content="1795465620">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1037,7 +1037,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
       const t=r.pick?[]:regAnswers(gid,w,r); return t.length?`<div class="regq">${t.map(x=>`<blockquote>“${esc(x)}”</blockquote>`).join("")}</div><p class="s-txt">Ninguém sabe quem escreveu o quê 🕶️</p>`
       :`<p class="s-txt">${r.empty||({irrit:"Semana calma… ninguém irritou ninguém 😇",coro:"Nenhum coro registado esta semana 🤐",mom:"Ninguém registou nenhum momento esta semana 📭"})[r.key]}</p>`; },
     joke:r.joke||({irrit:["Alguém irritou alguém 😤","Quem? Só sabe quem votou. Tu ficas a imaginar se foste tu."],coro:["Houve coros esta semana 💋","Os pormenores ficam para quem votou. Tu ficas com a curiosidade."],mom:["Houve momentos épicos 📸","Toda a gente se lembra deles. Tu não estavas lá… pelo menos aqui."]})[r.key]}));
-  S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
+  if(nextW===PF_START) S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
     html:()=>pfSummary(gid,w)||`<p class="s-txt">Não houve Preferias Flash esta semana.</p>`,
     joke:["Preferias votar ou ficar de fora? 😏","Já escolheste. E, por isso, esta semana também não jogas o Preferias Flash."]});
   S_.push({emo:"🛋️",title:nextW===CANT_START?"Novidade: o Cantinho":"Cantinho desta semana",
@@ -1249,7 +1249,7 @@ function activityParts(gid,k){ const ws=scoreWeeks(gid); const cw=curWeek(); con
   let m=0,r=0,g=0; ws.forEach(w=>{ const x=act.w?.[w]?.[k]||{}; m+=x.m||0; r+=x.r||0; g+=x.g||0; });
   const evC=groupEvents(gid).filter(e=>e.createdBy===k&&countsForStats(e)&&ws.includes(weekOf(e.date||""))).length;
   const pts=m+r+g+3*evC; parts.push({w:20,label:"Conversa e eventos",v:Math.min(1,pts/(4*n)),d:`${m} mensagens, ${r} reações, ${g} palpites, ${evC} eventos criados`});
-  const td=lisbonYMD(); const pdays=ws.flatMap(w=>weekPF(gid,w)).filter(q=>q.day<td||(q.day===td&&pfAns(k,q))); const pd=pdays.filter(q=>pfAns(k,q)).length;
+  const td=pfEd()||"0"; const pdays=ws.flatMap(w=>weekPF(gid,w)).filter(q=>q.day<td||(q.day===td&&pfAns(k,q))); const pd=pdays.filter(q=>pfAns(k,q)).length;
   if(pdays.length) parts.push({w:10,label:"Preferias Flash",v:pd/pdays.length,d:`${pd}/${pdays.length} dias`});
   return parts; }
 function activityScore(gid,k){ const p=activityParts(gid,k); const W=p.reduce((a,x)=>a+x.w,0)||1; return Math.round(100*p.reduce((a,x)=>a+x.w*x.v,0)/W); }
@@ -1313,7 +1313,7 @@ const CANT_START="2026-W48";
 /* Cantinho: a new person every 2 days (period 0 = 23–24 Nov 2026). The server opens/closes them; the app shows the 3 sections and the summary. */
 const CANT_DAY0="2026-11-23";
 const dayIdx=ymd=>Math.round((Date.UTC(+ymd.slice(0,4),+ymd.slice(5,7)-1,+ymd.slice(8,10))-Date.UTC(2026,10,23))/864e5);
-const curPeriod=()=>Math.floor(dayIdx(lisbonYMD())/2);
+const curPeriod=()=>Math.floor((dayIdx(lisbonYMD())*1440+pfLx().mins-20*60)/2880); // muda às 20:00, de 2 em 2 dias
 function cantinhoOf(gid){ const me=ME(); const cp=curPeriod(); const e=Object.entries(S.chats).find(([id,c])=>c.type==="cantinho"&&c.groupId===gid&&(c.members||[]).includes(me)&&!c.closed&&(c.period===cp||(c.period===undefined&&c.week===curWeek()))); return e?{id:e[0],...e[1]}:null; }
 function pastCantinhos(gid){ const me=ME(); const cp=curPeriod(); return Object.entries(S.chats).filter(([id,c])=>c.type==="cantinho"&&c.groupId===gid&&(c.members||[]).includes(me)&&(c.closed||(c.period!==undefined&&c.period<cp))).map(([id,c])=>({id,...c})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); }
 function cantFirstHost(gid){ return (S.groups[gid]?.members||[]).find(k=>first(nm(k))==="Manel")||null; }
@@ -2198,15 +2198,15 @@ membros:[
 const PF_CATS=[["rotina","☕ Rotina"],["erotico","🌶️ Picante"],["filosofia","🧠 Filosofia"],["membros","👥 Malta"]];
 const PF_START="2026-W48";
 function pfLx(){ const p=Object.fromEntries(new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Lisbon",weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()).map(x=>[x.type,x.value])); return {dow:p.weekday,mins:(+p.hour%24)*60+(+p.minute)}; }
-/* Preferias Flash: one dilemma a day (from 24 Nov 2026), open 00:00–23:30 Lisbon; on Sunday it closes at 21:00, when the week's vote closes.
-   Categories rotate day by day (rotina → picante → filosofia → malta); within a category, a fixed shuffle per group → no repeats until all have been used. */
-const PF_DAY0="2026-11-24";
+/* Preferias Flash: one dilemma a day, launched at 21:30 (Lisbon) and open until the next launch.
+   At each launch the previous dilemma's results come out, but only for whoever played it. */
+const PF_DAY0="2026-11-23";
 const PF_LOGO="icons/pf-logo.webp";
-function pfToday(){ return lisbonYMD(); }
-function pfCloseMins(day){ return ymdToUTC(day).getUTCDay()===0?21*60:23*60+30; }
-function pfOpen(){ if(window.PF_FORCE) return true; const d=pfToday(); if(d<PF_DAY0) return false; return pfLx().mins<pfCloseMins(d); }
-function pfMsLeft(){ return Math.max(0,(pfCloseMins(pfToday())-pfLx().mins)*6e4); }
-function pfCloseTxt(day=pfToday()){ return pfCloseMins(day)===21*60?"21:00":"23:30"; }
+const PF_AT=21*60+30;
+function pfEd(){ const t=lisbonYMD(); const ed=pfLx().mins>=PF_AT?t:addDays(t,-1); return ed>=PF_DAY0?ed:null; }
+function pfToday(){ return pfEd(); }
+function pfOpen(){ return window.PF_FORCE?true:!!pfEd(); }
+function pfMsLeft(){ const m=pfLx().mins; return ((m>=PF_AT?1440:0)+PF_AT-m)*6e4; }
 function pfDayIdx(day){ return Math.round((ymdToUTC(day)-ymdToUTC(PF_DAY0))/864e5); }
 function pfItem(gid,day){ const d=pfDayIdx(day); if(d<0) return null; const [cat,label]=PF_CATS[d%PF_CATS.length]; const N=PF[cat].length;
   const idx=[...Array(N).keys()]; let seed=hashStr2(gid+"|pfd|"+cat); for(let i=N-1;i>0;i--){ seed=(Math.imul(seed,1664525)+1013904223)>>>0; const j=seed%(i+1); [idx[i],idx[j]]=[idx[j],idx[i]]; }
@@ -2215,51 +2215,51 @@ function pfItem(gid,day){ const d=pfDayIdx(day); if(d<0) return null; const [cat
     const sn=k=>{ const f=first(nm(k)); return mem.filter(o=>first(nm(o))===f).length>1?nm(k):f; }; // full name when the first name repeats
     a=a.replace("{A}",sn(x)).replace("{B}",sn(z)); b=b.replace("{A}",sn(x)).replace("{B}",sn(z)); }
   return {id:"pf:"+day,day,w:weekOf(day),cat,label,a,b}; }
-// the dilemmas of a voting week (Monday to Sunday)
-function weekPF(gid,w=curWeek()){ if(!w||w<PF_START) return []; const m=utcToYmd(weekMonday(w)); const out=[];
+// the editions launched in a week (Monday to Sunday)
+function weekPF(gid,w=curWeek()){ if(!w) return []; const m=utcToYmd(weekMonday(w)); const out=[];
   for(let i=0;i<7;i++){ const d=addDays(m,i); if(d<PF_DAY0) continue; const it=pfItem(gid,d); if(it) out.push(it); } return out; }
 const pfAns=(k,q)=>S.votes[k]?.weeks?.[q.w]?.[q.id];
-const pfDone=(gid,k=ME())=>{ const q=pfItem(gid,pfToday()); return !!(q&&pfAns(k,q)); };
+const pfDone=(gid,k=ME())=>{ const e=pfEd(); const q=e&&pfItem(gid,e); return !!(q&&pfAns(k,q)); };
 const pfDayName=day=>["domingo","segunda","terça","quarta","quinta","sexta","sábado"][ymdToUTC(day).getUTCDay()];
-function pfCard(g){ if(!pfOpen()) return ""; const q=pfItem(g.id,pfToday()); if(!q) return ""; const logo=`<img class="pf-logo" src="${PF_LOGO}" alt="">`;
-  if(rankLocked(g.id)) return `<div class="section" style="margin-top:14px"><button class="pfcard locked" data-act="tease">${logo}<span class="grow"><b>Preferias Flash</b><small>Não completaste a votação da semana passada, por isso esta semana não jogas 🔒</small></span>${ic("lock")}</button></div>`;
+function pfCard(g){ const ed=pfEd(); if(!ed) return ""; const q=pfItem(g.id,ed); if(!q) return ""; const logo=`<img class="pf-logo" src="${PF_LOGO}" alt="">`;
+  const prev=addDays(ed,-1); const pq=prev>=PF_DAY0?pfItem(g.id,prev):null;
+  const locked=rankLocked(g.id); const res=pq?`<button class="row" data-act="${locked?"tease":"pfRes"}" data-arg="${prev}"><span style="font-size:22px;flex:none">${!locked&&pfAns(ME(),pq)?"👀":"🔒"}</span><div class="grow"><div class="rowtitle">Resultados de ontem</div><div class="rowsub">${!locked&&pfAns(ME(),pq)?"Vê o que cada um escolheu":"Não jogaste, por isso não os vês 😏"}</div></div>${ic(locked?"lock":"right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`:"";
+  if(locked) return `<div class="section" style="margin-top:14px"><button class="pfcard locked" data-act="tease">${logo}<span class="grow"><b>Preferias Flash de hoje</b><small>Não completaste a votação da semana passada, por isso esta semana não jogas 🔒</small></span>${ic("lock")}</button>${res?`<div class="card list" style="margin-top:8px">${res}</div>`:""}</div>`;
   const done=pfDone(g.id); const n=(g.members||[]).filter(k=>pfDone(g.id,k)).length;
-  return `<div class="section" style="margin-top:14px"><button class="pfcard ${done?"done":""}" data-act="pfPlay">${logo}<span class="grow"><b>${done?"Dilema de hoje feito ✓":"Preferias Flash de hoje"}</b><small>${done?`Amanhã há outro. Os resultados saem no resumo de domingo 👀`:`${q.label} · fecha em ${fmtLeft(pfMsLeft())} · ${n} de ${(g.members||[]).length} já jogaram`}</small></span>${ic("right")}</button></div>`; }
-function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const day=pfToday(); const q=pfItem(g.id,day);
-  if(!q||!pfOpen()){ toast("O Preferias Flash de hoje já fechou. Amanhã há outro ⚡"); return; }
+  return `<div class="section" style="margin-top:14px"><button class="pfcard ${done?"done":""}" data-act="pfPlay">${logo}<span class="grow"><b>${done?"Dilema de hoje feito ✓":"Preferias Flash de hoje"}</b><small>${done?`Os resultados saem às 21:30, com o dilema seguinte 👀`:`${q.label} · fecha em ${fmtLeft(pfMsLeft())} · ${n} de ${(g.members||[]).length} já jogaram`}</small></span>${ic("right")}</button>${res?`<div class="card list" style="margin-top:8px">${res}</div>`:""}</div>`; }
+function pfResultHtml(gid,q){ const g=S.groups[gid]; const me=ME(); const who={A:[],B:[]}; (g?.members||[]).forEach(k=>{ const v=pfAns(k,q); if(v==="A"||v==="B") who[v].push(k); });
+  const tot=who.A.length+who.B.length; const pa=tot?Math.round(100*who.A.length/tot):0;
+  const side=(t,list,p,cls)=>`<div class="pfr ${cls}"><div class="pfr-top"><span>${esc(t)}</span><b class="num">${p}%</b></div><div class="pfr-who">${list.length?list.map(k=>{ const f=first(nm(k)); const dup=(g?.members||[]).filter(o=>first(nm(o))===f).length>1; return `<span>${avatar(k,22)}${esc(dup?nm(k):f)}${k===me?" (tu)":""}</span>`; }).join(""):'<small class="muted">Ninguém</small>'}</div></div>`;
+  return `<div class="card pad" style="margin-bottom:10px"><div class="rowsub" style="margin-bottom:8px">${q.label} · lançado ${pfDayName(q.day)} às 21:30</div><h3 style="margin:0 0 10px">Preferias…</h3>${side(q.a,who.A,pa,"a")}${side(q.b,who.B,tot?100-pa:0,"b")}</div>`; }
+function pfResSheet(gid,day){ const me=ME(); const ed=pfEd(); const all=[]; for(let d=addDays(ed,-1);d>=PF_DAY0&&all.length<14;d=addDays(d,-1)) all.push(pfItem(gid,d));
+  openSheet({title:"⚡ Resultados",left:"Fechar",body:()=>{ const q=pfItem(gid,day); const mine=pfAns(me,q);
+    const past=all.filter(x=>x.day!==day&&pfAns(me,x)).slice(0,7);
+    return `<div class="pf-head"><img class="pf-logo-big" src="${PF_LOGO}" alt="Preferias Flash"></div>`+(mine?pfResultHtml(gid,q)
+      :`<div class="card pad pflock"><b>🔒 Não jogaste este Preferias Flash</b><span>Por isso não vês o que a malta escolheu 😏 Há um dilema novo todos os dias às 21:30.</span></div>`)
+      +(past.length?`<div class="label" style="margin:16px 4px 8px">Anteriores em que jogaste</div><div class="card list">${past.map(x=>`<button class="row" data-act="pfRes" data-arg="${x.day}"><span class="grow"><span class="rowtitle" style="white-space:normal">${esc(x.a)} <span class="muted">ou</span> ${esc(x.b)}</span><span class="rowsub">${x.label} · ${pfDayName(x.day)}</span></span>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")}</div>`:""); }}); }
+function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const day=pfEd(); const q=day&&pfItem(g.id,day);
+  if(!q){ toast("O Preferias Flash começa hoje às 21:30 ⚡"); return; }
   if(rankLocked(g.id)){ teaseSheet(); return; }
   let pick=pfAns(me,q)||null;
   const L=openSheet({title:"⚡ Preferias Flash",left:"Fechar",body:()=>{
     if(pick) return `<div class="pf-end"><img class="pf-logo-big" src="${PF_LOGO}" alt="Preferias Flash"><b>Feito!</b><p>Escolheste: <b>${esc(pick==="A"?q.a:q.b)}</b></p>
-      <p>Amanhã às 00:00 há um dilema novo. No domingo às 21h, o resumo da semana mostra o que cada um escolheu, todos os dias.</p>
-      ${(()=>{ const ds=weekPF(g.id,q.w).filter(x=>x.day<=day); const n=ds.filter(x=>pfAns(me,x)).length; return `<p class="info">Esta semana já jogaste ${n} de ${ds.length} ${ds.length===1?"dia":"dias"}. No resumo só vês os dias em que jogaste 😏</p>`; })()}</div>`;
+      <p>Às 21:30 saem os resultados, com o dilema seguinte. Só quem joga vê o que a malta escolheu 😏</p><p class="info">Faltam ${fmtLeft(pfMsLeft())}</p></div>`;
     return `<div class="pf-head"><img class="pf-logo-big" src="${PF_LOGO}" alt="Preferias Flash"></div>
-      <div class="pf-cat">${q.label} · dilema de ${pfDayName(day)}</div><h2 class="pf-q">Preferias…</h2>
+      <div class="pf-cat">${q.label} · dilema de hoje</div><h2 class="pf-q">Preferias…</h2>
       <button class="pf-opt a" data-pf="A">${esc(q.a)}</button><div class="pf-or">ou</div><button class="pf-opt b" data-pf="B">${esc(q.b)}</button>
-      <p class="info" style="text-align:center">Fecha hoje às ${pfCloseTxt(day)} · faltam ${fmtLeft(pfMsLeft())}</p>`; },
-    onMount:L=>{ L.body.addEventListener("click",async e=>{ const b=e.target.closest("[data-pf]"); if(!b||pick) return; if(!pfOpen()){ toast("O Preferias Flash de hoje já fechou"); return; } if(rankLocked(g.id)){ toast("Esta semana não podes jogar 🔒"); return; }
+      <p class="info" style="text-align:center">Fecha às 21:30 · faltam ${fmtLeft(pfMsLeft())}</p>`; },
+    onMount:L=>{ L.body.addEventListener("click",async e=>{ const b=e.target.closest("[data-pf]"); if(!b||pick) return; if(pfEd()!==day){ toast("Este dilema já fechou. Já saiu outro ⚡"); return; } if(rankLocked(g.id)){ toast("Esta semana não podes jogar 🔒"); return; }
       b.classList.add("pick"); const v=b.dataset.pf;
       const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{}; doc.weeks[q.w]={...(doc.weeks[q.w]||{}),[q.id]:v};
       const ok=await write(()=>D("votes/"+me).set(doc),"Preferias Flash feito ⚡"); if(!ok){ b.classList.remove("pick"); return; }
       pick=v; setTimeout(()=>{ L.render(); L.body.scrollTop=0; },180); }); }}); }
-function pfSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); const me=ME(); const g=S.groups[gid];
-  let out="";
-  const it=weekPF(gid,w); const mine=it.filter(q=>pfAns(me,q)); const miss=it.length-mine.length;
-  if(it.length){ out+=`<div style="text-align:center;margin:-4px 0 10px"><img class="pf-logo-sum" src="${PF_LOGO}" alt="Preferias Flash"></div>`;
-    if(!mine.length) out+=`<div class="card pad pflock"><b>🔒 Não jogaste nenhum Preferias Flash esta semana</b><span>Por isso não vês o que a malta escolheu 😏 Há um dilema novo todos os dias, joga para não ficares de fora outra vez.</span></div>`;
-    else { out+=mine.map(q=>{ const who={A:[],B:[]}; (g?.members||[]).forEach(k=>{ const v=pfAns(k,q); if(v==="A"||v==="B") who[v].push(k); });
-      const tot=who.A.length+who.B.length; const pa=tot?Math.round(100*who.A.length/tot):0;
-      const side=(t,list,p,cls)=>`<div class="pfr ${cls}"><div class="pfr-top"><span>${esc(t)}</span><b class="num">${p}%</b></div><div class="pfr-who">${list.length?list.map(k=>{ const f=first(nm(k)); const dup=(g?.members||[]).filter(o=>first(nm(o))===f).length>1; return `<span>${avatar(k,22)}${esc(dup?nm(k):f)}${k===me?" (tu)":""}</span>`; }).join(""):'<small class="muted">Ninguém</small>'}</div></div>`;
-      return `<div class="card pad" style="margin-bottom:10px"><div class="rowsub" style="margin-bottom:8px">${pfDayName(q.day)[0].toUpperCase()+pfDayName(q.day).slice(1)} · ${q.label} · Preferias…</div>${side(q.a,who.A,pa,"a")}${side(q.b,who.B,tot?100-pa:0,"b")}</div>`; }).join("");
-      if(miss) out+=`<div class="card pad pflock"><b>🔒 Não jogaste em ${miss} ${miss===1?"dia":"dias"}</b><span>${miss===1?"Desse dia":"Desses dias"} não vês o que a malta escolheu 😏</span></div>`; } }
-  if(nextW===PF_START) out+=`<div class="card pad cantsum">
+function pfSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); if(nextW!==PF_START) return "";
+  return `<div class="card pad cantsum">
     <div style="text-align:center"><img class="pf-logo-sum" src="${PF_LOGO}" alt="Preferias Flash"></div>
-    <p>A partir desta semana, <b>todos os dias</b> aparece no Dashboard um <b>Preferias Flash</b>: um dilema rápido, que vai rodando entre ☕ rotina, 🌶️ picante, 🧠 filosofia e 👥 a malta do grupo.</p>
-    <p>Cada dilema só está aberto nesse dia, <b>das 00:00 às 23:30</b> (ao domingo fecha às 21:00). Depois fecha, sem desculpas.</p>
-    <p>No domingo às 21h, o resumo da semana mostra o que cada um escolheu em cada dia, com nome e tudo 👀 Mas atenção: <b>só vês as respostas dos dias em que jogaste</b>.</p>
+    <p>A partir desta semana, <b>todos os dias às 21:30</b> sai no Dashboard um <b>Preferias Flash</b>: um dilema rápido, que vai rodando entre ☕ rotina, 🌶️ picante, 🧠 filosofia e 👥 a malta do grupo.</p>
+    <p>Fica aberto até às 21:30 do dia seguinte. Nessa altura sai o dilema novo e <b>os resultados do anterior</b>, com nome e tudo 👀 Mas atenção: <b>só vê os resultados quem jogou</b>.</p>
     <p>⚠️ Quem não completar a votação da semana não pode jogar o Preferias Flash na semana seguinte.</p>
-    <div class="cantwho"><span>O primeiro Preferias Flash é já</span><span class="cw"><b>terça-feira, 24 de novembro ⚡</b></span></div></div>`;
-  return out; }
+    <div class="cantwho"><span>O primeiro Preferias Flash é já</span><span class="cw"><b>hoje, 23 de novembro, às 21:30 ⚡</b></span></div></div>`; }
 /* ───────── Locked (didn't vote): every tap gets a cheeky message ───────── */
 const TEASES=[["Ups… 🙈","Estavas mesmo à espera de ver alguma coisa? Quem não vota fica a ver navios."],
   ["Bela tentativa 😏","Carregar mais vezes não desbloqueia nada. Votar desbloqueia."],
@@ -2531,7 +2531,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
