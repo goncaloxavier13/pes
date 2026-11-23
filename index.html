@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795463193">
+<meta name="pes-version" content="1795463832">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1237,9 +1237,21 @@ function rankLocked(gid){ const g=S.groups[gid]; if(!g||!ME()||(g.members||[]).l
 function scoreWeeks(gid){ const s=viewSeason(gid); const cw=curWeek(); const end=s.endW&&s.endW<cw?s.endW:cw; return weeksBack(8,end).filter(w=>inSeasonW(s,w)); }
 function rankingWeeksDone(k,gid){ const ws=scoreWeeks(gid); return ws.filter(w=>S.rankings[k]?.weeks?.[w]?.[gid]).length; }
 function voteWeeksDone(k,gid){ const aw=groupAwards(gid).map(a=>a.id); const ws=scoreWeeks(gid); return ws.filter(w=>{ const v=S.votes[k]?.weeks?.[w]||{}; return aw.some(a=>v[a]); }).length; }
-function activityScore(gid,k){ const st=eventStats(gid,k); const rate=st.invited?st.rate/100:0;
-  const n=Math.max(1,scoreWeeks(gid).length);
-  return Math.round(100*(.4*rate + .3*rankingWeeksDone(k,gid)/n + .3*voteWeeksDone(k,gid)/n)); }
+/* Activity score (0–100), last 8 weeks of the season: every kind of participation counts.
+   Parts without anything to measure yet (e.g. no cantinho with access) are left out and the rest is reweighted. */
+function activityParts(gid,k){ const ws=scoreWeeks(gid); const cw=curWeek(); const n=Math.max(1,ws.length); const act=S.groups[gid]?.act||{}; const parts=[];
+  const vw=ws.filter(w=>w<cw||weekComplete(gid,k,w)); const vd=vw.filter(w=>weekComplete(gid,k,w)).length;
+  parts.push({w:30,label:"Votação completa",v:vw.length?vd/vw.length:0,d:`${vd}/${Math.max(1,vw.length)} semanas`});
+  const st=eventStats(gid,k); if(st.invited) parts.push({w:20,label:"Presença em eventos",v:st.rate/100,d:`${st.rate}% (eventos com 4 ou mais pessoas)`});
+  let ca=0, cpn=0; ws.forEach(w=>{ ca+=act.ca?.[w]?.[k]||0; }); Object.values(act.cp||{}).forEach(c=>{ if(c&&ws.includes(c.w)&&(c.k||[]).includes(k)) cpn++; }); cpn=Math.min(cpn,ca);
+  if(ca) parts.push({w:20,label:"Cantinho",v:cpn/ca,d:`participaste em ${cpn} de ${ca}`});
+  let m=0,r=0,g=0; ws.forEach(w=>{ const x=act.w?.[w]?.[k]||{}; m+=x.m||0; r+=x.r||0; g+=x.g||0; });
+  const evC=groupEvents(gid).filter(e=>e.createdBy===k&&countsForStats(e)&&ws.includes(weekOf(e.date||""))).length;
+  const pts=m+r+g+3*evC; parts.push({w:20,label:"Conversa e eventos",v:Math.min(1,pts/(4*n)),d:`${m} mensagens, ${r} reações, ${g} palpites, ${evC} eventos criados`});
+  const pw=ws.filter(w=>w>=PF_START&&(w<cw||weekPF(gid,w).some(q=>S.votes[k]?.weeks?.[w]?.[q.id]))); const pd=pw.filter(w=>weekPF(gid,w).some(q=>S.votes[k]?.weeks?.[w]?.[q.id])).length;
+  if(pw.length) parts.push({w:10,label:"Preferias Flash",v:pd/pw.length,d:`${pd}/${pw.length} semanas`});
+  return parts; }
+function activityScore(gid,k){ const p=activityParts(gid,k); const W=p.reduce((a,x)=>a+x.w,0)||1; return Math.round(100*p.reduce((a,x)=>a+x.w*x.v,0)/W); }
 /* ───────── Seasons: each season ends on the group's gala day; the next one starts the day after ─────────
    Votes and rankings are weekly, so the gala week is the season's last week (voting closes after the gala). */
 function addDays(ymd,n){ const d=ymdToUTC(ymd); d.setUTCDate(d.getUTCDate()+n); return utcToYmd(d); }
@@ -1339,7 +1351,7 @@ function popLayer(L){ L=L||layers[layers.length-1]; if(!L) return; layers=layers
 function toast(msg){ app.querySelectorAll(".toast").forEach(x=>x.remove()); const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; app.appendChild(t); setTimeout(()=>t.remove(),2200); }
 function dialog(title,msg,buttons){ return new Promise(res=>{
   const L=pushLayer(`<div class="overlay"></div><div class="dialog" role="alertdialog" aria-modal="true"><div class="dt"><h3></h3>${msg?"<p></p>":""}</div><div class="db">${buttons.map((b,i)=>`<button data-i="${i}" class="${b.danger?"danger":""}"></button>`).join("")}</div></div>`);
-  L.el.querySelector("h3").textContent=title; if(msg) L.el.querySelector("p").textContent=msg;
+  L.el.querySelector("h3").textContent=title; if(msg){ const P=L.el.querySelector("p"); P.textContent=msg; if(msg.includes("\n")){ P.style.whiteSpace="pre-line"; P.style.textAlign="left"; } }
   L.el.querySelectorAll("[data-i]").forEach(b=>{ b.textContent=buttons[+b.dataset.i].t; b.onclick=()=>{ popLayer(L); res(buttons[+b.dataset.i].v); }; });
   L.el.querySelector("[data-i]:last-child").focus();
 }); }
@@ -2529,7 +2541,7 @@ const A = {
   allAvg:()=>{ const g=curGroup(); const av=averages(g.id); const me=ME(); if(rankLocked(g.id)||firstWeekReveal(g.id)) return;
     openSheet({title:"Ranking atual",left:"Fechar",live:true,body:()=>(rankLocked(g.id)||firstWeekReveal(g.id))?`<div class="card lockcard">${ic("lock")}<b>Rankings bloqueados</b></div>`:`<div class="card list">${averages(g.id).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${i<3?["🥇","🥈","🥉"][i]:i+1}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div><div class="rowsub">${a.n} ${a.n===1?"ranking":"rankings"}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div><p class="info">Média da posição que cada pessoa recebe no ranking mais recente de cada membro. Quanto mais baixo, melhor.</p>`}); },
   scoreInfo:()=>{ const g=curGroup(); const me=ME(); const st=eventStats(g.id,me);
-    alertD(`Activity score: ${activityScore(g.id,me)}`,`40% taxa de presença em eventos de grupo, com 4 ou mais pessoas (${st.rate}%), 30% semanas com ranking submetido (${rankingWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}) e 30% semanas com votos nos prémios (${voteWeeksDone(me,g.id)}/${Math.max(1,scoreWeeks(g.id).length)}), nas últimas 8 semanas desta época.`); },
+    { const p=activityParts(g.id,me); const W=p.reduce((a,x)=>a+x.w,0)||1; alertD(`Activity score: ${activityScore(g.id,me)}`,`Conta toda a tua participação nas últimas 8 semanas desta época:\n\n${p.map(x=>`• ${x.label} (${Math.round(100*x.w/W)}%): ${x.d}`).join("\n")}\n\nConversa e eventos: o máximo atinge-se com cerca de 4 participações por semana (cada evento criado vale 3).`); } },
   presence:async arg=>{ const [id,v]=arg.split("|"); const me=ME(); const e=S.events[id]; if(!e) return; if((e.att||{})[me]===v) return;
     await write(()=>D("events/"+id).update({att:{[me]:v}}), v==="yes"?"Marcado como presente":"Marcado como ausente"); },
   eventMenu:async id=>{ const e=S.events[id]; if(!e) return; const me=ME(); const mine=e.createdBy===me; const admin=isAdmin(S.groups[e.groupId]);
