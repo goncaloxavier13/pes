@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795540513">
+<meta name="pes-version" content="1795540831">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1135,7 +1135,7 @@ function tribStories(fromSheet){ const g=curGroup(); lsSet(TRIB_NEWS,true);
   const S_=[
     {emo:"⚖️",title:"Tribunal do Sr. Sid",sub:"Nova rubrica semanal · toca para avançar",html:()=>p("Todas as semanas, o grupo acusa e o <b>Meritíssimo Sr. Sid</b> julga.")+p("Aqui ele exige ser tratado com cerimónia: é sempre <b>Meritíssimo Sr. Sid</b>. Sem exceções 🧑‍⚖️")},
     {emo:"🗓️",title:"A semana do tribunal",html:()=>li([["📝","Segunda até terça, 17:00","acusações"],["🔨","Até quinta, 20:00","veredicto do Meritíssimo"],["👏","Até sexta, 20:00","o povo reage"],["🔁","Até domingo, 21:00","recurso, se houver"]])},
-    {emo:"📝",title:"Acusa quem quiseres",sub:"Até terça às 17:00",html:()=>p("Escolhe o acusado, dá um título ao caso e conta tudo. Pode ser desta semana ou de momentos passados.")+p("<b>É anónimo:</b> só o Meritíssimo vê quem acusou e o que escreveu 🤫")+p("Podes submeter vários casos.")},
+    {emo:"📝",title:"Acusa quem quiseres",sub:"Até terça às 17:00",html:()=>p("Escolhe o acusado, dá um título ao caso e conta tudo. Pode ser desta semana ou de momentos passados.")+p("<b>É anónimo:</b> ninguém sabe quem acusou, nem o próprio Meritíssimo 🤫")+p("Podes submeter vários casos.")},
     {emo:"🔨",title:"O veredicto",sub:"Até quinta às 20:00",html:()=>p("Terça às 17:00, o Meritíssimo escolhe <b>um caso</b> e leva-o a julgamento: fica logo visível para todos.")+p("Até quinta às 20:00 decide: <b>condenado</b> ou <b>absolvido</b>.")+p("Escreve a sentença e, se condenar, aplica uma <b>pena simbólica</b>.")+p("Cada caso julgado ganha número: <b>Processo n.º 001/2026</b>.")},
     {emo:"👏",title:"O povo reage",sub:"Até sexta às 20:00",html:()=>li([["👏","Justiça feita","concordas com a sentença"],["🔁","Recurso","achas que o Meritíssimo errou"]])+p("Uma reação por pessoa, sem voltar atrás. O acusado também pode reagir. O Meritíssimo não vota.")},
     {emo:"🔁",title:"Recurso",html:()=>p("Vai a recurso se às 20:00 de sexta houver <b>pelo menos 3 🔁</b> e <b>mais 🔁 do que 👏</b>.")+p("O Meritíssimo decide até domingo às 21:00:")+li([["✋","Mantém a sentença","cada um que pediu recurso fica a dever-lhe um fino 🍺"],["🔄","Revê a sentença","o resultado inverte-se"]])},
@@ -2398,7 +2398,7 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
     if(c.status==="none") out+=`<div class="empty" style="margin-top:20px"><div class="ico">🪑</div><h3>Semana sem julgamento</h3><p>O ${MER} não proferiu sentença esta semana. Na segunda abre um tribunal novo.</p></div>`;
     if(c.status==="sub"){
       if(m<TR_SUB){ const subs=Object.entries(my.sub||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w);
-        out+=`<div class="card pad trform"><b>Submeter um caso</b><p class="info" style="margin:4px 0 10px">Até terça às 17:00 (faltam ${trLeft(TR_SUB)}). Pode ser desta semana ou de momentos passados. É anónimo: só o ${MER} vê quem acusou e o que escreveste.</p>
+        out+=`<div class="card pad trform"><b>Submeter um caso</b><p class="info" style="margin:4px 0 10px">Até terça às 17:00 (faltam ${trLeft(TR_SUB)}). Pode ser desta semana ou de momentos passados. É anónimo: ninguém sabe quem acusou, nem o ${MER}.</p>
           <div class="label" style="margin:0 0 6px">Quem é o acusado?</div><div class="chips">${(g.members||[]).slice().sort((a,b)=>nm(a).localeCompare(nm(b))).map(k=>`<button type="button" class="namechip ${st.accused===k?"sel":""}" data-tracc="${k}">${avatar(k,26)}${esc((g.members||[]).filter(o=>first(nm(o))===first(nm(k))).length>1?nm(k):first(nm(k)))}${k===me?" (tu)":""}</button>`).join("")}</div>
           <div class="field" style="margin-top:12px"><label for="trtitle">Título do caso</label><input id="trtitle" class="input" maxlength="120" placeholder="Ex.: O caso da última fatia"></div>
           <div class="field"><label for="trdesc">Descrição</label><textarea id="trdesc" class="input" maxlength="1500" rows="4" placeholder="Conta tudo ao Meritíssimo…"></textarea></div>
@@ -2406,7 +2406,7 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
         if(subs.length) out+=`<div class="label" style="margin-top:14px">Os teus casos desta semana</div><div class="card list">${subs.map(([id,x])=>`<div class="row"><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub">Contra ${esc(nm(x.accused))}</div></div><button class="btn sm ghost" data-trdel="${id}">Retirar</button></div>`).join("")}</div>`; }
       if(sid){ const inbox=Object.entries(my.inbox||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w).sort((a,b)=>a[1].at-b[1].at); const sent=my.pick?.[gid]?.[c.w];
         out+=`<div class="label" style="margin-top:16px">🔒 Caixa do ${MER} · ${inbox.length} ${inbox.length===1?"caso":"casos"}</div>`;
-        out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔘":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))} · submetido por ${esc(nm(x.from))}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
+        out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔘":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
         if(sent) out+=`<p class="info">Caso levado a julgamento. Está a ser publicado…</p>`;
         else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. A escolha do caso abre terça às 17:00, quando fecharem as acusações.</p>`;
         else if(m<TR_VERD&&inbox.length) out+=`<p class="info">Escolha um caso acima e leve-o a julgamento: fica visível para todos (título, descrição e acusado) até proferir a sentença. Quem acusou continua anónimo.</p><button class="btn block" data-trtrial ${st.pick?"":"disabled"}>⚖️ Levar a julgamento</button>`; }
