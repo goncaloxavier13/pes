@@ -3,7 +3,7 @@
 // 🎯 Quanto conheces o …? (responde em segredo; o grupo adivinha entre 4 opções). No fim, o resumo (calculado na app).
 // Corre no GitHub Actions. Segredos: FIREBASE_SERVICE_ACCOUNT e VAPID_PRIVATE_KEY.
 import { initializeApp, cert } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore, FieldValue, FieldPath } from "firebase-admin/firestore";
 import webpush from "web-push";
 import { PHILO, ROUTINE, PREF, PROV } from "./cantinho-temas.mjs";
 import { QUIZ } from "./cantinho-quiz.mjs";
@@ -264,7 +264,7 @@ for (const [gid, g0] of Object.entries(groups)) {
   newSt.pf = pf;
 }
 // ── ⚖️ Tribunal do Sr. Sid (semanal, semana de calendário seg–dom, horas de Lisboa):
-//    casos até terça 17:00 (anónimos: só o Meritíssimo vê) → veredicto até quinta 20:00 → reações até sexta 20:00
+//    casos até terça 17:00 (anónimos para todos, incluindo o Meritíssimo) → veredicto até quinta 20:00 → reações até sexta 20:00
 //    → recurso (≥3 🔁 e mais 🔁 do que 👏) com novo veredicto até domingo 21:00. Registo de penas e finos.
 //    Tudo o que os membros escrevem fica no seu reads/{key} (privado); só este script publica em groups/{id}.trib.
 if (!DRY) { const TR = newSt.trib = newSt.trib || {};
@@ -284,16 +284,17 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     // 0) a semana nova: a rubrica abre (segunda, a partir das 10h; na estreia, logo)
     if (!pub.cur || pub.cur.w !== wk) { if (pub.cur && pub.cur.w !== wk && !pub.cur.closed) { pub.cur.closed = true; } pub.cur = { w: wk, status: "sub" }; changed = true; }
     if (!tw.opened && hrL >= 10 && lxNow < subEnd) { tw.opened = 1;
-      await allSend({ title: "⚖️ O Tribunal do Sr. Sid está aberto", body: `Até terça às 17:00, submete casos para o ${MER} julgar. É anónimo: só o Meritíssimo sabe quem acusou 🤫`, tag: "trib-" + wk, url },
+      await allSend({ title: "⚖️ O Tribunal do Sr. Sid está aberto", body: `Até terça às 17:00, submete casos para o ${MER} julgar. É anónimo: ninguém sabe quem acusou, nem o Meritíssimo 🤫`, tag: "trib-" + wk, url },
         { title: "⚖️ O Tribunal do Sr. Sid está aberto", body: "A malta já está a acusar… menos tu, que não votaste 🔒", tag: "trib-" + wk, url }); }
     if (!tw.lastCall && hrL >= 24 + 15 && lxNow < subEnd) { tw.lastCall = 1;
       for (const k of mem.filter(k => canBase(k) && k !== sid)) await send(k, { title: "⚖️ Últimas horas para acusar", body: `Os casos para o ${MER} fecham hoje às 17:00.`, tag: "trib-" + wk, url }); }
     // 1) casos submetidos → caixa do Meritíssimo (com o autor; só ele vê)
     const inbox = { ...(sidRd.inbox || {}) }; let newCases = 0;
+    for (const [id, c] of Object.entries(inbox)) if (c && "from" in c) { delete c.from; await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), FieldValue.delete()); }
     for (const k of mem) { const subs = reads[k]?.trib?.sub || {}; for (const [id, c] of Object.entries(subs)) {
       if (!c || c.gid !== gid || c.w !== wk || inbox[id] || !canBase(k) || loc(c.at || 0) > subEnd) continue;
       if (!mem.includes(c.accused) || !c.title) continue;
-      inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 1500), accused: c.accused, from: k, at: c.at }; newCases++;
+      inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 1500), accused: c.accused, at: c.at }; newCases++; // sem o autor: anónimo também para o Meritíssimo
       await db.doc("reads/" + sid).set({ trib: { inbox: { [id]: inbox[id] } } }, { merge: true }); } }
     if (newCases) await send(sid, { title: `⚖️ ${newCases === 1 ? "Chegou um caso novo" : `Chegaram ${newCases} casos novos`}, Meritíssimo`, body: "A justiça aguarda pela sua sabedoria.", tag: "trib-sid-" + wk, url });
     const weekCases = Object.entries(inbox).filter(([, c]) => c.gid === gid && c.w === wk);
