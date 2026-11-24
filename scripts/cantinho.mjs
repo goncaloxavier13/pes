@@ -290,11 +290,15 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
       for (const k of mem.filter(k => canBase(k) && k !== sid)) await send(k, { title: "⚖️ Últimas horas para acusar", body: `Os casos para o ${MER} fecham hoje às 17:00.`, tag: "trib-" + wk, url }); }
     // 1) casos submetidos → caixa do Meritíssimo (com o autor; só ele vê)
     const inbox = { ...(sidRd.inbox || {}) }; let newCases = 0;
-    for (const [id, c] of Object.entries(inbox)) if (c && "from" in c) { delete c.from; await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), FieldValue.delete()); }
+    // a partir da semana 49 nem o Meritíssimo vê quem acusou; até lá (semana 48) vê o autor
+    const ANON_FROM = "2026-W49"; const authorOf = id => mem.find(k => reads[k]?.trib?.sub?.[id]);
+    for (const [id, c] of Object.entries(inbox)) { if (!c) continue;
+      if (c.w >= ANON_FROM && "from" in c) { delete c.from; await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), FieldValue.delete()); }
+      else if (c.w < ANON_FROM && !c.from && authorOf(id)) { c.from = authorOf(id); await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), c.from); } }
     for (const k of mem) { const subs = reads[k]?.trib?.sub || {}; for (const [id, c] of Object.entries(subs)) {
       if (!c || c.gid !== gid || c.w !== wk || inbox[id] || !canBase(k) || loc(c.at || 0) > subEnd) continue;
       if (!mem.includes(c.accused) || !c.title) continue;
-      inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 1500), accused: c.accused, at: c.at }; newCases++; // sem o autor: anónimo também para o Meritíssimo
+      inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 1500), accused: c.accused, ...(wk < ANON_FROM ? { from: k } : {}), at: c.at }; newCases++; // a partir da semana 49 sem o autor
       await db.doc("reads/" + sid).set({ trib: { inbox: { [id]: inbox[id] } } }, { merge: true }); } }
     if (newCases) await send(sid, { title: `⚖️ ${newCases === 1 ? "Chegou um caso novo" : `Chegaram ${newCases} casos novos`}, Meritíssimo`, body: "A justiça aguarda pela sua sabedoria.", tag: "trib-sid-" + wk, url });
     const weekCases = Object.entries(inbox).filter(([, c]) => c.gid === gid && c.w === wk);
