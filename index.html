@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795540831">
+<meta name="pes-version" content="1795541725">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2406,7 +2406,7 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
         if(subs.length) out+=`<div class="label" style="margin-top:14px">Os teus casos desta semana</div><div class="card list">${subs.map(([id,x])=>`<div class="row"><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub">Contra ${esc(nm(x.accused))}</div></div><button class="btn sm ghost" data-trdel="${id}">Retirar</button></div>`).join("")}</div>`; }
       if(sid){ const inbox=Object.entries(my.inbox||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w).sort((a,b)=>a[1].at-b[1].at); const sent=my.pick?.[gid]?.[c.w];
         out+=`<div class="label" style="margin-top:16px">🔒 Caixa do ${MER} · ${inbox.length} ${inbox.length===1?"caso":"casos"}</div>`;
-        out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔘":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
+        out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔘":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))}${x.from?` · submetido por ${esc(nm(x.from))}`:""}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
         if(sent) out+=`<p class="info">Caso levado a julgamento. Está a ser publicado…</p>`;
         else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. A escolha do caso abre terça às 17:00, quando fecharem as acusações.</p>`;
         else if(m<TR_VERD&&inbox.length) out+=`<p class="info">Escolha um caso acima e leve-o a julgamento: fica visível para todos (título, descrição e acusado) até proferir a sentença. Quem acusou continua anónimo.</p><button class="btn block" data-trtrial ${st.pick?"":"disabled"}>⚖️ Levar a julgamento</button>`; }
