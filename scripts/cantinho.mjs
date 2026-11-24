@@ -277,7 +277,7 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     const pv = prevWeek(wkV); const canBase = k => k === sid || weekComplete(gid, k, pv); const url = `./?g=${gid}&t=dash&trib=1`;
     const T = g.trib || {}; const pub = { year: T.year || +wk.slice(0, 4), seq: T.seq || 0, cur: T.cur || null, hist: T.hist || [], pens: T.pens || [], sid };
     if (pub.year !== +wk.slice(0, 4)) { pub.year = +wk.slice(0, 4); pub.seq = 0; }
-    const can = k => canBase(k) || (!!pub.cur?.no && pub.cur.w === wk && pub.cur.accused === k); // o acusado entra sempre no seu processo, mesmo sem ter votado
+    const can = k => canBase(k) || (!!pub.cur?.accused && pub.cur.w === wk && pub.cur.accused === k); // o acusado entra sempre no seu processo, mesmo sem ter votado
     const ts = TR[gid] = TR[gid] || {}; const tw = ts[wk] = ts[wk] || {}; let changed = !g.trib;
     const allSend = async (pl, lockedPl) => { for (const k of mem) await send(k, can(k) || !lockedPl ? pl : lockedPl); };
     const sidRd = reads[sid]?.trib || {};
@@ -298,21 +298,28 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     if (newCases) await send(sid, { title: `⚖️ ${newCases === 1 ? "Chegou um caso novo" : `Chegaram ${newCases} casos novos`}, Meritíssimo`, body: "A justiça aguarda pela sua sabedoria.", tag: "trib-sid-" + wk, url });
     const weekCases = Object.entries(inbox).filter(([, c]) => c.gid === gid && c.w === wk);
     if (!tw.sidCall && lxNow >= subEnd && lxNow < verdEnd) { tw.sidCall = 1;
-      await send(sid, weekCases.length ? { title: `⚖️ ${weekCases.length} ${weekCases.length === 1 ? "caso aguarda" : "casos aguardam"} sentença`, body: "Escolha um e profira o veredicto até quinta às 20:00, Meritíssimo.", tag: "trib-sid-" + wk, url }
+      await send(sid, weekCases.length ? { title: `⚖️ ${weekCases.length} ${weekCases.length === 1 ? "caso aguarda" : "casos aguardam"} sentença`, body: "Escolha um e leve-o a julgamento. A sentença é até quinta às 20:00, Meritíssimo.", tag: "trib-sid-" + wk, url }
         : { title: "⚖️ Semana sem casos", body: "Ninguém acusou ninguém esta semana, Meritíssimo. Paz no reino.", tag: "trib-sid-" + wk, url }); }
     if (!tw.sidLast && weekCases.length && !pub.cur.no && hrL >= 3 * 24 + 12 && lxNow < verdEnd) { tw.sidLast = 1;
       await send(sid, { title: "⚖️ A sentença é até às 20:00", body: "O povo aguarda, Meritíssimo.", tag: "trib-sid-" + wk, url }); }
     const cur = pub.cur;
+    // 1b) o Meritíssimo leva um caso a julgamento: fica visível para todos (título, descrição e acusado) até ao veredicto
+    const pk = sidRd.pick?.[gid]?.[wk];
+    if (cur.status === "sub" && pk && inbox[pk.caseId] && inbox[pk.caseId].w === wk && loc(pk.at || 0) <= verdEnd + 60e3) {
+      const c = inbox[pk.caseId]; Object.assign(cur, { status: "trial", caseId: pk.caseId, title: c.title, desc: c.desc, accused: c.accused, trialAt: Date.now() }); changed = true;
+      await allSend({ title: "⚖️ Há um caso em julgamento", body: `O ${MER} vai julgar “${c.title}”. Acusado: ${first(c.accused)}. Sentença até quinta às 20:00.`, tag: "trib-" + wk, url },
+        { title: "⚖️ Há um caso em julgamento", body: "Toda a gente já sabe quem está no banco dos réus… menos tu 🔒", tag: "trib-" + wk, url });
+    }
     // 2) veredicto
     const v = sidRd.verdict?.[gid]?.[wk];
-    if (!cur.no && v && inbox[v.caseId] && inbox[v.caseId].w === wk && loc(v.at || 0) <= verdEnd + 60e3 && (v.result === "cond" || v.result === "abs")) {
+    if (!cur.no && v && (!cur.caseId || v.caseId === cur.caseId) && inbox[v.caseId] && inbox[v.caseId].w === wk && loc(v.at || 0) <= verdEnd + 60e3 && (v.result === "cond" || v.result === "abs")) {
       const c = inbox[v.caseId]; pub.seq++;
       Object.assign(cur, { status: "verdict", no: no3(pub.seq, pub.year), title: c.title, desc: c.desc, accused: c.accused, result: v.result, text: String(v.text || "").slice(0, 1500), penalty: v.result === "cond" ? String(v.penalty || "").slice(0, 300) : "", at: Date.now(), rx: { jf: 0, rec: 0 } });
       changed = true;
       await allSend({ title: `⚖️ Processo n.º ${cur.no}: ${v.result === "cond" ? "CONDENADO" : "ABSOLVIDO"}`, body: `O ${MER} proferiu sentença no caso “${c.title}”. Vê o veredicto e reage até sexta às 20:00.`, tag: "trib-" + wk, url },
         { title: `⚖️ Há sentença no Processo n.º ${cur.no}`, body: "Toda a gente já sabe quem foi condenado… menos tu 🔒", tag: "trib-" + wk, url });
     }
-    if (!cur.no && cur.status === "sub" && lxNow >= verdEnd) { cur.status = "none"; changed = true;
+    if (!cur.no && (cur.status === "sub" || cur.status === "trial") && lxNow >= verdEnd) { cur.status = "none"; changed = true;
       await allSend({ title: "⚖️ Semana sem julgamento", body: weekCases.length ? `O ${MER} faltou à audiência. Os réus agradecem.` : "Ninguém foi acusado esta semana. Que grupo tão exemplar 😇", tag: "trib-" + wk, url }); }
     // 3) reações (só números em público; quem pediu recurso fica guardado em privado para os finos)
     if (cur.no && cur.status === "verdict") { let jf = 0; const rec = [];
