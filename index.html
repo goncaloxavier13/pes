@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795469184">
+<meta name="pes-version" content="1795540513">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -627,7 +627,7 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .trcase{border:1px solid color-mix(in srgb,#c8a064 35%,transparent)}.trno{font-family:Georgia,serif;font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#c8a064}
 .trtitle{font-family:Georgia,"Times New Roman",serif;font-size:21px;margin:4px 0 6px}.trdesc{color:var(--muted);font-size:14.5px;margin:0 0 10px;white-space:pre-line}
 .trwho{display:flex;align-items:center;gap:8px;font-size:14.5px;margin:6px 0 10px}
-.trres{display:inline-block;padding:6px 12px;border-radius:10px;font-weight:800;letter-spacing:.6px;font-size:14px}.trres.cond{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}.trres.abs{background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--green)}.trres.sm{font-size:12px;padding:4px 9px;flex:none}
+.trres{display:inline-block;padding:6px 12px;border-radius:10px;font-weight:800;letter-spacing:.6px;font-size:14px}.trres.cond{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}.trres.abs{background:color-mix(in srgb,var(--green) 18%,transparent);color:var(--green)}.trres.wait{background:color-mix(in srgb,#c8a064 18%,transparent);color:#c8a064}.trres.sm{font-size:12px;padding:4px 9px;flex:none}
 .trsent{margin-top:12px;padding:12px;border-radius:12px;background:var(--card2)}.trsent small{color:#c8a064;font-family:Georgia,serif;font-size:12.5px}.trsent p{margin:4px 0 0;white-space:pre-line}
 .trpen{margin-top:10px;font-size:14.5px}
 .trrx{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trrxb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;border-radius:14px;border:0;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
@@ -1136,7 +1136,7 @@ function tribStories(fromSheet){ const g=curGroup(); lsSet(TRIB_NEWS,true);
     {emo:"⚖️",title:"Tribunal do Sr. Sid",sub:"Nova rubrica semanal · toca para avançar",html:()=>p("Todas as semanas, o grupo acusa e o <b>Meritíssimo Sr. Sid</b> julga.")+p("Aqui ele exige ser tratado com cerimónia: é sempre <b>Meritíssimo Sr. Sid</b>. Sem exceções 🧑‍⚖️")},
     {emo:"🗓️",title:"A semana do tribunal",html:()=>li([["📝","Segunda até terça, 17:00","acusações"],["🔨","Até quinta, 20:00","veredicto do Meritíssimo"],["👏","Até sexta, 20:00","o povo reage"],["🔁","Até domingo, 21:00","recurso, se houver"]])},
     {emo:"📝",title:"Acusa quem quiseres",sub:"Até terça às 17:00",html:()=>p("Escolhe o acusado, dá um título ao caso e conta tudo. Pode ser desta semana ou de momentos passados.")+p("<b>É anónimo:</b> só o Meritíssimo vê quem acusou e o que escreveu 🤫")+p("Podes submeter vários casos.")},
-    {emo:"🔨",title:"O veredicto",sub:"Até quinta às 20:00",html:()=>p("O Meritíssimo escolhe <b>um caso</b> por semana e decide: <b>condenado</b> ou <b>absolvido</b>.")+p("Escreve a sentença e, se condenar, aplica uma <b>pena simbólica</b>.")+p("Cada caso julgado ganha número: <b>Processo n.º 001/2026</b>.")},
+    {emo:"🔨",title:"O veredicto",sub:"Até quinta às 20:00",html:()=>p("Terça às 17:00, o Meritíssimo escolhe <b>um caso</b> e leva-o a julgamento: fica logo visível para todos.")+p("Até quinta às 20:00 decide: <b>condenado</b> ou <b>absolvido</b>.")+p("Escreve a sentença e, se condenar, aplica uma <b>pena simbólica</b>.")+p("Cada caso julgado ganha número: <b>Processo n.º 001/2026</b>.")},
     {emo:"👏",title:"O povo reage",sub:"Até sexta às 20:00",html:()=>li([["👏","Justiça feita","concordas com a sentença"],["🔁","Recurso","achas que o Meritíssimo errou"]])+p("Uma reação por pessoa, sem voltar atrás. O acusado também pode reagir. O Meritíssimo não vota.")},
     {emo:"🔁",title:"Recurso",html:()=>p("Vai a recurso se às 20:00 de sexta houver <b>pelo menos 3 🔁</b> e <b>mais 🔁 do que 👏</b>.")+p("O Meritíssimo decide até domingo às 21:00:")+li([["✋","Mantém a sentença","cada um que pediu recurso fica a dever-lhe um fino 🍺"],["🔄","Revê a sentença","o resultado inverte-se"]])},
     {emo:"🍺",title:"Cuidado com o recurso",html:()=>p("Pedir recurso tem risco: se o Meritíssimo mantiver a sentença, <b>pagas um fino</b> ao Meritíssimo no próximo evento.")+p("Pensa duas vezes antes de carregar no 🔁 😏")},
@@ -2334,7 +2334,7 @@ const trWeek=()=>weekOf(lisbonYMD());
 function sidKey(gid){ const g=S.groups[gid]; return g?.trib?.sid||(g?.members||[]).find(k=>/^sid\b/i.test(S.people[k]?.name||""))||null; }
 const isSid=gid=>!!ME()&&sidKey(gid)===ME();
 // quem não votou fica de fora do tribunal, exceto o acusado do processo desta semana (vê o seu processo e pode reagir)
-const trAccusedIn=gid=>{ const c=trCur(gid); return !!c.no&&c.accused===ME(); };
+const trAccusedIn=gid=>{ const c=trCur(gid); return !!c.accused&&c.accused===ME(); };
 const trLocked=gid=>rankLocked(gid)&&!isSid(gid)&&!trAccusedIn(gid);
 const trOnlyCase=gid=>rankLocked(gid)&&!isSid(gid)&&trAccusedIn(gid);
 function trCur(gid){ const t=S.groups[gid]?.trib; const w=trWeek(); return t?.cur?.w===w?t.cur:{w,status:"sub"}; }
@@ -2346,7 +2346,8 @@ async function readsMerge(obj){ const me=ME(); const dm=(a,b)=>{ for(const k in 
   else await D("reads/"+me).set(next); }
 function tribStatus(gid){ const c=trCur(gid); const m=trMins(); const sid=isSid(gid);
   if(c.status==="sub"&&m<TR_SUB) return sid?`Caixa: ${Object.values(S.reads[ME()]?.trib?.inbox||{}).filter(x=>x.gid===gid&&x.w===c.w).length} casos · fecha terça às 17:00`:`Acusa alguém até terça às 17:00 · anónimo 🤫`;
-  if(c.status==="sub") return sid?"Profira a sentença até quinta às 20:00":`O ${MER} está a deliberar… sentença até quinta às 20:00`;
+  if(c.status==="sub") return sid?"Escolha o caso a levar a julgamento":`O ${MER} está a escolher o caso a julgar…`;
+  if(c.status==="trial") return sid?"Profira a sentença até quinta às 20:00":`Em julgamento: “${c.title}” · sentença até quinta às 20:00`;
   if(c.status==="verdict") return `Processo n.º ${c.no}: ${trRes(c.result).toUpperCase()} · reage até sexta às 20:00`;
   if(c.status==="appeal") return `Processo n.º ${c.no} em recurso · decisão até domingo às 21:00`;
   if(c.status==="final") return `Processo n.º ${c.no}: ${trRes(c.final).toUpperCase()} · transitou em julgado`;
@@ -2355,9 +2356,9 @@ function tribCard(g){ if((g.members||[]).length<3||!sidKey(g.id)) return ""; con
   return `<div class="section" style="margin-top:14px"><button class="tribcard" data-act="${locked?"tease":"trib"}"><span class="trib-ico">⚖️</span><span class="grow"><b>Tribunal do Sr. Sid</b><small>${locked?"Não completaste a votação da semana passada: o tribunal não te recebe 🔒":esc(tribStatus(g.id))}</small></span>${ic(locked?"lock":"right")}</button></div>`; }
 function trCaseCard(gid,c,me){ const acc=c.accused;
   const res=c.status==="final"?c.final:c.result; const rev=c.appeal?.decision==="revise";
-  return `<div class="card pad trcase"><div class="trno">Processo n.º ${esc(c.no)}</div><h3 class="trtitle">${esc(c.title)}</h3>${c.desc?`<p class="trdesc">${esc(c.desc)}</p>`:""}
+  return `<div class="card pad trcase"><div class="trno">${c.no?`Processo n.º ${esc(c.no)}`:"⏳ Em julgamento"}</div><h3 class="trtitle">${esc(c.title)}</h3>${c.desc?`<p class="trdesc">${esc(c.desc)}</p>`:""}
     <div class="trwho">${avatar(acc,28)}<span>Acusado: <b>${esc(nm(acc))}</b>${acc===me?" (tu)":""}</span></div>
-    <div class="trres ${res}">${res==="cond"?"🔨 CONDENADO":"🕊️ ABSOLVIDO"}${c.status==="appeal"?" · em recurso":""}${rev?" · sentença revista":""}</div>
+    ${!res?`<div class="trres wait">⏳ A AGUARDAR SENTENÇA</div>`:""}<div class="trres ${res}" ${res?"":'style="display:none"'}>${res==="cond"?"🔨 CONDENADO":"🕊️ ABSOLVIDO"}${c.status==="appeal"?" · em recurso":""}${rev?" · sentença revista":""}</div>
     ${c.text?`<div class="trsent"><small>Sentença do ${MER}</small><p>${esc(c.text)}</p></div>`:""}
     ${res==="cond"&&c.penalty?`<div class="trpen">⚖️ Pena: <b>${esc(c.penalty)}</b></div>`:""}
     ${c.appeal&&c.appeal.decision!=="none"?`<div class="trsent"><small>Decisão do recurso</small><p><b>${c.appeal.decision==="keep"?"Sentença mantida":"Sentença revista"}.</b> ${esc(c.appeal.text||"")}</p>${c.appeal.decision==="keep"?`<p class="muted" style="margin-top:4px">Quem pediu recurso deve um fino ao ${MER} 🍺</p>`:""}</div>`:""}
@@ -2376,7 +2377,14 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
       out+=`<p class="info" style="margin-top:0">Ficha de cadastro de cada membro: todos os casos em que foi acusado, com o resultado final.</p><div class="card list">${mem.map(k=>{ const h=hist.filter(x=>x.accused===k); const nc=h.filter(x=>x.result==="cond").length;
         return `<button class="row" data-trcad="${k}">${avatar(k,34)}<div class="grow"><div class="rowtitle">${esc(nm(k))}</div><div class="rowsub">${h.length?`${h.length} ${h.length===1?"processo":"processos"} · ${nc} ${nc===1?"condenação":"condenações"}`:"Cadastro limpo"}</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`; }).join("")}</div>`; return out; }
     // ── esta semana ──
-    if(c.no) out+=trCaseCard(gid,c,me);
+    if(c.no||c.status==="trial") out+=trCaseCard(gid,c,me);
+    if(c.status==="trial"){ const sent=my.verdict?.[gid]?.[c.w];
+      if(sid&&!sent&&m<TR_VERD) out+=`<div class="card pad trform" style="margin-top:12px"><b>Proferir sentença</b><p class="info" style="margin:4px 0 10px">Até quinta às 20:00 (faltam ${trLeft(TR_VERD)}).</p>
+          <div class="seg" style="margin-bottom:10px"><button data-trres="cond" class="${st.res==="cond"?"on":""}">🔨 Condenado</button><button data-trres="abs" class="${st.res==="abs"?"on":""}">🕊️ Absolvido</button></div>
+          <div class="field"><label for="trsent">Sentença</label><textarea id="trsent" class="input" maxlength="1500" rows="4" placeholder="Este tribunal, em nome do povo do El Calderón…"></textarea></div>
+          ${st.res==="cond"?`<div class="field"><label for="trpen">Pena simbólica</label><input id="trpen" class="input" maxlength="300" placeholder="Ex.: paga os cafés no próximo jantar"></div>`:""}
+          <button class="btn block" data-trverd ${st.res?"":"disabled"}>Publicar veredicto</button></div>`;
+      else out+=`<p class="info" style="margin-top:12px">${sid?"Sentença enviada. Está a ser publicada…":`O ${MER} vai proferir sentença até quinta às 20:00. Quem acusou continua anónimo 🤫`}</p>`; }
     if(c.status==="verdict"){ const mine=my.rx?.[gid+"_"+c.w]?.v; const can=!sid&&m<TR_RX;
       out+=`<div class="label" style="margin-top:14px">O povo reage · até sexta às 20:00</div><div class="trrx">${[["jf","👏","Justiça feita"],["rec","🔁","Recurso"]].map(([k,e,l])=>`<button class="trrxb ${mine===k?"on":""}" data-trrx="${k}" ${!can||mine?"disabled":""}><span>${e}</span><b>${l}</b><small>${(c.rx?.[k]||0)}</small></button>`).join("")}</div>
         <p class="info">${sid?`O ${MER} não vota.`:mine?"Já reagiste. Só podes reagir uma vez.":"Só podes reagir uma vez."} Vai a recurso com pelo menos 3 🔁 e mais 🔁 do que 👏. Se o recurso falhar, quem pediu recurso paga um fino ao ${MER} 🍺</p>`; }
@@ -2396,19 +2404,15 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
           <div class="field"><label for="trdesc">Descrição</label><textarea id="trdesc" class="input" maxlength="1500" rows="4" placeholder="Conta tudo ao Meritíssimo…"></textarea></div>
           <button class="btn block" data-trsub>Submeter caso</button></div>`;
         if(subs.length) out+=`<div class="label" style="margin-top:14px">Os teus casos desta semana</div><div class="card list">${subs.map(([id,x])=>`<div class="row"><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub">Contra ${esc(nm(x.accused))}</div></div><button class="btn sm ghost" data-trdel="${id}">Retirar</button></div>`).join("")}</div>`; }
-      if(sid){ const inbox=Object.entries(my.inbox||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w).sort((a,b)=>a[1].at-b[1].at); const sent=my.verdict?.[gid]?.[c.w];
+      if(sid){ const inbox=Object.entries(my.inbox||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w).sort((a,b)=>a[1].at-b[1].at); const sent=my.pick?.[gid]?.[c.w];
         out+=`<div class="label" style="margin-top:16px">🔒 Caixa do ${MER} · ${inbox.length} ${inbox.length===1?"caso":"casos"}</div>`;
         out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔘":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))} · submetido por ${esc(nm(x.from))}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
-        if(sent) out+=`<p class="info">Sentença enviada. Está a ser publicada…</p>`;
-        else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. A sentença abre terça às 17:00, quando fecharem as acusações.</p>`;
-        else if(m<TR_VERD&&inbox.length){ out+=`<div class="card pad trform" style="margin-top:12px"><b>Proferir sentença</b><p class="info" style="margin:4px 0 10px">Escolhe um caso acima. Até quinta às 20:00 (faltam ${trLeft(TR_VERD)}).</p>
-          <div class="seg" style="margin-bottom:10px"><button data-trres="cond" class="${st.res==="cond"?"on":""}">🔨 Condenado</button><button data-trres="abs" class="${st.res==="abs"?"on":""}">🕊️ Absolvido</button></div>
-          <div class="field"><label for="trsent">Sentença</label><textarea id="trsent" class="input" maxlength="1500" rows="4" placeholder="Este tribunal, em nome do povo do El Calderón…"></textarea></div>
-          ${st.res==="cond"?`<div class="field"><label for="trpen">Pena simbólica</label><input id="trpen" class="input" maxlength="300" placeholder="Ex.: paga os cafés no próximo jantar"></div>`:""}
-          <button class="btn block" data-trverd ${st.pick&&st.res?"":"disabled"}>Publicar veredicto</button></div>`; } }
-      else if(m>=TR_SUB) out+=`<div class="empty" style="margin-top:20px"><div class="ico">🧑‍⚖️</div><h3>O ${MER} está a deliberar</h3><p>A sentença sai até quinta às 20:00. Fica atento às notificações.</p></div>`; }
+        if(sent) out+=`<p class="info">Caso levado a julgamento. Está a ser publicado…</p>`;
+        else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. A escolha do caso abre terça às 17:00, quando fecharem as acusações.</p>`;
+        else if(m<TR_VERD&&inbox.length) out+=`<p class="info">Escolha um caso acima e leve-o a julgamento: fica visível para todos (título, descrição e acusado) até proferir a sentença. Quem acusou continua anónimo.</p><button class="btn block" data-trtrial ${st.pick?"":"disabled"}>⚖️ Levar a julgamento</button>`; }
+      else if(m>=TR_SUB) out+=`<div class="empty" style="margin-top:20px"><div class="ico">🧑‍⚖️</div><h3>O ${MER} está a escolher o caso</h3><p>Quando escolher, o caso aparece aqui. A sentença sai até quinta às 20:00.</p></div>`; }
     return out; },
-  onMount:L=>{ L.body.addEventListener("click",async e=>{ if(e.target.closest("[data-trhow]")){ tribStories(true); return; } const b=e.target.closest("[data-trtab],[data-tracc],[data-trsub],[data-trdel],[data-trpick],[data-trres],[data-trverd],[data-trrx],[data-trdec],[data-trapp],[data-trdone],[data-trcad]"); if(!b||b.disabled) return;
+  onMount:L=>{ L.body.addEventListener("click",async e=>{ if(e.target.closest("[data-trhow]")){ tribStories(true); return; } const b=e.target.closest("[data-trtab],[data-tracc],[data-trsub],[data-trdel],[data-trpick],[data-trres],[data-trverd],[data-trtrial],[data-trrx],[data-trdec],[data-trapp],[data-trdone],[data-trcad]"); if(!b||b.disabled) return;
     const c=trCur(gid); const keep=()=>{ const v={}; L.body.querySelectorAll("input,textarea").forEach(i=>v[i.id]=i.value); return v; }; const restore=v=>{ for(const id in v){ const i=L.body.querySelector("#"+id); if(i) i.value=v[id]; } };
     const rr=()=>{ const v=keep(); L.render(); restore(v); };
     if(b.dataset.trtab){ st.tab=b.dataset.trtab; L.render(); return; }
@@ -2423,10 +2427,12 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
       const id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
       const ok=await write(()=>readsMerge({trib:{sub:{[id]:{gid,w:c.w,title:t,desc:d,accused:st.accused,at:Date.now()}}}}),"Caso entregue ao Meritíssimo ⚖️"); if(ok){ st.accused=null; L.render(); } return; }
     if(b.dataset.trdel){ const ok=await write(()=>readsMerge({trib:{sub:{[b.dataset.trdel]:undefined}}}),"Caso retirado"); if(ok) L.render(); return; }
+    if(b.dataset.trtrial!==undefined){ if(!(await confirmD("Levar este caso a julgamento?","Fica visível para todos: título, descrição e acusado. Quem acusou continua anónimo. Não pode ser trocado.","Levar a julgamento"))) return;
+      const ok=await write(()=>readsMerge({trib:{pick:{[gid]:{[c.w]:{caseId:st.pick,at:Date.now()}}}}}),"Caso levado a julgamento ⚖️ Aparece para todos em poucos minutos"); if(ok) L.render(); return; }
     if(b.dataset.trverd!==undefined){ const t=L.body.querySelector("#trsent").value.trim(); const pen=L.body.querySelector("#trpen")?.value.trim()||"";
       if(!t){ toast("Escreva a sentença, Meritíssimo"); return; } if(st.res==="cond"&&!pen){ toast("Falta a pena simbólica"); return; }
       if(!(await confirmD("Publicar o veredicto?","Depois de publicado, não pode ser alterado.","Publicar"))) return;
-      const ok=await write(()=>readsMerge({trib:{verdict:{[gid]:{[c.w]:{caseId:st.pick,result:st.res,text:t,penalty:pen,at:Date.now()}}}}}),"Veredicto enviado ⚖️ Sai em poucos minutos"); if(ok) L.render(); return; }
+      const ok=await write(()=>readsMerge({trib:{verdict:{[gid]:{[c.w]:{caseId:c.caseId||st.pick,result:st.res,text:t,penalty:pen,at:Date.now()}}}}}),"Veredicto enviado ⚖️ Sai em poucos minutos"); if(ok) L.render(); return; }
     if(b.dataset.trrx){ if(trMins()>=TR_RX){ toast("As reações já fecharam"); return; } const v=b.dataset.trrx;
       if(!(await confirmD(v==="jf"?"👏 Justiça feita?":"🔁 Pedir recurso?",v==="rec"?`Só podes reagir uma vez. Se o recurso falhar, ficas a dever um fino ao ${MER} 🍺`:"Só podes reagir uma vez.","Confirmar"))) return;
       const ok=await write(()=>readsMerge({trib:{rx:{[gid+"_"+c.w]:{v,at:Date.now()}}}}),v==="jf"?"👏 Justiça feita":"🔁 Recurso pedido"); if(ok) L.render(); return; }
