@@ -35,9 +35,15 @@ async function send(key, rd, payload) {
 // momentos marcados (Lisboa): cantinho (20:00), Preferias Flash (20:30 e 21:30) e prazos do Tribunal (10:00, 15:00, 17:00, 20:00, 21:00).
 // Nesses minutos corre o cantinho.mjs logo, sem esperar pelo agendamento de 5 em 5 minutos.
 const lxHM = () => new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Lisbon", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date()).replace("24:", "00:");
+// Tribunal (e Preferias/Adivinha): quando alguém mexe no que é do tribunal no seu reads/{key} (acusar, levar a julgamento,
+// veredicto, reação, recurso, pena cumprida), corre o cantinho.mjs no minuto seguinte. Só lê os documentos que mudam.
+const tribSig = {}; let tribDirty = false, tribReady = false;
+const unsubReads = db.collection("reads").onSnapshot(snap => { for (const d of snap.docs) { const sig = JSON.stringify(d.data()?.trib || null);
+  if (tribReady && tribSig[d.id] !== sig) tribDirty = true; tribSig[d.id] = sig; } tribReady = true; }, e => console.warn("vigia do tribunal:", e.message));
 const MARKS = ["10:00", "15:00", "17:00", "20:00", "20:30", "21:00", "21:30"]; let lastMark = null;
 while (Date.now() < end) {
   ticks++;
+  if (tribDirty) { tribDirty = false; const r = spawnSync("node", ["scripts/cantinho.mjs"], { stdio: "inherit", env: process.env }); if (r.status) console.log("cantinho terminou com", r.status); }
   { const hm = lxHM(); const mk = MARKS.find(m => hm >= m && hm < m.slice(0, 3) + String(+m.slice(3) + 3).padStart(2, "0"));
     if (mk && lastMark !== mk + new Date().toDateString()) { lastMark = mk + new Date().toDateString(); const r = spawnSync("node", ["scripts/cantinho.mjs"], { stdio: "inherit", env: process.env }); if (r.status) console.log("cantinho terminou com", r.status); } }
   try {
@@ -67,4 +73,5 @@ while (Date.now() < end) {
   } catch (e) { console.warn("erro no ciclo:", e.message); }
   await sleep(TICK);
 }
-console.log(`Feito: ${ticks} verificações, ${sent} notificações enviadas.`);
+unsubReads(); console.log(`Feito: ${ticks} verificações, ${sent} notificações enviadas.`);
+process.exit(0);
