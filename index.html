@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795541725">
+<meta name="pes-version" content="1795544223">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2390,7 +2390,7 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
         <p class="info">${sid?`O ${MER} não vota.`:mine?"Já reagiste. Só podes reagir uma vez.":"Só podes reagir uma vez."} Vai a recurso com pelo menos 3 🔁 e mais 🔁 do que 👏. Se o recurso falhar, quem pediu recurso paga um fino ao ${MER} 🍺</p>`; }
     if(c.status==="appeal"){ const sent=S.reads[me]?.trib?.appeal?.[gid]?.[c.w];
       if(sid&&!sent&&m<TR_APP){ out+=`<div class="label" style="margin-top:14px">Decisão do recurso · até domingo às 21:00</div>
-        <div class="card list">${[["keep","Mantém a sentença","Quem pediu recurso fica a dever-lhe um fino 🍺"],["revise","Revê a sentença",`O resultado inverte-se: passa a ${c.result==="cond"?"absolvido":"condenado"}`]].map(([k,t,d])=>`<button class="row" data-trdec="${k}"><span style="font-size:20px">${st.dec===k?"🔘":"⚪️"}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub" style="white-space:normal">${d}</div></div></button>`).join("")}</div>
+        <div class="card list">${[["keep","Mantém a sentença","Quem pediu recurso fica a dever-lhe um fino 🍺"],["revise","Revê a sentença",`O resultado inverte-se: passa a ${c.result==="cond"?"absolvido":"condenado"}`]].map(([k,t,d])=>`<button class="row" data-trdec="${k}"><span style="font-size:20px">${st.dec===k?"🔵":"⚪️"}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub" style="white-space:normal">${d}</div></div></button>`).join("")}</div>
         ${st.dec==="revise"&&c.result==="abs"?`<div class="field"><label for="trappen">Pena simbólica</label><input id="trappen" class="input" maxlength="300" placeholder="Ex.: paga os cafés da próxima vez"></div>`:""}
         <div class="field"><label for="trapptxt">Fundamentação</label><textarea id="trapptxt" class="input" maxlength="1500" rows="4" placeholder="O tribunal, depois de ponderar…"></textarea></div>
         <button class="btn block" data-trapp ${st.dec?"":"disabled"}>Publicar decisão do recurso</button>`; }
@@ -2406,16 +2406,22 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
         if(subs.length) out+=`<div class="label" style="margin-top:14px">Os teus casos desta semana</div><div class="card list">${subs.map(([id,x])=>`<div class="row"><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub">Contra ${esc(nm(x.accused))}</div></div><button class="btn sm ghost" data-trdel="${id}">Retirar</button></div>`).join("")}</div>`; }
       if(sid){ const inbox=Object.entries(my.inbox||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w).sort((a,b)=>a[1].at-b[1].at); const sent=my.pick?.[gid]?.[c.w];
         out+=`<div class="label" style="margin-top:16px">🔒 Caixa do ${MER} · ${inbox.length} ${inbox.length===1?"caso":"casos"}</div>`;
-        out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔘":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))}${x.from?` · submetido por ${esc(nm(x.from))}`:""}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
+        out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔵":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))}${x.from?` · submetido por ${esc(nm(x.from))}`:""}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
         if(sent) out+=`<p class="info">Caso levado a julgamento. Está a ser publicado…</p>`;
         else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. A escolha do caso abre terça às 17:00, quando fecharem as acusações.</p>`;
         else if(m<TR_VERD&&inbox.length) out+=`<p class="info">Escolha um caso acima e leve-o a julgamento: fica visível para todos (título, descrição e acusado) até proferir a sentença. Quem acusou continua anónimo.</p><button class="btn block" data-trtrial ${st.pick?"":"disabled"}>⚖️ Levar a julgamento</button>`; }
       else if(m>=TR_SUB) out+=`<div class="empty" style="margin-top:20px"><div class="ico">🧑‍⚖️</div><h3>O ${MER} está a escolher o caso</h3><p>Quando escolher, o caso aparece aqui. A sentença sai até quinta às 20:00.</p></div>`; }
     return out; },
-  onMount:L=>{ L.body.addEventListener("click",async e=>{ if(e.target.closest("[data-trhow]")){ tribStories(true); return; } const b=e.target.closest("[data-trtab],[data-tracc],[data-trsub],[data-trdel],[data-trpick],[data-trres],[data-trverd],[data-trtrial],[data-trrx],[data-trdec],[data-trapp],[data-trdone],[data-trcad]"); if(!b||b.disabled) return;
-    const c=trCur(gid); const keep=()=>{ const v={}; L.body.querySelectorAll("input,textarea").forEach(i=>v[i.id]=i.value); return v; }; const restore=v=>{ for(const id in v){ const i=L.body.querySelector("#"+id); if(i) i.value=v[id]; } };
-    const rr=()=>{ const v=keep(); L.render(); restore(v); };
-    if(b.dataset.trtab){ st.tab=b.dataset.trtab; L.render(); return; }
+  onMount:L=>{
+    // nunca apagar o que se está a escrever: com um campo em foco, as atualizações ao vivo esperam; ao redesenhar, os textos ficam
+    const base=L.render; let pending=false;
+    L.render=force=>{ const a=document.activeElement; if(force!==true&&a&&L.body.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName)){ pending=true; return; }
+      const v={}; if(force!==true) L.body.querySelectorAll("input[id],textarea[id]").forEach(i=>v[i.id]=i.value); base(); for(const id in v){ const i=L.body.querySelector("#"+id); if(i&&!i.value) i.value=v[id]; } };
+    L.body.addEventListener("focusout",()=>setTimeout(()=>{ const a=document.activeElement; if(pending&&!(a&&L.body.contains(a)&&/^(INPUT|TEXTAREA)$/.test(a.tagName))){ pending=false; L.render(); } },250));
+    L.body.addEventListener("click",async e=>{ if(e.target.closest("[data-trhow]")){ tribStories(true); return; } const b=e.target.closest("[data-trtab],[data-tracc],[data-trsub],[data-trdel],[data-trpick],[data-trres],[data-trverd],[data-trtrial],[data-trrx],[data-trdec],[data-trapp],[data-trdone],[data-trcad]"); if(!b||b.disabled) return;
+    const c=trCur(gid); const keep=()=>{ st.drafts=st.drafts||{}; L.body.querySelectorAll("input[id],textarea[id]").forEach(i=>st.drafts[i.id]=i.value); return st.drafts; }; const restore=v=>{ for(const id in v){ const i=L.body.querySelector("#"+id); if(i&&!i.value) i.value=v[id]; } };
+    const rr=()=>{ const v=keep(); L.render(true); restore(v); };
+    if(b.dataset.trtab){ st.tab=b.dataset.trtab; L.render(true); return; }
     if(b.dataset.tracc){ st.accused=b.dataset.tracc; rr(); return; }
     if(b.dataset.trpick){ st.pick=b.dataset.trpick; rr(); return; }
     if(b.dataset.trres){ st.res=b.dataset.trres; rr(); return; }
@@ -2425,22 +2431,22 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
     if(b.dataset.trsub!==undefined){ if(trMins()>=TR_SUB){ toast("As acusações desta semana já fecharam"); return; } const t=L.body.querySelector("#trtitle").value.trim(), d=L.body.querySelector("#trdesc").value.trim();
       if(!st.accused){ toast("Escolhe o acusado"); return; } if(!t){ toast("Dá um título ao caso"); return; }
       const id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-      const ok=await write(()=>readsMerge({trib:{sub:{[id]:{gid,w:c.w,title:t,desc:d,accused:st.accused,at:Date.now()}}}}),"Caso entregue ao Meritíssimo ⚖️"); if(ok){ st.accused=null; L.render(); } return; }
-    if(b.dataset.trdel){ const ok=await write(()=>readsMerge({trib:{sub:{[b.dataset.trdel]:undefined}}}),"Caso retirado"); if(ok) L.render(); return; }
+      const ok=await write(()=>readsMerge({trib:{sub:{[id]:{gid,w:c.w,title:t,desc:d,accused:st.accused,at:Date.now()}}}}),"Caso entregue ao Meritíssimo ⚖️"); if(ok){ st.accused=null; st.drafts={}; L.render(true); } return; }
+    if(b.dataset.trdel){ const ok=await write(()=>readsMerge({trib:{sub:{[b.dataset.trdel]:undefined}}}),"Caso retirado"); if(ok) L.render(true); return; }
     if(b.dataset.trtrial!==undefined){ if(!(await confirmD("Levar este caso a julgamento?","Fica visível para todos: título, descrição e acusado. Quem acusou continua anónimo. Não pode ser trocado.","Levar a julgamento"))) return;
-      const ok=await write(()=>readsMerge({trib:{pick:{[gid]:{[c.w]:{caseId:st.pick,at:Date.now()}}}}}),"Caso levado a julgamento ⚖️ Aparece para todos em poucos minutos"); if(ok) L.render(); return; }
+      const ok=await write(()=>readsMerge({trib:{pick:{[gid]:{[c.w]:{caseId:st.pick,at:Date.now()}}}}}),"Caso levado a julgamento ⚖️ Aparece para todos em poucos minutos"); if(ok) L.render(true); return; }
     if(b.dataset.trverd!==undefined){ const t=L.body.querySelector("#trsent").value.trim(); const pen=L.body.querySelector("#trpen")?.value.trim()||"";
       if(!t){ toast("Escreva a sentença, Meritíssimo"); return; } if(st.res==="cond"&&!pen){ toast("Falta a pena simbólica"); return; }
       if(!(await confirmD("Publicar o veredicto?","Depois de publicado, não pode ser alterado.","Publicar"))) return;
-      const ok=await write(()=>readsMerge({trib:{verdict:{[gid]:{[c.w]:{caseId:c.caseId||st.pick,result:st.res,text:t,penalty:pen,at:Date.now()}}}}}),"Veredicto enviado ⚖️ Sai em poucos minutos"); if(ok) L.render(); return; }
+      const ok=await write(()=>readsMerge({trib:{verdict:{[gid]:{[c.w]:{caseId:c.caseId||st.pick,result:st.res,text:t,penalty:pen,at:Date.now()}}}}}),"Veredicto enviado ⚖️ Sai em poucos minutos"); if(ok){ st.drafts={}; } if(ok) L.render(true); return; }
     if(b.dataset.trrx){ if(trMins()>=TR_RX){ toast("As reações já fecharam"); return; } const v=b.dataset.trrx;
       if(!(await confirmD(v==="jf"?"👏 Justiça feita?":"🔁 Pedir recurso?",v==="rec"?`Só podes reagir uma vez. Se o recurso falhar, ficas a dever um fino ao ${MER} 🍺`:"Só podes reagir uma vez.","Confirmar"))) return;
-      const ok=await write(()=>readsMerge({trib:{rx:{[gid+"_"+c.w]:{v,at:Date.now()}}}}),v==="jf"?"👏 Justiça feita":"🔁 Recurso pedido"); if(ok) L.render(); return; }
+      const ok=await write(()=>readsMerge({trib:{rx:{[gid+"_"+c.w]:{v,at:Date.now()}}}}),v==="jf"?"👏 Justiça feita":"🔁 Recurso pedido"); if(ok) L.render(true); return; }
     if(b.dataset.trapp!==undefined){ const t=L.body.querySelector("#trapptxt").value.trim(); const pen=L.body.querySelector("#trappen")?.value.trim()||"";
       if(!t){ toast("Falta a fundamentação, Meritíssimo"); return; } if(st.dec==="revise"&&c.result==="abs"&&!pen){ toast("Falta a pena simbólica"); return; }
       if(!(await confirmD("Publicar a decisão do recurso?","Depois de publicada, não pode ser alterada.","Publicar"))) return;
-      const ok=await write(()=>readsMerge({trib:{appeal:{[gid]:{[c.w]:{decision:st.dec,text:t,penalty:pen,at:Date.now()}}}}}),"Decisão enviada ⚖️"); if(ok) L.render(); return; }
-    if(b.dataset.trdone){ const [pid,on]=b.dataset.trdone.split("|"); const ok=await write(()=>readsMerge({trib:{done:{[pid]:on==="1"}}}),on==="1"?"Marcada como cumprida ✓ (atualiza em breve)":"Reaberta"); if(ok) L.render(); return; }
+      const ok=await write(()=>readsMerge({trib:{appeal:{[gid]:{[c.w]:{decision:st.dec,text:t,penalty:pen,at:Date.now()}}}}}),"Decisão enviada ⚖️"); if(ok){ st.drafts={}; } if(ok) L.render(true); return; }
+    if(b.dataset.trdone){ const [pid,on]=b.dataset.trdone.split("|"); const ok=await write(()=>readsMerge({trib:{done:{[pid]:on==="1"}}}),on==="1"?"Marcada como cumprida ✓ (atualiza em breve)":"Reaberta"); if(ok) L.render(true); return; }
   }); }}); }
 function pfSummary(gid,w){ const nextW=weekOf(addDays(utcToYmd(weekMonday(w)),7)); if(nextW!==PF_START) return "";
   return `<div class="card pad cantsum">
