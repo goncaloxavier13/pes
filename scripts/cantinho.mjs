@@ -298,7 +298,7 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     for (const k of mem) { const subs = reads[k]?.trib?.sub || {}; for (const [id, c] of Object.entries(subs)) {
       if (!c || c.gid !== gid || c.w !== wk || inbox[id] || !canBase(k) || loc(c.at || 0) > subEnd) continue;
       if (!mem.includes(c.accused) || !c.title) continue;
-      inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 1500), accused: c.accused, ...(wk < ANON_FROM ? { from: k } : {}), at: c.at }; newCases++; // a partir da semana 49 sem o autor
+      inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 8000), accused: c.accused, ...(wk < ANON_FROM ? { from: k } : {}), at: c.at }; newCases++; // a partir da semana 49 sem o autor
       await db.doc("reads/" + sid).set({ trib: { inbox: { [id]: inbox[id] } } }, { merge: true }); } }
     if (newCases) await send(sid, { title: `⚖️ ${newCases === 1 ? "Chegou um caso novo" : `Chegaram ${newCases} casos novos`}, Meritíssimo`, body: "A justiça aguarda pela sua sabedoria.", tag: "trib-sid-" + wk, url });
     const weekCases = Object.entries(inbox).filter(([, c]) => c.gid === gid && c.w === wk);
@@ -319,7 +319,7 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     const v = sidRd.verdict?.[gid]?.[wk];
     if (!cur.no && v && (!cur.caseId || v.caseId === cur.caseId) && inbox[v.caseId] && inbox[v.caseId].w === wk && loc(v.at || 0) <= verdEnd + 60e3 && (v.result === "cond" || v.result === "abs")) {
       const c = inbox[v.caseId]; pub.seq++;
-      Object.assign(cur, { status: "verdict", no: no3(pub.seq, pub.year), title: c.title, desc: c.desc, accused: c.accused, result: v.result, text: String(v.text || "").slice(0, 1500), penalty: v.result === "cond" ? String(v.penalty || "").slice(0, 300) : "", at: Date.now(), rx: { jf: 0, rec: 0 } });
+      Object.assign(cur, { status: "verdict", no: no3(pub.seq, pub.year), title: c.title, desc: c.desc, accused: c.accused, result: v.result, text: String(v.text || "").slice(0, 8000), penalty: v.result === "cond" ? String(v.penalty || "").slice(0, 300) : "", at: Date.now(), rx: { jf: 0, rec: 0 } });
       changed = true;
       await allSend({ title: `⚖️ Processo n.º ${cur.no}: ${v.result === "cond" ? "CONDENADO" : "ABSOLVIDO"}`, body: `O ${MER} proferiu sentença no caso “${c.title}”. Vê o veredicto e reage até sexta às 20:00.`, tag: "trib-" + wk, url },
         { title: `⚖️ Há sentença no Processo n.º ${cur.no}`, body: "Toda a gente já sabe quem foi condenado… menos tu 🔒", tag: "trib-" + wk, url });
@@ -341,7 +341,7 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     // 4) recurso: novo veredicto do Meritíssimo até domingo 21:00
     if (cur.status === "appeal") { const a = sidRd.appeal?.[gid]?.[wk];
       if (a && loc(a.at || 0) <= appEnd + 60e3 && (a.decision === "keep" || a.decision === "revise")) {
-        cur.appeal = { decision: a.decision, text: String(a.text || "").slice(0, 1500), at: Date.now() };
+        cur.appeal = { decision: a.decision, text: String(a.text || "").slice(0, 8000), at: Date.now() };
         cur.final = a.decision === "keep" ? cur.result : (cur.result === "cond" ? "abs" : "cond");
         if (a.decision === "revise" && cur.final === "cond") cur.penalty = String(a.penalty || cur.penalty || "").slice(0, 300);
         if (a.decision === "keep") for (const k of tw.rec || []) pub.pens.push({ id: `f${cur.no.replace("/", "-")}-${k}`, k, no: cur.no, kind: "fino", text: `Um fino ao ${MER} no próximo evento`, done: false, at: Date.now() });
