@@ -290,8 +290,8 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
       for (const k of mem.filter(k => canBase(k) && k !== sid)) await send(k, { title: "⚖️ Últimas horas para acusar", body: `Os casos para o ${MER} fecham hoje às 17:00.`, tag: "trib-" + wk, url }); }
     // 1) casos submetidos → caixa do Meritíssimo (com o autor; só ele vê)
     const inbox = { ...(sidRd.inbox || {}) }; let newCases = 0;
-    // a partir da semana 49 nem o Meritíssimo vê quem acusou; até lá (semana 48) vê o autor
-    const ANON_FROM = "2026-W49"; const authorOf = id => mem.find(k => reads[k]?.trib?.sub?.[id]);
+    // nem o Meritíssimo vê quem acusou (desde a semana 48)
+    const ANON_FROM = "2026-W48"; const authorOf = id => mem.find(k => reads[k]?.trib?.sub?.[id]);
     for (const [id, c] of Object.entries(inbox)) { if (!c) continue;
       if (c.w >= ANON_FROM && "from" in c) { delete c.from; await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), FieldValue.delete()); }
       else if (c.w < ANON_FROM && !c.from && authorOf(id)) { c.from = authorOf(id); await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), c.from); } }
