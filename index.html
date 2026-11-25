@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795616888">
+<meta name="pes-version" content="1795622992">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2404,7 +2404,7 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
       else out+=`<p class="info" style="margin-top:12px">${sent?"Decisão enviada. Está a ser publicada…":`O ${MER} vai decidir até domingo às 21:00: mantém a sentença (e quem pediu recurso paga um fino 🍺) ou revê-a.`}</p>`; }
     if(c.status==="none") out+=`<div class="empty" style="margin-top:20px"><div class="ico">🪑</div><h3>Semana sem julgamento</h3><p>O ${MER} não proferiu sentença esta semana. Na segunda abre um tribunal novo.</p></div>`;
     if(c.status==="sub"){
-      if(m<TR_SUB){ const subs=Object.entries(my.sub||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w);
+      if(m<TR_SUB&&!sid){ const subs=Object.entries(my.sub||{}).filter(([,x])=>x&&x.gid===gid&&x.w===c.w);
         out+=`<div class="card pad trform"><b>Submeter um caso</b><p class="info" style="margin:4px 0 10px">Até terça às 17:00 (faltam ${trLeft(TR_SUB)}). Pode ser desta semana ou de momentos passados. É anónimo: ninguém sabe quem acusou, nem o ${MER}.</p>
           <div class="label" style="margin:0 0 6px">Quem é o acusado?</div><div class="chips">${(g.members||[]).slice().sort((a,b)=>nm(a).localeCompare(nm(b))).map(k=>`<button type="button" class="namechip ${st.accused===k?"sel":""}" data-tracc="${k}">${avatar(k,26)}${esc((g.members||[]).filter(o=>first(nm(o))===first(nm(k))).length>1?nm(k):first(nm(k)))}${k===me?" (tu)":""}</button>`).join("")}</div>
           <div class="field" style="margin-top:12px"><label for="trtitle">Título do caso</label><input id="trtitle" class="input" maxlength="120" placeholder="Ex.: O caso da última fatia"></div>
@@ -2415,7 +2415,7 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
         out+=`<div class="label" style="margin-top:16px">🔒 Caixa do ${MER} · ${inbox.length} ${inbox.length===1?"caso":"casos"}</div>`;
         out+=inbox.length?`<div class="card list">${inbox.map(([id,x])=>`<button class="row" style="align-items:flex-start" data-trpick="${id}" ${m<TR_SUB||sent?"disabled":""}><span style="font-size:20px">${st.pick===id?"🔵":(m<TR_SUB||sent?"📁":"⚪️")}</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.title)}</div><div class="rowsub" style="white-space:normal">Acusado: ${esc(nm(x.accused))}${x.from?` · submetido por ${esc(nm(x.from))}`:""}</div>${x.desc?`<div class="rowsub" style="white-space:normal;margin-top:4px;color:var(--text)">${esc(x.desc)}</div>`:""}</div></button>`).join("")}</div>`:`<p class="info">Ainda não chegou nenhum caso.</p>`;
         if(sent) out+=`<p class="info">Caso levado a julgamento. Está a ser publicado…</p>`;
-        else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. A escolha do caso abre terça às 17:00, quando fecharem as acusações.</p>`;
+        else if(m<TR_SUB) out+=`<p class="info">Só o ${MER} vê esta caixa. O ${MER} não acusa no seu próprio tribunal: o povo acusa até terça às 17:00 e depois escolhe o caso a julgar.</p>`;
         else if(m<TR_VERD&&inbox.length) out+=`<p class="info">Escolha um caso acima e leve-o a julgamento: fica visível para todos (título, descrição e acusado) até proferir a sentença. Quem acusou continua anónimo.</p><button class="btn block" data-trtrial ${st.pick?"":"disabled"}>⚖️ Levar a julgamento</button>`; }
       else if(m>=TR_SUB) out+=`<div class="empty" style="margin-top:20px"><div class="ico">🧑‍⚖️</div><h3>O ${MER} está a escolher o caso</h3><p>Quando escolher, o caso aparece aqui. A sentença sai até quinta às 20:00.</p></div>`; }
     return out; }),
