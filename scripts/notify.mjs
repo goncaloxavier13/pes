@@ -159,7 +159,7 @@ if (stage && st.weekly !== wk + ":" + stage && !(stage === "18" && st.weekly ===
       const p = stage === "18"
         ? { title: `⏳ A votação do ${g.name} fecha hoje às 21h`, body: `Já votaram ${done.length} de ${mem.length}. Se não votares, às 21h ficas sem ranking, sem resumo da semana e sem Cantinho 🔒` }
         : { title: "🚨 Última chamada: falta 1 hora", body: others ? `Só faltas tu e mais ${others}. Às 21h fecha e ficas de fora a semana toda 😬` : `Só faltas TU. O grupo todo já votou… às 21h ficas sozinho de fora 😬` };
-      await send(k, "votes", { ...p, tag: "votes-" + wk, url: `./?g=${gid}&t=gap` });
+      await send(k, "votes", { ...p, tag: "votes-" + wk, url: `./?g=${gid}&t=dash` });
     }
   }
   st.weekly = wk + ":" + stage;
@@ -190,7 +190,7 @@ if (st.locked !== wkV && (wkV !== wk || weekdayLx() !== "Sun")) {
     const mem = g.members || []; if (mem.length < 2) continue;
     const inside = mem.filter(k => complete(vr, gid, k, pw)); if (!inside.length) continue;
     for (const k of mem.filter(k => !inside.includes(k)))
-      await send(k, "votes", { title: "🔒 Esta semana ficaste de fora", body: `${inside.length} ${inside.length === 1 ? "amigo já está" : "amigos já estão"} a ver o ranking, o resumo e o Cantinho do ${g.name}. Tu não 😬 Vota esta semana para voltares na próxima segunda.`, tag: "locked-" + wk, url: `./?g=${gid}&t=gap` });
+      await send(k, "votes", { title: "🔒 Esta semana ficaste de fora", body: `${inside.length} ${inside.length === 1 ? "amigo já está" : "amigos já estão"} a ver o ranking, o resumo e o Cantinho do ${g.name}. Tu não 😬 Vota esta semana para voltares na próxima segunda.`, tag: "locked-" + wk, url: `./?g=${gid}&t=dash` });
   }
   st.locked = wkV;
 }
@@ -322,7 +322,7 @@ if (nudges.length) {
       if (!missing) continue;
       done.push(k + "|" + gid);
       await db.doc("reads/" + k).set({ nudged: { [gid]: { at: now, wk } } }, { merge: true });
-      await send(k, "votes", { title: `👀 Alguém do ${g.name} deu-te um toque`, body: "Ainda não votaste esta semana. Vai lá, demora 1 minuto!", tag: "nudge-" + gid, url: `./?g=${gid}&t=gap` });
+      await send(k, "votes", { title: `👀 Alguém do ${g.name} deu-te um toque`, body: "Ainda não votaste esta semana. Vai lá, demora 1 minuto!", tag: "nudge-" + gid, url: `./?g=${gid}&t=dash` });
     }
   }
   st.nudged = { day: today, list: done };
