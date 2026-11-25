@@ -328,11 +328,11 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     if (!cur.no && (cur.status === "sub" || cur.status === "trial") && lxNow >= verdEnd) { cur.status = "none"; changed = true;
       await allSend({ title: "⚖️ Semana sem julgamento", body: weekCases.length ? `O ${MER} faltou à audiência. Os réus agradecem.` : "Ninguém foi acusado esta semana. Que grupo tão exemplar 😇", tag: "trib-" + wk, url }); }
     // 3) reações (só números em público; quem pediu recurso fica guardado em privado para os finos)
-    if (cur.no && cur.status === "verdict") { let jf = 0; const rec = [];
-      for (const k of mem) { if (k === sid || !can(k)) continue; const r = reads[k]?.trib?.rx?.[gid + "_" + wk]; if (!r || loc(r.at || 0) > rxEnd) continue; if (r.v === "jf") jf++; else if (r.v === "rec") rec.push(k); }
+    if (cur.no && cur.status === "verdict") { let jf = 0; const rec = [], jfWho = [];
+      for (const k of mem) { if (k === sid || !can(k)) continue; const r = reads[k]?.trib?.rx?.[gid + "_" + wk]; if (!r || loc(r.at || 0) > rxEnd) continue; if (r.v === "jf") { jf++; jfWho.push(k); } else if (r.v === "rec") rec.push(k); }
       // em público só o total de quem já reagiu (para não haver manipulação); 👏 e 🔁 ficam em privado até sexta às 20:00
       const n = jf + rec.length; if (cur.rx?.n !== n || "jf" in (cur.rx || {})) { cur.rx = { n }; changed = true; } tw.rec = rec; tw.jf = jf;
-      if (lxNow >= rxEnd) { cur.rxFinal = { jf, rec: rec.length };
+      if (lxNow >= rxEnd) { cur.rxFinal = { jf, rec: rec.length, jfWho, recWho: rec }; // quem votou em quê só aparece quando as reações fecham
         if (rec.length >= 3 && rec.length > jf) { cur.status = "appeal"; changed = true;
           await allSend({ title: `⚖️ Processo n.º ${cur.no} vai a recurso!`, body: `${rec.length} recursos contra ${jf} “justiça feita”. O ${MER} decide até domingo às 21:00. Quem pediu recurso arrisca um fino 🍺`, tag: "trib-" + wk, url });
           await send(sid, { title: "⚖️ Recurso aceite, Meritíssimo", body: "Mantém a sentença (e cobra finos) ou revê-a? Decida até domingo às 21:00.", tag: "trib-sid-" + wk, url }); }
