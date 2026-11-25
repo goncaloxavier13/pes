@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795636743">
+<meta name="pes-version" content="1795637436">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -84,6 +84,7 @@ p{margin:0}
 .dt-art img{width:86%;height:86%;object-fit:contain}.dt-emo{font-size:40px;line-height:1}
 .dtile.c1{background:#4f7a91}.dtile.c2{background:linear-gradient(135deg,#8e3bd6,#2c6cf0)}.dtile.c3{background:#6b4423}.dtile.c4{background:#b0457f}.dtile.c5{background:#2e7d5b}.dtile.c6{background:#2a3566}
 .dtile.locked{filter:saturate(.35) brightness(.7)}.dt-lock{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.35);display:grid;place-items:center}.dt-lock svg{width:15px;height:15px;color:#ffd60a}
+.row>svg:last-child{width:18px;height:18px;flex:none;color:var(--muted)}
 .dsec{margin-top:28px}.dhead{display:flex;align-items:center;gap:9px;margin:0 4px 12px}.dhead h3{font-size:20px;font-weight:700;margin:0;flex:1;letter-spacing:-.2px}.dh-emo{font-size:22px;line-height:1;width:28px;text-align:center;flex:none}.dh-pf{width:30px;height:30px;object-fit:contain;margin:-4px 0}
 .dhead button{font-size:15px;font-weight:500;color:var(--accent);background:none;border:0;padding:4px;cursor:pointer;font-family:inherit}
 .dsub-l{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:16px 4px 8px;display:flex;justify-content:space-between;align-items:center}.dsub-l:first-child{margin-top:0}.dsub-l button{font-size:13px;font-weight:500;color:var(--accent);text-transform:none;letter-spacing:0;background:none;border:0;cursor:pointer;font-family:inherit}
@@ -2797,7 +2798,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
