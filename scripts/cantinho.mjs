@@ -284,8 +284,9 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     // 0) a semana nova: a rubrica abre (segunda, a partir das 10h; na estreia, logo)
     if (!pub.cur || pub.cur.w !== wk) { if (pub.cur && pub.cur.w !== wk && !pub.cur.closed) { pub.cur.closed = true; } pub.cur = { w: wk, status: "sub" }; changed = true; }
     if (!tw.opened && hrL >= 10 && lxNow < subEnd) { tw.opened = 1;
-      await allSend({ title: "⚖️ O Tribunal do Sr. Sid está aberto", body: `Até terça às 17:00, submete casos para o ${MER} julgar. É anónimo: ninguém sabe quem acusou, nem o Meritíssimo 🤫`, tag: "trib-" + wk, url },
-        { title: "⚖️ O Tribunal do Sr. Sid está aberto", body: "A malta já está a acusar… menos tu, que não votaste 🔒", tag: "trib-" + wk, url }); }
+      for (const k of mem) await send(k, k === sid ? { title: "⚖️ O seu tribunal abriu, Meritíssimo", body: "Até terça às 17:00 o povo acusa. Depois escolhe o caso a levar a julgamento.", tag: "trib-" + wk, url }
+        : can(k) ? { title: "⚖️ O Tribunal do Sr. Sid está aberto", body: `Até terça às 17:00, submete casos para o ${MER} julgar. É anónimo: ninguém sabe quem acusou, nem o Meritíssimo 🤫`, tag: "trib-" + wk, url }
+        : { title: "⚖️ O Tribunal do Sr. Sid está aberto", body: "A malta já está a acusar… menos tu, que não votaste 🔒", tag: "trib-" + wk, url }); }
     if (!tw.lastCall && hrL >= 24 + 15 && lxNow < subEnd) { tw.lastCall = 1;
       for (const k of mem.filter(k => canBase(k) && k !== sid)) await send(k, { title: "⚖️ Últimas horas para acusar", body: `Os casos para o ${MER} fecham hoje às 17:00.`, tag: "trib-" + wk, url }); }
     // 1) casos submetidos → caixa do Meritíssimo (com o autor; só ele vê)
@@ -296,7 +297,7 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
       if (c.w >= ANON_FROM && "from" in c) { delete c.from; await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), FieldValue.delete()); }
       else if (c.w < ANON_FROM && !c.from && authorOf(id)) { c.from = authorOf(id); await db.doc("reads/" + sid).update(new FieldPath("trib", "inbox", id, "from"), c.from); } }
     for (const k of mem) { const subs = reads[k]?.trib?.sub || {}; for (const [id, c] of Object.entries(subs)) {
-      if (!c || c.gid !== gid || c.w !== wk || inbox[id] || !canBase(k) || loc(c.at || 0) > subEnd) continue;
+      if (!c || k === sid || c.gid !== gid || c.w !== wk || inbox[id] || !canBase(k) || loc(c.at || 0) > subEnd) continue; // o Meritíssimo não acusa no seu próprio tribunal
       if (!mem.includes(c.accused) || !c.title) continue;
       inbox[id] = { gid, w: wk, title: String(c.title).slice(0, 120), desc: String(c.desc || "").slice(0, 8000), accused: c.accused, ...(wk < ANON_FROM ? { from: k } : {}), at: c.at }; newCases++; // a partir da semana 49 sem o autor
       await db.doc("reads/" + sid).set({ trib: { inbox: { [id]: inbox[id] } } }, { merge: true }); } }
