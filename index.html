@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795622992">
+<meta name="pes-version" content="1795630504">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -632,6 +632,7 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .trpen{margin-top:10px;font-size:14.5px}
 .trrx{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trdisc{margin:22px 4px 4px;font-size:12.5px;line-height:1.45;color:var(--muted);text-align:center}.trdisc b{color:var(--text)}
 .trcount{text-align:center;font-size:14px;margin:10px 0 0;color:var(--muted)}.trcount b{color:var(--text)}
+.tsgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 0 12px}.tsbig{background:rgba(255,255,255,.12);border-radius:14px;padding:12px 10px;text-align:center}.tsbig b{display:block;font-size:30px;line-height:1.1;color:#fff}.tsbig span{display:block;font-size:12.5px;color:#fff;opacity:.8;margin-top:2px}
 .trrxb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;border-radius:14px;border:0;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
 .trrxb span{font-size:28px}.trrxb b{font-size:15px}.trrxb small{color:var(--muted);font-size:13px}.trrxb.on{box-shadow:inset 0 0 0 2px var(--accent)}.trrxb:disabled{opacity:.75;cursor:default}.trrxb.on:disabled{opacity:1}
 .trform b{font-size:16px}.btn.sm{height:34px;padding:0 12px;font-size:13.5px;border-radius:10px;flex:none}
@@ -1147,6 +1148,25 @@ function tribStories(fromSheet){ const g=curGroup(); lsSet(TRIB_NEWS,true);
     {emo:"🔒",title:"Quem não vota, não entra",html:()=>p("Quem não completar a votação da semana anterior vê o tribunal e recebe as notificações, mas <b>não acusa, não reage e não lê os veredictos</b>.")+p("Só há uma exceção: <b>se fores tu o acusado</b>, podes ver o teu processo e reagir ao veredicto.")+`<p class="s-txt" style="font-size:12.5px;color:#fff;opacity:.7;margin-top:14px">⚠️ Aviso legal: o que se decide no Tribunal é da exclusiva responsabilidade do Meritíssimo Sr. Sid e de quem acusa. O Cláudio e o criador da app não se responsabilizam.</p>`+p("<b>As acusações desta semana fecham amanhã, terça, às 17:00.</b>")+(fromSheet?`<button class="btn block" data-sx style="margin-top:14px">Entendido ⚖️</button>`:`<button class="btn block" data-sx data-act="trib" style="margin-top:14px">⚖️ Ir ao tribunal</button>`)},
   ];
   storyPlayer(S_,`${g?esc(g.name)+" · ":""}<span>Tribunal do Sr. Sid</span>`,"Tribunal do Sr. Sid",[["#7A4B1F","#2B1A0B"],["#5B2BE0","#1A0B4D"],["#0A84FF","#06224D"],["#B3261E","#3A0A07"],["#30B07A","#073B2A"],["#FF9F0A","#4D2400"],["#E0A100","#5A2C00"],["#3A3A55","#0B0B16"],["#AF52DE","#2E0C47"],["#7A4B1F","#140B04"]]); }
+/* 📜 Resumo da semana do tribunal (stories): nunca diz quem acusou */
+function tribSummary(gid){ const c=trCur(gid); const T=S.groups[gid]?.trib||{}; const x=c.sum; if(!x||!c.no){ toast("O resumo sai quando o processo terminar ⚖️"); return; }
+  const n=k=>esc(nm(k)); const res=c.final; const p=t=>`<p class="s-txt" style="font-size:16px;color:#fff;opacity:.92">${t}</p>`;
+  const big=(v,l)=>`<div class="tsbig"><b>${v}</b><span>${l}</span></div>`;
+  const pct=x.elig?Math.round(100*x.reacted/x.elig):0;
+  const accLine=x.cases===0?"":x.cases===1?"Um único caso. O povo foi preguiçoso… ou o grupo anda muito bem comportado 😇":x.cases<4?"Poucos casos, mas bons.":x.cases<8?"Semana movimentada no tribunal!":"Isto já não é um grupo de amigos, é uma esquadra 🚨";
+  const wordsLine=x.words<15?"Curta e grossa. O Meritíssimo é um homem de poucas palavras.":x.words<80?"Uma sentença à medida.":x.words<250?"O Meritíssimo inspirou-se.":"Praticamente um romance. Alguém dê um prémio literário ao Meritíssimo 📚";
+  const povo=x.reacted===0?"Ninguém reagiu. O povo estava a dormir 😴":x.rec===0?"Unanimidade: ninguém pediu recurso. O Meritíssimo tem o povo na mão 👑":x.jf===0?"Ninguém achou justo. Revolta popular! 🔥":x.rec>x.jf?"O povo não ficou convencido…":"A maioria achou que foi justiça feita.";
+  const S_=[
+    {emo:"📜",title:`Processo n.º ${esc(c.no)}`,sub:"O resumo da semana do tribunal",html:()=>p(`<b>“${esc(c.title)}”</b>`)+p(`Acusado: <b>${n(c.accused)}</b>`)+p(`Resultado final: <b>${res==="cond"?"🔨 CONDENADO":"🕊️ ABSOLVIDO"}</b>`)},
+    {emo:"📝",title:"As acusações",sub:"Segunda e terça",html:()=>`<div class="tsgrid">${big(x.cases,x.cases===1?"caso submetido":"casos submetidos")}${big(x.accusedN,x.accusedN===1?"pessoa acusada":"pessoas acusadas")}</div>`+p(accLine)+(x.top?p(`🎯 O mais acusado da semana: <b>${n(x.top[0])}</b>, com ${x.top[1]} acusações. Alguma coisa ele fez…`):"")+(x.caseAcc>1&&(!x.top||x.top[0]!==c.accused)?p(`O ${n(c.accused)} tinha ${x.caseAcc} casos contra ele.`):"")+p("Quem acusou? Isso fica no segredo dos deuses 🤫")},
+    {emo:"🧑‍⚖️",title:"A escolha do Meritíssimo",html:()=>p(`Entre ${x.cases} ${x.cases===1?"caso":"casos"}, o Meritíssimo Sr. Sid escolheu levar a julgamento <b>“${esc(c.title)}”</b>.`)+(x.trialH!=null?p(x.trialH<=1?"Escolheu logo a seguir ao fecho das acusações. Já tinha o réu debaixo de olho 👀":`Levou ${x.trialH} horas a decidir. A justiça não se apressa.`):"")},
+    {emo:res==="cond"?"🔨":"🕊️",title:"O veredicto",html:()=>`<div class="tsgrid">${big(c.result==="cond"?"Condenado":"Absolvido","1.ª instância")}${big(x.words,x.words===1?"palavra de sentença":"palavras de sentença")}</div>`+p(wordsLine)+(c.result==="cond"&&c.penalty?p(`Pena: <b>${esc(c.penalty)}</b>`):"")+(x.verdLeftH!=null?p(x.verdLeftH>24?`Publicado com ${x.verdLeftH} horas de folga. Pontualidade judicial.`:x.verdLeftH>2?`Publicado ${x.verdLeftH} horas antes do prazo.`:"Mesmo em cima do prazo. Suspense até ao fim ⏰"):"")},
+    {emo:"🗳️",title:"O povo reagiu",html:()=>`<div class="tsgrid">${big(x.jf,"👏 Justiça feita")}${big(x.rec,"🔁 Recurso")}</div>`+p(`${x.reacted} de ${x.elig} reagiram (${pct}%).`)+p(povo)},
+    {emo:"🔁",title:c.appeal&&c.appeal.decision!=="none"?"O recurso":c.appeal?.decision==="none"?"O recurso caducou":"Sem recurso",html:()=>!c.appeal?p("Não houve recurso: a sentença transitou em julgado na sexta às 20:00.")+p(x.rec>0?`${x.rec} ${x.rec===1?"pessoa tentou":"pessoas tentaram"}, mas não chegou. Escaparam ao fino por pouco 🍺`:"Ninguém se atreveu a pedir recurso."):c.appeal.decision==="none"?p("O povo pediu recurso, mas o Meritíssimo não se pronunciou a tempo. A sentença mantém-se e ninguém paga finos."):c.appeal.decision==="keep"?`<div class="tsgrid">${big(x.fines,x.fines===1?"fino devido":"finos devidos")}</div>`+p("O Meritíssimo manteve a sentença. Quem pediu recurso paga um fino ao Meritíssimo no próximo evento 🍺")+p("Moral da história: não se contraria o Meritíssimo."):p(`Reviravolta! O Meritíssimo reviu a sentença: o ${n(c.accused)} passou a <b>${res==="cond"?"condenado":"absolvido"}</b>.`)+p("Até os Meritíssimos sabem dar o braço a torcer.")},
+    {emo:"📊",title:"A semana em números",html:()=>`<div class="tsgrid">${big(x.cases,"casos")}${big(x.accusedN,"acusados")}${big(x.reacted,"reações")}${big(pct+"%","participação")}${big(x.words+(x.appealWords||0),"palavras do Meritíssimo")}${big(x.fines,"finos")}</div>`},
+    {emo:"⚖️",title:"Até para a semana",html:()=>p(res==="cond"?`A pena do ${n(c.accused)} fica no registo até o Meritíssimo a dar como cumprida.`:`O ${n(c.accused)} sai em liberdade e de cadastro limpo neste processo.`)+p("Segunda-feira o tribunal volta a abrir. Portem-se bem… ou não 😏")+`<p class="s-txt" style="font-size:12.5px;color:#fff;opacity:.7;margin-top:14px">⚠️ O que se decide no Tribunal é da exclusiva responsabilidade do Meritíssimo Sr. Sid e de quem acusa. O Cláudio e o criador da app não se responsabilizam.</p><button class="btn block" data-sx style="margin-top:14px">Fechar</button>`},
+  ];
+  storyPlayer(S_,`${esc(S.groups[gid]?.name||"")} · <span>Tribunal do Sr. Sid</span>`,"Resumo do tribunal",[["#7A4B1F","#2B1A0B"],["#5B2BE0","#1A0B4D"],["#3A3A55","#0B0B16"],res==="cond"?["#B3261E","#3A0A07"]:["#30B07A","#073B2A"],["#0A84FF","#06224D"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#7A4B1F","#140B04"]]); }
 function maybeTribNews(){ const g=curGroup(); if(!ME()||layers.length||lsGet(TRIB_NEWS,false)||!g||!sidKey(g.id)) return false; tribStories(); return true; }
 function maybeNews(){ if(!ME()||layers.length||lsGet(NEWS_ID,false)) return false; newsStories(); return true; }
 /* One-time announcement: notifications are now available (shown once per device, unless already enabled) */
@@ -1539,12 +1559,12 @@ function back(){ S.route.pop(); render(); }
 function setTab(t){ S.tab=t; S.route=[]; render(); }
 function enterGroup(gid,tab="dash"){ if(S.groupId!==gid) S.localVotes={}; S.groupId=gid; lsSet("group",gid); setTab(tab); }
 /* Deep links from push notifications: ?g=<group>&t=<tab>&c=<chat> */
-function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1",news:q.get("news")==="1",trib:q.get("trib")==="1",tstory:q.get("tstory")==="1"}; }catch{ return null; } }
+function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1",news:q.get("news")==="1",trib:q.get("trib")==="1",tstory:q.get("tstory")==="1",tsum:q.get("tsum")==="1"}; }catch{ return null; } }
 S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceState(null,"",location.pathname); }catch{} }
 navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
 function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
   if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
-  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
+  S.tab=["dash","events","journey","gap"].includes(l.t)?l.t:"dash"; S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); if(l.tsum&&!trLocked(l.g)) setTimeout(()=>tribSummary(l.g),400); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -2364,6 +2384,7 @@ function trCaseCard(gid,c,me){ const acc=c.accused;
     ${!res?`<div class="trres wait">⏳ A AGUARDAR SENTENÇA</div>`:""}<div class="trres ${res}" ${res?"":'style="display:none"'}>${res==="cond"?"🔨 CONDENADO":"🕊️ ABSOLVIDO"}${c.status==="appeal"?" · em recurso":""}${rev?" · sentença revista":""}</div>
     ${c.text?`<div class="trsent"><small>Sentença do ${MER}</small><p>${esc(c.text)}</p></div>`:""}
     ${res==="cond"&&c.penalty?`<div class="trpen">⚖️ Pena: <b>${esc(c.penalty)}</b></div>`:""}
+    ${c.sum&&c.status==="final"?`<button class="btn block" data-act="tribSum" style="margin-top:14px">📜 Ver o resumo do processo</button>`:""}
     ${c.rxFinal?`<div class="trpen">Reações do povo: 👏 <b>${c.rxFinal.jf}</b> · 🔁 <b>${c.rxFinal.rec}</b></div>`:""}
     ${c.appeal&&c.appeal.decision!=="none"?`<div class="trsent"><small>Decisão do recurso</small><p><b>${c.appeal.decision==="keep"?"Sentença mantida":"Sentença revista"}.</b> ${esc(c.appeal.text||"")}</p>${c.appeal.decision==="keep"?`<p class="muted" style="margin-top:4px">Quem pediu recurso deve um fino ao ${MER} 🍺</p>`:""}</div>`:""}
     ${c.appeal?.decision==="none"?`<div class="trsent"><p class="muted">O recurso caducou: o ${MER} não se pronunciou. A sentença mantém-se, sem finos.</p></div>`:""}</div>`; }
@@ -2739,7 +2760,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,36)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3)))):""}</div></div>${ic("right")}</button>`).join("")}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
