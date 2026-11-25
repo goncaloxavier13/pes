@@ -177,7 +177,7 @@ for (const [gid, g0] of Object.entries(groups)) {
     for (const k of members) await send(k, k === host
       ? { title: "🛋️ É a tua vez no cantinho!", body: "Durante 2 dias o cantinho é teu: pensamentos, perguntas e o grupo vai tentar adivinhar as tuas respostas 🎯", tag: "cant-" + cid, url: url(cid) }
       : { title: `🛋️ Novo cantinho: é a vez do ${first(host)}!`, body: `Vai às Rubricas: durante 2 dias vais poder ler o ${first(host)} e adivinhar as respostas dele 🎯`, tag: "cant-" + cid, url: url(cid) });
-    for (const k of mem) if (!members.includes(k)) await send(k, { title: `🔒 Há um cantinho novo no ${g.name}`, body: `É a vez do ${first(host)}… mas tu não votaste e ficas de fora 😬`, tag: "cant-" + cid, url: `./?g=${gid}&t=dash` });
+    for (const k of mem) if (!members.includes(k)) await send(k, { title: `🔒 Há um cantinho novo no ${g.name}`, body: `É a vez do ${first(host)}… mas tu não votaste e ficas de fora 😬`, tag: "cant-" + cid, url: `./?g=${gid}&t=rubricas` });
     if (DRY) continue;
   }
   if (chat.closed) continue;
@@ -247,7 +247,7 @@ for (const [gid, g0] of Object.entries(groups)) {
   if (ed >= PF_DAY0 && pf.launched !== ed && mins >= 21 * 60 + 30 && mins < 23 * 60 + 59) {
     for (const [gid, g] of Object.entries(groups)) { const mem = g.members || []; if (mem.length < 2) continue;
       if ((g.galas || []).some(d => d < today && weekOf(d) === wk)) continue;
-      const pv = prevWeek(wkV); const url = `./?g=${gid}&t=dash`;
+      const pv = prevWeek(wkV); const url = `./?g=${gid}&t=rubricas`;
       for (const k of mem) { const can = weekComplete(gid, k, pv); const hadPrev = prevEd >= PF_DAY0;
         await send(k, !can ? { title: "⚡ Saiu o Preferias Flash de hoje", body: "Toda a gente já está a escolher… menos tu 🔒 Quem não completou a votação não joga.", tag: "pf-" + ed, url }
           : { title: "⚡ Saiu o Preferias Flash de hoje!", body: hadPrev ? (played(k, prevEd) ? "Dilema novo, e já saíram os resultados de ontem 👀" : "Dilema novo. Os resultados de ontem já saíram, mas não jogaste, por isso não os vês 😏") : "Um dilema novo todos os dias às 21:30. Amanhã à mesma hora saem os resultados (só para quem jogou) 😏", tag: "pf-" + ed, url }); }
@@ -257,7 +257,7 @@ for (const [gid, g0] of Object.entries(groups)) {
   if (ed >= PF_DAY0 && pf.reminded !== ed && mins >= 20 * 60 + 30 && mins < 21 * 60 + 30) {
     for (const [gid, g] of Object.entries(groups)) { const mem = g.members || []; if (mem.length < 2) continue; const pv = prevWeek(wkV);
       const can = mem.filter(k => weekComplete(gid, k, pv)); const done = can.filter(k => played(k, ed));
-      for (const k of can.filter(k => !played(k, ed))) await send(k, { title: "⚡ O Preferias Flash fecha às 21:30", body: `Já jogaram ${done.length} de ${can.length}. Se não jogares, não vês o que a malta escolheu 👀`, tag: "pf-" + ed, url: `./?g=${gid}&t=dash` });
+      for (const k of can.filter(k => !played(k, ed))) await send(k, { title: "⚡ O Preferias Flash fecha às 21:30", body: `Já jogaram ${done.length} de ${can.length}. Se não jogares, não vês o que a malta escolheu 👀`, tag: "pf-" + ed, url: `./?g=${gid}&t=rubricas` });
     }
     pf.reminded = ed;
   }
@@ -274,7 +274,7 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
   const MER = "Meritíssimo Sr. Sid"; const no3 = (n, y) => `${String(n).padStart(3, "0")}/${y}`;
   for (const [gid, g] of Object.entries(groups)) { const mem = g.members || []; if (mem.length < 3) continue;
     const sid = (await db.doc("config/app").get()).data()?.sidKey || mem.find(k => /^sid\b/i.test(people[k]?.name || "")); if (!sid) continue;
-    const pv = prevWeek(wkV); const canBase = k => k === sid || weekComplete(gid, k, pv); const url = `./?g=${gid}&t=dash&trib=1`;
+    const pv = prevWeek(wkV); const canBase = k => k === sid || weekComplete(gid, k, pv); const url = `./?g=${gid}&t=rubricas&trib=1`;
     const T = g.trib || {}; const pub = { year: T.year || +wk.slice(0, 4), seq: T.seq || 0, cur: T.cur || null, hist: T.hist || [], pens: T.pens || [], sid };
     if (pub.year !== +wk.slice(0, 4)) { pub.year = +wk.slice(0, 4); pub.seq = 0; }
     const can = k => canBase(k) || (!!pub.cur?.accused && pub.cur.w === wk && pub.cur.accused === k); // o acusado entra sempre no seu processo, mesmo sem ter votado
