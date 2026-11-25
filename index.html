@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795638383">
+<meta name="pes-version" content="1795638481">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2476,7 +2476,7 @@ function tribStatus(gid){ const c=trCur(gid); const m=trMins(); const sid=isSid(
   if(c.status==="final") return `Processo n.º ${c.no}: ${trRes(c.final).toUpperCase()} · transitou em julgado`;
   return "Semana sem julgamento"; }
 function tribCard(g){ if((g.members||[]).length<3||!sidKey(g.id)) return ""; const locked=trLocked(g.id);
-  return `<div class="section" style="margin-top:14px"><button class="tribcard" data-act="${locked?"tease":"trib"}"><span class="trib-ico">⚖️</span><span class="grow"><b>${trCur(g.id).no?`Processo n.º ${esc(trCur(g.id).no)}`:"Esta semana no tribunal"}</b><small>${locked?"Não completaste a votação da semana passada: o tribunal não te recebe 🔒":esc(tribStatus(g.id))}</small></span>${ic(locked?"lock":"right")}</button></div>`; }
+  return `<div class="section" style="margin-top:14px"><button class="tribcard" data-act="${locked?"tease":"trib"}"><span class="trib-ico">⚖️</span><span class="grow"><b>${trCur(g.id).no?`Processo n.º ${esc(trCur(g.id).no)}`:"Esta semana no tribunal"}</b><small>${locked?"Não completaste a votação da semana passada: o tribunal não te recebe 🔒":esc(tribStatus(g.id).replace(/^Processo n\.º [^:]+: /,""))}</small></span>${ic(locked?"lock":"right")}</button></div>`; }
 function trCaseCard(gid,c,me){ const acc=c.accused;
   const res=c.status==="final"?c.final:c.result; const rev=c.appeal?.decision==="revise";
   return `<div class="card pad trcase"><div class="trno">${c.no?`Processo n.º ${esc(c.no)}`:"⏳ Em julgamento"}</div><h3 class="trtitle">${esc(c.title)}</h3>${c.desc?`<p class="trdesc">${esc(c.desc)}</p>`:""}
