@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795635242">
+<meta name="pes-version" content="1795636214">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -76,6 +76,10 @@ p{margin:0}
 
 /* Sections & cards */
 .section{padding:0 calc(var(--gut) + var(--sr)) 0 calc(var(--gut) + var(--sl));margin-top:22px}
+.dsec{margin-top:28px}.dhead{display:flex;align-items:center;gap:9px;margin:0 4px 12px}.dhead h3{font-size:20px;font-weight:700;margin:0;flex:1;letter-spacing:-.2px}.dh-emo{font-size:22px;line-height:1;width:28px;text-align:center;flex:none}.dh-pf{width:30px;height:30px;object-fit:contain;margin:-4px 0}
+.dhead button{font-size:15px;font-weight:500;color:var(--accent);background:none;border:0;padding:4px;cursor:pointer;font-family:inherit}
+.dsub-l{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:16px 4px 8px;display:flex;justify-content:space-between;align-items:center}.dsub-l:first-child{margin-top:0}.dsub-l button{font-size:13px;font-weight:500;color:var(--accent);text-transform:none;letter-spacing:0;background:none;border:0;cursor:pointer;font-family:inherit}
+.dsec .card.list+.card.list{margin-top:0}
 .label{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:0 4px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .label button{font-size:13px;font-weight:500;color:var(--accent);text-transform:none;letter-spacing:0}
 .card{background:var(--card);border-radius:var(--r);overflow:hidden}
@@ -1732,6 +1736,9 @@ function dashScreen(){
   else chart=`<div class="card"><div class="empty"><div class="ico">${ic("trend")}</div><h3>Ainda há poucos dados</h3><p>Submetam o ranking de amizade todas as semanas para ver a evolução.</p></div></div>`;
   if(!past&&!reveal&&rankLocked(g.id)){
     const fk=(l)=>`<button class="stat" data-act="tease"><span class="v num">🔒</span><span class="k">${l}</span><span class="s">██████</span></button>`;
+    const lfake=h=>`<button class="card lockfake" data-act="tease" aria-label="Bloqueado"><div class="ws-blur" aria-hidden="true">${h}</div><span class="lockpin">${ic("lock")}</span></button>`;
+    const ldsec=(emo,t,inner)=>inner?`<section class="section dsec"><div class="dhead"><span class="dh-emo">${emo}</span><h3>${t}</h3></div>${inner}</section>`:"";
+    const lunwrap=h=>h.replace(/^<div class="section" style="margin-top:\d+px">([\s\S]*)<\/div>$/,"$1");
     const fsec=(label,h)=>`<div class="section"><div class="label">${label}</div><button class="card lockfake" data-act="tease" aria-label="${label} bloqueado"><div class="ws-blur" aria-hidden="true">${h}</div><span class="lockpin">${ic("lock")}</span></button></div>`;
     const frows=n=>[...Array(n)].map((_,i)=>`<div class="row"><span class="rank">${i+1}</span><span style="width:34px;height:34px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">████████ ████</div></div><span class="num">█.█</span></div>`).join("");
     const voteBtn=votingClosed(g.id)?"":`<div class="section" style="margin-top:14px"><div class="stats"><button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Voltas a ver tudo domingo às 21h":voteCtaSub(g)}</span></span></button></div></div>`;
@@ -1739,20 +1746,47 @@ function dashScreen(){
       <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Dashboard trancado</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p>${(()=>{ const n=(g.members||[]).length, nIn=insideCount(g.id), ct=g.cant&&g.cant.week===curWeek()?g.cant:null;
         return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar no domingo às 21h.`}</span></div>`; })()}
         <small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
-      ${voteBtn}${pfCard(g)}${tribCard(g)}
-      <div class="section"><div class="label">Resumo da época</div><div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div></div>
-      ${fsec("Resumo da semana",`<div style="padding:16px">${frows(2)}</div>`)}
-      ${fsec("Conquistas",`<div style="padding:18px;display:flex;gap:10px">${[...Array(6)].map(()=>`<span style="width:40px;height:40px;border-radius:50%;background:var(--border);display:inline-block"></span>`).join("")}</div>`)}
-      ${fsec("Ranking atual",frows(3))}
-      ${fsec("Rating médio da época",frows(3))}
-      ${fsec("Evolução do ranking",`<div style="height:150px"></div>`)}
-      ${fsec("Prémios",frows(2))}
+      ${voteBtn}
+      ${ldsec("📊","Resumo da semana",lfake(`<div style="padding:16px">${frows(2)}</div>`))}
+      ${ldsec("📈","Resumo da época",`<div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div>`)}
+      ${ldsec(`<img class="dh-pf" src="${PF_LOGO}" alt="">`,"Preferias Flash",lunwrap(pfCard(g).trim()))}
+      ${ldsec("⚖️","Tribunal do Sr. Sid",lunwrap(tribCard(g).trim()))}
+      ${ldsec("🏅","Conquistas",lfake(`<div style="padding:18px;display:flex;gap:10px">${[...Array(6)].map(()=>`<span style="width:40px;height:40px;border-radius:50%;background:var(--border);display:inline-block"></span>`).join("")}</div>`))}
+      ${ldsec("🏆","Ranking",`<div class="dsub-l">Ranking atual</div>${lfake(frows(3))}<div class="dsub-l">Rating médio da época</div>${lfake(frows(3))}<div class="dsub-l">Evolução do ranking</div>${lfake(`<div style="height:150px"></div>`)}`)}
+      ${ldsec("🎖️","Prémios",lfake(frows(2)))}
     </div>`;
   }
+  const dh=(emo,t,link="")=>`<div class="dhead"><span class="dh-emo">${emo}</span><h3>${t}</h3>${link}</div>`;
+  const dsec=(emo,t,inner,link="")=>inner?`<section class="section dsec">${dh(emo,t,link)}${inner}</section>`:"";
+  const unwrap=h=>h.replace(/^<div class="section" style="margin-top:\d+px">([\s\S]*)<\/div>$/,"$1");
+  const ctaBtn=past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Ranking, prémios e perguntas · toca para alterar":voteCtaSub(g)}</span></span><span class="rcount num" aria-label="${nDone} de ${g.members.length} membros já votaram esta semana"><b>${nDone}/${g.members.length}</b><small>votaram</small></span></button>`;
+  const nb=past?"":nudgeBlock(g);
+  const ach=past?null:achievements(g.id);
+  const achHtml=(()=>{ if(past) return ""; const got=ach.filter(a=>a.done); const near=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal);
+      const nextA=near[0]; const strip=[...got,...near].slice(0,12);
+      return `<button class="card achcard" data-act="achievements">
+        <div class="achtop">${achRing(got.length,ach.length,64)}
+          <div class="achinfo">${nextA?`<small>Próxima conquista</small><b>${nextA.emo} ${esc(nextA.name)}</b><span>${esc(nextA.desc)}</span><div class="ach-bar"><i style="width:${Math.max(4,Math.round(100*nextA.val/nextA.goal))}%"></i></div><small class="num">${nextA.val} de ${nextA.goal}</small>`:`<b>Todas desbloqueadas 👑</b>`}</div></div>
+        <div class="achstrip">${strip.map(a=>`<span class="achdot ${a.done?"on":""}" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>
+      </button>`; })();
+  const rankHtml=locked?`<button class="card lockcard" data-act="rank">${ic("lock")}${reveal
+        ?`<b>Rankings revelados domingo às 21h 🕘</b><span>É a primeira semana da época. Os rankings aparecem no domingo às 21h, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>`
+        :`<b>Rankings bloqueados</b><span>Não completaste a votação da semana passada, por isso esta semana não vês os rankings.</span>`}</button>`
+    :`<div class="dsub-l">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
+      <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
+        : `<div class="empty"><p>${seasonPending(g.id)?"Época nova: o ranking recomeça na próxima semana.":"Ainda ninguém submeteu o ranking nesta época."}</p></div>`}</div>
+      ${(()=>{ const sa=seasonAverages(g.id); return `<div class="dsub-l">Rating médio da época${sa.length>3?`<button data-act="allSeasonAvg">Ver todos</button>`:""}</div>
+      <div class="card list">${sa.length?sa.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join(""):`<div class="empty"><p>${seasonPending(g.id)?"Época nova: o rating recomeça na próxima semana.":"Ainda não há rankings nesta época."}</p></div>`}</div>`; })()}
+      <div class="dsub-l">Evolução do ranking</div>${chart}`;
+  const hid=resultsHidden(g.id);
+  const prizeHtml=!awards.length?`<div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>Os admins do grupo criam prémios no separador Journey.</p></div></div>`
+    :hid?`<div class="card"><div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Só vão ser revelados no jantar de Natal${hid.gala?`, na Gala ${esc(hid.year)} (${esc(fmtDate(hid.gala))})`:""}. Podes continuar a votar.</span></div></div>
+        <div class="list">${awards.map(a=>`<div class="row"><span style="font-size:24px;flex:none;width:34px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle">${esc(a.label)}</div></div><span class="chip grey">🔒 Secreto</span></div>`).join("")}</div></div>`
+    :awards.map(a=>awardBlock(g,a,true)).join(`<div style="height:12px"></div>`);
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?"":bdayBanner(g)+nudgedBanner(g)}${past?pastSeasonBanner(g):seasonBanner(g)}
-    ${!past&&!firstWeekReveal(g.id)?`<div class="section" style="margin-top:14px"><button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Resumo da semana</b><small>${esc(weekRange(lastClosedWeek()))} · vê como correu</small></span>${ic("right")}</button></div>`:""}
-    <div class="section" style="margin-top:14px"><div class="label">Resumo da época</div>
-      <div class="stats">
+    <div class="section" style="margin-top:14px"><div class="stats">${ctaBtn}</div>${nb?`<div style="margin-top:10px">${nb}</div>`:""}</div>
+    ${!past&&!firstWeekReveal(g.id)?dsec("📊","Resumo da semana",`<button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Como correu a semana</b><small>${esc(weekRange(lastClosedWeek()))} · rankings, prémios, perguntas e registos</small></span>${ic("right")}</button>`):""}
+    ${dsec("📈","Resumo da época",`<div class="stats">
         ${stat(st.created,"Eventos criados","nesta época")}
         ${stat(st.attended,"Presenças",`em ${st.invited} ${st.invited===1?"evento":"eventos"}`)}
         ${stat(st.invited?st.rate+"%":"—","Taxa de presença",st.invited?"eventos passados":"sem eventos ainda")}
@@ -1760,33 +1794,13 @@ function dashScreen(){
         ${locked?"":stat(mySIdx>=0?"#"+(mySIdx+1):"—","Posição média",mySIdx>=0?`média ${sav[mySIdx].avg.toFixed(1)} na época`:"sem rankings ainda")}
         ${locked?"":stat(myIdx>=0?"#"+(myIdx+1):"—",past?"Posição final":"Posição atual",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)} ${past?"no fim":"agora"}`:"sem rankings ainda")}
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
-        ${past?`<button class="stat cta" data-act="openGala" data-arg="${g.id}|${viewSeason(g.id).i}">${ic("trophy")}<span><span class="k" style="display:block">Rever a Gala ${esc(viewSeason(g.id).year)}</span><span class="s" style="display:block">Resultados finais da época</span></span></button>`:votingClosed(g.id)?`<div class="stat cta done" style="opacity:.75">${ic("lock")}<span><span class="k" style="display:block">Época fechada</span><span class="s" style="display:block">Rankings de volta segunda-feira</span></span></div>`:`<button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Ranking, prémios e perguntas · toca para alterar":voteCtaSub(g)}</span></span><span class="rcount num" aria-label="${nDone} de ${g.members.length} membros já votaram esta semana"><b>${nDone}/${g.members.length}</b><small>votaram</small></span></button>`}
-      </div></div>
-    ${past?"":pfCard(g)+tribCard(g)}
-    ${past?"":(()=>{ const nb=nudgeBlock(g); return nb?`<div class="section" style="margin-top:12px">${nb}</div>`:""; })()}
-    ${(()=>{ if(past) return ""; const ach=achievements(g.id); const got=ach.filter(a=>a.done); const near=ach.filter(a=>!a.done).sort((a,b)=>b.val/b.goal-a.val/a.goal);
-      const nextA=near[0]; const strip=[...got,...near].slice(0,12);
-      return `<div class="section"><div class="label">Conquistas<button data-act="achievements">Ver todas</button></div>
-      <button class="card achcard" data-act="achievements">
-        <div class="achtop">${achRing(got.length,ach.length,64)}
-          <div class="achinfo">${nextA?`<small>Próxima conquista</small><b>${nextA.emo} ${esc(nextA.name)}</b><span>${esc(nextA.desc)}</span><div class="ach-bar"><i style="width:${Math.max(4,Math.round(100*nextA.val/nextA.goal))}%"></i></div><small class="num">${nextA.val} de ${nextA.goal}</small>`:`<b>Todas desbloqueadas 👑</b><span>És uma lenda do grupo</span>`}</div></div>
-        <div class="achstrip">${strip.map(a=>`<span class="achdot ${a.done?"on":""}" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>
-      </button></div>`; })()}
-
-    ${locked?`<div class="section"><div class="label">Rankings</div><button class="card lockcard" data-act="rank">${ic("lock")}${reveal
-        ?`<b>Rankings revelados domingo às 21h 🕘</b><span>É a primeira semana da época. Os rankings aparecem no domingo às 21h, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>${myRankingThisWeek(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer o ranking</span>`}`
-        :`<b>Rankings bloqueados</b><span>Não completaste a votação da semana passada, por isso esta semana não vês os rankings.${weekDone(g.id)?" A votação desta semana já está feita ✔︎: voltas a ver a partir de domingo às 21h.":" Faz a votação desta semana para voltares a ver a partir de segunda, às 00:00."}</span>${weekDone(g.id)?"":`<span class="btn" style="margin-top:6px">${ic("edit")}Fazer a votação</span>`}`}</button></div>`:`
-    <div class="section"><div class="label">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
-      <div class="card list">${av.length? av.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")
-        : `<div class="empty"><p>${seasonPending(g.id)?"Época nova: o ranking recomeça na próxima semana.":"Ainda ninguém submeteu o ranking nesta época."}</p></div>`}</div></div>
-    ${(()=>{ const sa=seasonAverages(g.id); if(!sa.length) return `<div class="section"><div class="label">Rating médio da época</div><div class="card list"><div class="empty"><p>${seasonPending(g.id)?"Época nova: o rating recomeça na próxima semana.":"Ainda não há rankings nesta época."}</p></div></div></div>`;
-      return `<div class="section"><div class="label">Rating médio da época${sa.length>3?`<button data-act="allSeasonAvg">Ver todos</button>`:""}</div>
-      <div class="card list">${sa.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join("")}</div></div>`; })()}
-    <div class="section"><div class="label">Evolução do ranking</div>${chart}</div>
-`}
-    <div class="section"><div class="label">Probabilidades dos prémios</div>
-      ${awards.length? awards.map(a=>awardBlock(g,a,true)).join(`<div style="height:12px"></div>`) : `<div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>Os admins do grupo criam prémios no separador Journey.</p></div></div>`}
-    </div></div>`;
+      </div>`)}
+    ${past?"":dsec(`<img class="dh-pf" src="${PF_LOGO}" alt="">`,"Preferias Flash",unwrap(pfCard(g).trim()))}
+    ${past?"":dsec("⚖️","Tribunal do Sr. Sid",unwrap(tribCard(g).trim()))}
+    ${past?"":dsec("🏅","Conquistas",achHtml,`<button data-act="achievements">Ver todas</button>`)}
+    ${dsec("🏆","Ranking",rankHtml)}
+    ${dsec("🎖️","Prémios",prizeHtml)}
+    </div>`;
 }
 function stat(v,k,s,extra=""){ return `<${extra?"button":"div"} class="stat" ${extra}><span class="v num">${esc(v)}</span><span class="k">${esc(k)}</span><span class="s">${esc(s)}</span></${extra?"button":"div"}>`; }
 const expanded=new Set();
@@ -2318,9 +2332,9 @@ const pfDayName=day=>["domingo","segunda","terça","quarta","quinta","sexta","s�
 function pfCard(g){ const ed=pfEd(); if(!ed) return ""; const q=pfItem(g.id,ed); if(!q) return ""; const logo=`<img class="pf-logo" src="${PF_LOGO}" alt="">`;
   const prev=addDays(ed,-1); const pq=prev>=PF_DAY0?pfItem(g.id,prev):null;
   const locked=rankLocked(g.id); const res=pq?`<button class="row" data-act="${locked?"tease":"pfRes"}" data-arg="${prev}"><span style="font-size:22px;flex:none">${!locked&&pfAns(ME(),pq)?"👀":"🔒"}</span><div class="grow"><div class="rowtitle">Resultados de ontem</div><div class="rowsub">${!locked&&pfAns(ME(),pq)?"Vê o que cada um escolheu":"Não jogaste, por isso não os vês 😏"}</div></div>${ic(locked?"lock":"right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`:"";
-  if(locked) return `<div class="section" style="margin-top:14px"><button class="pfcard locked" data-act="tease">${logo}<span class="grow"><b>Preferias Flash de hoje</b><small>Não completaste a votação da semana passada, por isso esta semana não jogas 🔒</small></span>${ic("lock")}</button>${res?`<div class="card list" style="margin-top:8px">${res}</div>`:""}</div>`;
+  if(locked) return `<div class="section" style="margin-top:14px"><button class="pfcard locked" data-act="tease">${logo}<span class="grow"><b>Dilema de hoje</b><small>Não completaste a votação da semana passada, por isso esta semana não jogas 🔒</small></span>${ic("lock")}</button>${res?`<div class="card list" style="margin-top:8px">${res}</div>`:""}</div>`;
   const done=pfDone(g.id); const n=(g.members||[]).filter(k=>pfDone(g.id,k)).length;
-  return `<div class="section" style="margin-top:14px"><button class="pfcard ${done?"done":""}" data-act="pfPlay">${logo}<span class="grow"><b>${done?"Dilema de hoje feito ✓":"Preferias Flash de hoje"}</b><small>${done?`Os resultados saem às 21:30, com o dilema seguinte 👀`:`${q.label} · fecha em ${fmtLeft(pfMsLeft())} · ${n} de ${(g.members||[]).length} já jogaram`}</small></span>${ic("right")}</button>${res?`<div class="card list" style="margin-top:8px">${res}</div>`:""}</div>`; }
+  return `<div class="section" style="margin-top:14px"><button class="pfcard ${done?"done":""}" data-act="pfPlay">${logo}<span class="grow"><b>${done?"Dilema de hoje feito ✓":"Dilema de hoje"}</b><small>${done?`Os resultados saem às 21:30, com o dilema seguinte 👀`:`${q.label} · fecha em ${fmtLeft(pfMsLeft())} · ${n} de ${(g.members||[]).length} já jogaram`}</small></span>${ic("right")}</button>${res?`<div class="card list" style="margin-top:8px">${res}</div>`:""}</div>`; }
 function pfResultHtml(gid,q){ const g=S.groups[gid]; const me=ME(); const who={A:[],B:[]}; (g?.members||[]).forEach(k=>{ const v=pfAns(k,q); if(v==="A"||v==="B") who[v].push(k); });
   const tot=who.A.length+who.B.length; const pa=tot?Math.round(100*who.A.length/tot):0;
   const side=(t,list,p,cls)=>`<div class="pfr ${cls}"><div class="pfr-top"><span>${esc(t)}</span><b class="num">${p}%</b></div><div class="pfr-who">${list.length?list.map(k=>{ const f=first(nm(k)); const dup=(g?.members||[]).filter(o=>first(nm(o))===f).length>1; return `<span>${avatar(k,22)}${esc(dup?nm(k):f)}${k===me?" (tu)":""}</span>`; }).join(""):'<small class="muted">Ninguém</small>'}</div></div>`;
@@ -2376,7 +2390,7 @@ function tribStatus(gid){ const c=trCur(gid); const m=trMins(); const sid=isSid(
   if(c.status==="final") return `Processo n.º ${c.no}: ${trRes(c.final).toUpperCase()} · transitou em julgado`;
   return "Semana sem julgamento"; }
 function tribCard(g){ if((g.members||[]).length<3||!sidKey(g.id)) return ""; const locked=trLocked(g.id);
-  return `<div class="section" style="margin-top:14px"><button class="tribcard" data-act="${locked?"tease":"trib"}"><span class="trib-ico">⚖️</span><span class="grow"><b>Tribunal do Sr. Sid</b><small>${locked?"Não completaste a votação da semana passada: o tribunal não te recebe 🔒":esc(tribStatus(g.id))}</small></span>${ic(locked?"lock":"right")}</button></div>`; }
+  return `<div class="section" style="margin-top:14px"><button class="tribcard" data-act="${locked?"tease":"trib"}"><span class="trib-ico">⚖️</span><span class="grow"><b>${trCur(g.id).no?`Processo n.º ${esc(trCur(g.id).no)}`:"Esta semana no tribunal"}</b><small>${locked?"Não completaste a votação da semana passada: o tribunal não te recebe 🔒":esc(tribStatus(g.id))}</small></span>${ic(locked?"lock":"right")}</button></div>`; }
 function trCaseCard(gid,c,me){ const acc=c.accused;
   const res=c.status==="final"?c.final:c.result; const rev=c.appeal?.decision==="revise";
   return `<div class="card pad trcase"><div class="trno">${c.no?`Processo n.º ${esc(c.no)}`:"⏳ Em julgamento"}</div><h3 class="trtitle">${esc(c.title)}</h3>${c.desc?`<p class="trdesc">${esc(c.desc)}</p>`:""}
