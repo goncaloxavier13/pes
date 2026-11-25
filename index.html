@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795611326">
+<meta name="pes-version" content="1795616888">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -631,6 +631,7 @@ button.qlock{width:100%;border:0;background:none;font:inherit;text-align:left;cu
 .trsent{margin-top:12px;padding:12px;border-radius:12px;background:var(--card2)}.trsent small{color:#c8a064;font-family:Georgia,serif;font-size:12.5px}.trsent p{margin:4px 0 0;white-space:pre-line}
 .trpen{margin-top:10px;font-size:14.5px}
 .trrx{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trdisc{margin:22px 4px 4px;font-size:12.5px;line-height:1.45;color:var(--muted);text-align:center}.trdisc b{color:var(--text)}
+.trcount{text-align:center;font-size:14px;margin:10px 0 0;color:var(--muted)}.trcount b{color:var(--text)}
 .trrxb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 8px;border-radius:14px;border:0;background:var(--card);color:var(--text);font:inherit;cursor:pointer}
 .trrxb span{font-size:28px}.trrxb b{font-size:15px}.trrxb small{color:var(--muted);font-size:13px}.trrxb.on{box-shadow:inset 0 0 0 2px var(--accent)}.trrxb:disabled{opacity:.75;cursor:default}.trrxb.on:disabled{opacity:1}
 .trform b{font-size:16px}.btn.sm{height:34px;padding:0 12px;font-size:13.5px;border-radius:10px;flex:none}
@@ -2363,6 +2364,7 @@ function trCaseCard(gid,c,me){ const acc=c.accused;
     ${!res?`<div class="trres wait">⏳ A AGUARDAR SENTENÇA</div>`:""}<div class="trres ${res}" ${res?"":'style="display:none"'}>${res==="cond"?"🔨 CONDENADO":"🕊️ ABSOLVIDO"}${c.status==="appeal"?" · em recurso":""}${rev?" · sentença revista":""}</div>
     ${c.text?`<div class="trsent"><small>Sentença do ${MER}</small><p>${esc(c.text)}</p></div>`:""}
     ${res==="cond"&&c.penalty?`<div class="trpen">⚖️ Pena: <b>${esc(c.penalty)}</b></div>`:""}
+    ${c.rxFinal?`<div class="trpen">Reações do povo: 👏 <b>${c.rxFinal.jf}</b> · 🔁 <b>${c.rxFinal.rec}</b></div>`:""}
     ${c.appeal&&c.appeal.decision!=="none"?`<div class="trsent"><small>Decisão do recurso</small><p><b>${c.appeal.decision==="keep"?"Sentença mantida":"Sentença revista"}.</b> ${esc(c.appeal.text||"")}</p>${c.appeal.decision==="keep"?`<p class="muted" style="margin-top:4px">Quem pediu recurso deve um fino ao ${MER} 🍺</p>`:""}</div>`:""}
     ${c.appeal?.decision==="none"?`<div class="trsent"><p class="muted">O recurso caducou: o ${MER} não se pronunciou. A sentença mantém-se, sem finos.</p></div>`:""}</div>`; }
 function TR_DISC_WRAP(f){ return ()=>{ const h=f(); return h+`<p class="trdisc">⚠️ <b>Aviso legal:</b> as acusações, sentenças e penas do Tribunal do Sr. Sid são da exclusiva responsabilidade do ${MER} e de quem as submete. O Cláudio e o criador da app não se responsabilizam por nada do que aqui se decide.</p>`; }; }
@@ -2389,7 +2391,9 @@ function tribSheet(){ const g=curGroup(); if(!g) return; const gid=g.id; const m
           <button class="btn block" data-trverd ${st.res?"":"disabled"}>Publicar veredicto</button></div>`;
       else out+=`<p class="info" style="margin-top:12px">${sid?"Sentença enviada. Está a ser publicada…":`O ${MER} vai proferir sentença até quinta às 20:00. Quem acusou continua anónimo 🤫`}</p>`; }
     if(c.status==="verdict"){ const mine=my.rx?.[gid+"_"+c.w]?.v; const can=!sid&&m<TR_RX;
-      out+=`<div class="label" style="margin-top:14px">O povo reage · até sexta às 20:00</div><div class="trrx">${[["jf","👏","Justiça feita"],["rec","🔁","Recurso"]].map(([k,e,l])=>`<button class="trrxb ${mine===k?"on":""}" data-trrx="${k}" ${!can||mine?"disabled":""}><span>${e}</span><b>${l}</b><small>${(c.rx?.[k]||0)}</small></button>`).join("")}</div>
+      const tot=(c.rx?.n??0)+(mine&&!(c.rx?.n)?1:0); const who=(S.groups[gid]?.members||[]).filter(k=>k!==sidKey(gid)).length;
+      out+=`<div class="label" style="margin-top:14px">O povo reage · até sexta às 20:00</div><div class="trrx">${[["jf","👏","Justiça feita"],["rec","🔁","Recurso"]].map(([k,e,l])=>`<button class="trrxb ${mine===k?"on":""}" data-trrx="${k}" ${!can||mine?"disabled":""}><span>${e}</span><b>${l}</b>${mine===k?"<small>A tua escolha</small>":""}</button>`).join("")}</div>
+        <p class="trcount">🗳️ <b>${tot}</b> de ${who} já ${tot===1?"reagiu":"reagiram"} · o resultado é secreto até sexta às 20:00</p>
         <p class="info">${sid?`O ${MER} não vota.`:mine?"Já reagiste. Só podes reagir uma vez.":"Só podes reagir uma vez."} Vai a recurso com pelo menos 3 🔁 e mais 🔁 do que 👏. Se o recurso falhar, quem pediu recurso paga um fino ao ${MER} 🍺</p>`; }
     if(c.status==="appeal"){ const sent=S.reads[me]?.trib?.appeal?.[gid]?.[c.w];
       if(sid&&!sent&&m<TR_APP){ out+=`<div class="label" style="margin-top:14px">Decisão do recurso · até domingo às 21:00</div>
