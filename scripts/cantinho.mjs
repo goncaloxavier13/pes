@@ -355,7 +355,17 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
     // 5) sentença final → registo de penas e cadastro
     if (cur.status === "final" && !cur.logged) { cur.logged = true; changed = true;
       if (cur.final === "cond") pub.pens.push({ id: `p${cur.no.replace("/", "-")}`, k: cur.accused, no: cur.no, kind: "pena", text: cur.penalty || "Pena simbólica", done: false, at: Date.now() });
-      pub.hist = [...pub.hist.filter(h => h.no !== cur.no), { no: cur.no, w: wk, title: cur.title, accused: cur.accused, result: cur.final }]; }
+      // 📜 resumo da semana do tribunal (sem nunca dizer quem acusou)
+      const byAcc = {}; weekCases.forEach(([, c]) => { byAcc[c.accused] = (byAcc[c.accused] || 0) + 1; });
+      const top = Object.entries(byAcc).sort((a, b) => b[1] - a[1]); const elig = mem.filter(k => k !== sid && can(k));
+      const fines = (tw.rec || []).length && cur.appeal?.decision === "keep" ? (tw.rec || []).length : 0;
+      cur.sum = { cases: weekCases.length, accusedN: top.length, top: top.length && top[0][1] > 1 && (top.length < 2 || top[0][1] > top[1][1]) ? top[0] : null,
+        caseAcc: byAcc[cur.accused] || 1, elig: elig.length, reacted: (tw.jf || 0) + (tw.rec || []).length, jf: tw.jf || 0, rec: (tw.rec || []).length,
+        trialH: cur.trialAt ? Math.max(0, Math.round((loc(cur.trialAt) - subEnd) / 36e5)) : null, verdLeftH: cur.at ? Math.max(0, Math.round((verdEnd - loc(cur.at)) / 36e5)) : null,
+        words: (cur.text || "").split(/\s+/).filter(Boolean).length, appealWords: (cur.appeal?.text || "").split(/\s+/).filter(Boolean).length, fines, at: Date.now() };
+      pub.hist = [...pub.hist.filter(h => h.no !== cur.no), { no: cur.no, w: wk, title: cur.title, accused: cur.accused, result: cur.final }];
+      await allSend({ title: `📜 O resumo do Processo n.º ${cur.no} já saiu`, body: "Acusações, veredicto, reações e recurso: a semana do tribunal toda, com números 🍿", tag: "trib-sum-" + wk, url: url + "&tsum=1" },
+        { title: `📜 Saiu o resumo do Processo n.º ${cur.no}`, body: "Toda a gente já está a rir-se… menos tu, que não votaste 🔒", tag: "trib-sum-" + wk, url }); }
     // 6) penas cumpridas (só o Meritíssimo marca)
     for (const [pid, on] of Object.entries(sidRd.done || {})) { const p = pub.pens.find(x => x.id === pid); if (p && !!on !== !!p.done) { p.done = !!on; p.doneAt = on ? Date.now() : null; changed = true;
       if (on) await send(p.k, { title: "⚖️ Dívida saldada", body: `O ${MER} deu como cumprid${p.kind === "fino" ? "o o teu fino" : "a a tua pena"} do Processo n.º ${p.no}.`, tag: "trib-pen-" + pid, url }); } }
