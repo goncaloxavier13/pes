@@ -176,7 +176,7 @@ for (const [gid, g0] of Object.entries(groups)) {
     await say(cid, { sec: "quiz", kind: "ask", qi: z, text: QUIZ[z][0], choices: QUIZ[z][1] }, `🛋️ É a vez do ${first(host)} no cantinho!`);
     for (const k of members) await send(k, k === host
       ? { title: "🛋️ É a tua vez no cantinho!", body: "Durante 2 dias o cantinho é teu: pensamentos, perguntas e o grupo vai tentar adivinhar as tuas respostas 🎯", tag: "cant-" + cid, url: url(cid) }
-      : { title: `🛋️ Novo cantinho: é a vez do ${first(host)}!`, body: `Vai ao GAP: durante 2 dias vais poder ler o ${first(host)} e adivinhar as respostas dele 🎯`, tag: "cant-" + cid, url: url(cid) });
+      : { title: `🛋️ Novo cantinho: é a vez do ${first(host)}!`, body: `Vai às Rubricas: durante 2 dias vais poder ler o ${first(host)} e adivinhar as respostas dele 🎯`, tag: "cant-" + cid, url: url(cid) });
     for (const k of mem) if (!members.includes(k)) await send(k, { title: `🔒 Há um cantinho novo no ${g.name}`, body: `É a vez do ${first(host)}… mas tu não votaste e ficas de fora 😬`, tag: "cant-" + cid, url: `./?g=${gid}&t=dash` });
     if (DRY) continue;
   }
