@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795638481">
+<meta name="pes-version" content="1795638821">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -87,7 +87,7 @@ p{margin:0}
 .dtiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .dtile{position:relative;overflow:hidden;aspect-ratio:1.55/1;border:0;border-radius:14px;padding:14px;text-align:left;color:#fff;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:4px;-webkit-tap-highlight-color:transparent;transition:transform .12s}
 .dtile:active{transform:scale(.97)}
-.dt-t{font-size:18px;font-weight:800;line-height:1.15;letter-spacing:-.2px;max-width:85%;position:relative;z-index:1}.dt-s{font-size:13px;opacity:.9;position:relative;z-index:1;font-weight:600;max-width:72%}
+.dt-t{font-size:18px;font-weight:800;line-height:1.15;letter-spacing:-.2px;max-width:85%;position:relative;z-index:1}.dt-s{font-size:13px;opacity:.9;position:relative;z-index:1;font-weight:600;max-width:72%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .dt-art{position:absolute;right:-10px;bottom:-10px;width:68px;height:68px;transform:rotate(22deg);border-radius:10px;display:grid;place-items:center;background:rgba(0,0,0,.25);box-shadow:0 6px 16px rgba(0,0,0,.35)}
 .dt-art img{width:86%;height:86%;object-fit:contain}.dt-emo{font-size:40px;line-height:1}
 .dtile.c1{background:#4f7a91}.dtile.c2{background:linear-gradient(135deg,#8e3bd6,#2c6cf0)}.dtile.c3{background:#6b4423}.dtile.c4{background:#b0457f}.dtile.c5{background:#2e7d5b}.dtile.c6{background:#2a3566}
@@ -1090,7 +1090,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
     html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">No próximo domingo, às 21h, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
     joke:null});
   const lockedEnd=()=>`<div class="s-lock"><div class="s-lemo">🔒</div><b>Voltas a ver tudo quando votares</b><p>Quem não completa a votação de uma semana não vê nada na semana seguinte.</p>
-    ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎ · na próxima segunda vês tudo</span>`:`<button class="btn" style="margin-top:10px" data-act="teaseVote">${ic("edit")}Fazer a votação</button>`}</div>`;
+    ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎ · na próxima segunda vês tudo</span>`:`<span class="chip" style="margin-top:10px">Vota no botão <b>Votar</b>, ao centro da barra de baixo ⬇️</span>`}</div>`;
   const render=s=>`<div class="s-emo">${s.emo}</div><div class="s-title">${s.title}</div>${s.sub?`<div class="s-sub">${s.sub}</div>`:""}
     ${locked?(s.joke?`<div class="s-lock"><div class="s-lemo">🔒</div><b>${s.joke[0]}</b><p>${s.joke[1]}</p></div>`:lockedEnd()):s.html()}`;
   const COLORS=[["#5B2BE0","#1A0B4D"],["#E0A100","#5A2C00"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#FF375F","#4D0717"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#3A3A55","#0B0B16"]];
@@ -1587,7 +1587,7 @@ S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceS
 navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
 function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
   if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
-  S.tab=normTab(l.t||"hoje"); S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); if(l.tsum&&!trLocked(l.g)) setTimeout(()=>tribSummary(l.g),400); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
+  S.tab=normTab(l.t||"rubricas"); S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); if(l.tsum&&!trLocked(l.g)) setTimeout(()=>tribSummary(l.g),400); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -1621,19 +1621,19 @@ function screenHtml(r){
   else if (!ME() && S.fb && (!S.uidChecked || !S.peopleOk)) html=`<div class="center"><div class="spinner"></div><p class="muted small">${S.stale?"A base de dados ainda não respondeu. Verifica a ligação.":"A carregar…"}</p></div>`;
   else if (!ME()) html=claimScreen();
   else if (r) html=({group:groupScreen,settings:settingsScreen,chat:chatShell,awards:awardsScreen})[r.name](r.arg);
-  else html=({hoje:hojeScreen,rubricas:rubricasScreen,epoca:dashScreen,events:eventsScreen,gap:gapScreen})[normTab(S.tab)]() + tabbar();
+  else html=({rubricas:rubricasScreen,epoca:dashScreen,events:eventsScreen,gap:gapScreen})[normTab(S.tab)]() + tabbar();
   return html;
 }
 
-// Barra: Hoje · Rubricas · [Votar] · Época · Eventos. O GAP abre pelo 💬 no Hoje (e pelas notificações).
-const TAB_MAP={home:"hoje",dash:"hoje",journey:"epoca"};
-function normTab(t){ t=TAB_MAP[t]||t; return ["hoje","rubricas","epoca","events","gap"].includes(t)?t:"hoje"; }
+// Barra: Rubricas · Época · [Votar] · Eventos · GAP. Cada coisa tem um só caminho.
+const TAB_MAP={home:"rubricas",dash:"rubricas",hoje:"rubricas",journey:"epoca"};
+function normTab(t){ t=TAB_MAP[t]||t; return ["rubricas","epoca","events","gap"].includes(t)?t:"rubricas"; }
 function tabbar(){
   const g=curGroup(); const n=g?groupNotifs(g.id):{msgs:0,evs:0}; const cur=normTab(S.tab);
   const voteDue=g&&!viewingPast(g.id)&&!votingClosed(g.id)&&!weekDone(g.id);
   const t=(id,label,icon,badge)=>`<button class="tab ${cur===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
-  const vote=`<button class="tab hometab ${voteDue?"due":""}" data-act="${g?"rank":"tab"}" data-arg="hoje" aria-label="Votar${voteDue?", votação por fazer":""}"><span class="hbub">${ic(voteDue?"edit":"vote")}</span>${voteDue?`<span class="badge num">!</span>`:""}<span>Votar</span></button>`;
-  return `<nav class="tabbar">${t("hoje","Hoje","home",n.msgs)}${t("rubricas","Rubricas","grid")}${vote}${t("epoca","Época","chart")}${t("events","Eventos","cal",n.evs)}</nav>`;
+  const vote=`<button class="tab hometab ${voteDue?"due":""}" data-act="${g?"rank":"tab"}" data-arg="rubricas" aria-label="Votar${voteDue?", votação por fazer":""}"><span class="hbub">${ic(voteDue?"edit":"vote")}</span>${voteDue?`<span class="badge num">!</span>`:""}<span>Votar</span></button>`;
+  return `<nav class="tabbar">${t("rubricas","Rubricas","grid")}${t("epoca","Época","chart")}${vote}${t("events","Eventos","cal",n.evs)}${t("gap","GAP","chat",n.msgs)}</nav>`;
 }
 function groupPill(withSeason){ const g=curGroup(); if(!g) return "";
   const ch=withSeason?seasonChoices(g.id):[]; const v=viewSeason(g.id);
@@ -1676,7 +1676,7 @@ document.addEventListener("submit",async e=>{
   S.claimBusy=true; render();
   const key=slug(name)+"-"+Math.random().toString(36).slice(2,6);
   await write(()=> S.fb? fbCreateProfile(name) : D("people/"+key).set({name,uid:S.uid,photo:null,createdAt:Date.now()}),`Olá, ${first(name)}!`);
-  S.claimBusy=false; S.route=[]; S.tab="hoje"; render();
+  S.claimBusy=false; S.route=[]; S.tab="rubricas"; render();
 });
 
 /* ───────────────────────── screens: home ───────────────────────── */
@@ -1766,20 +1766,19 @@ const rankLockedFor=(gid,k)=>{ const pw=lastClosedWeek(); return !weekComplete(g
 function rubricasScreen(){
   const g=curGroup(); const me=ME();
   const head=`<div class="tabhead"><div class="titles"><h1>Rubricas</h1>${groupPill()}</div></div>`;
-  if(!g) return `<div class="scroll pad-tabs" data-key="rubricas">${head}${noGroup()}</div>`;
+  if(!g) return `<div class="scroll pad-tabs" data-key="rubricas">${head}${previewBanner()}<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("users")}</div><h3>Ainda não estás no grupo</h3><p>Entra com o código de convite que te enviaram.</p><button class="btn" style="margin-top:8px" data-act="joinGroup">${ic("link")}Entrar com código</button></div></div></div></div>`;
   const locked=rankLocked(g.id)&&!firstWeekReveal(g.id); const t=[];
-  // Cantinho
   { const c=cantinhoOf(g.id); const past=pastCantinhos(g.id).length; const lk=locked&&!c;
-    t.push(dtile("cantHub","c7","Cantinho",lk?"":c?esc(c.name||"Cantinho"):past?`${past} ${past===1?"anterior":"anteriores"}`:"A sortear…",dtEmo("🛋️"),lk)); }
+    t.push(dtile("cantHub","c7","Cantinho",lk?"":c?(c.host===me?"É a tua vez!":`É a vez do ${esc(first(nm(c.host)))}`):past?`${past} ${past===1?"anterior":"anteriores"}`:"A sortear…",dtEmo("🛋️"),lk)); }
   if(sidKey(g.id)&&(g.members||[]).length>=3){ const c=trCur(g.id); const tl=trLocked(g.id);
     t.push(dtile("trib","c3","Tribunal do Sr. Sid",tl?"":c.no?`Processo ${esc(c.no)}`:c.status==="trial"?"Em julgamento":c.status==="sub"?"Acusações abertas":"Esta semana",dtEmo("⚖️"),tl)); }
   { const ed=pfEd(); t.push(dtile("dashPF","c2","Preferias Flash",locked?"":ed?(pfDone(g.id)?"Feito hoje ✓":"Dilema de hoje"):"Às 21:30",`<img src="${PF_LOGO}" alt="">`,locked)); }
-  t.push(dtile("questArch","c8","Perguntas da semana",locked?"":"E quem percebe mais de…",dtEmo("🎲"),locked));
-  return `<div class="scroll pad-tabs" data-key="rubricas">${head}${previewBanner()}
+  t.push(dtile("questArch","c8","Perguntas da semana",locked?"":"Respostas da semana",dtEmo("🎲"),locked));
+  const lockHero=locked?`<div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Esta semana estás cá fora</b><p>Não completaste a votação da semana passada. Vês as rubricas, mas não consegues abrir nenhuma. Faz a votação desta semana (botão Votar) para voltares no domingo às 21h.</p><small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>`:"";
+  return `<div class="scroll pad-tabs" data-key="rubricas">${head}${previewBanner()}${bdayBanner(g)}${nudgedBanner(g)}${seasonBanner(g)}${lockHero}
     <div class="section" style="margin-top:14px"><div class="dtiles">${t.join("")}</div></div>
-    <p class="info" style="margin:14px 20px 0">As rubricas só estão abertas a quem completou a votação da semana passada.</p>
   </div>`; }
-function cantHubSheet(){ const g=curGroup(); if(!g) return; const c=cantinhoOf(g.id); if(c&&!pastCantinhos(g.id).length){ A.openChat(c.id); return; }
+function cantHubSheet(){ const g=curGroup(); if(!g) return; const c=cantinhoOf(g.id); if(c){ A.openChat(c.id); return; } if(pastCantinhos(g.id).length){ A.cantPast(g.id); return; }
   openSheet({title:"🛋️ Cantinho",left:"Fechar",live:true,body:()=>{ const h=cantinhoCard(g).trim().replace(/^<div class="section" style="margin-top:\d+px">([\s\S]*)<\/div>$/,"$1"); return (h||`<div class="empty"><p>O cantinho ainda não começou.</p></div>`)+`<p class="info">De 2 em 2 dias, às 20:00, é sorteada uma pessoa para o cantinho. Ninguém repete até passarem todos.</p>`; }}); }
 function questArchSheet(){ const g=curGroup(); if(!g) return; if(rankLocked(g.id)&&!firstWeekReveal(g.id)){ teaseSheet(); return; }
   openSheet({title:"🎲 Perguntas da semana",left:"Fechar",live:true,body:()=>(questionsArchive(g)||`<div class="empty"><p>As respostas aparecem aqui no domingo às 21h.</p></div>`).replace(/^<div class="section">/,"<div>")}); }
@@ -1789,7 +1788,7 @@ function awardsScreen(){ const html=journeyScreen(true); return html; }
 /* ───────────────────────── screens: dashboard ───────────────────────── */
 function dashScreen(){
   const g=curGroup(); const me=ME();
-  const head=`<div class="tabhead"><div class="titles"><h1>Época</h1>${groupPill(true)}</div></div>`;
+  const head=`<div class="tabhead hojehead"><div class="titles" style="flex:1"><h1>Época</h1>${groupPill(true)}</div><button class="hojeme" data-act="settings" aria-label="Perfil e definições">${avatar(me,40)}</button></div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="dash">${head}${noGroup()}</div>`;
   const st=eventStats(g.id,me); const av=averages(g.id); const myIdx=av.findIndex(a=>a.k===me);
   const sav=seasonAverages(g.id); const mySIdx=sav.findIndex(a=>a.k===me); const reveal=firstWeekReveal(g.id); const locked=reveal||rankLocked(g.id);
@@ -1821,7 +1820,6 @@ function dashScreen(){
       <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Época trancada</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p>${(()=>{ const n=(g.members||[]).length, nIn=insideCount(g.id), ct=g.cant&&g.cant.week===curWeek()?g.cant:null;
         return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar no domingo às 21h.`}</span></div>`; })()}
         <small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
-      ${voteBtn}
       ${ldsec("📈","Resumo da época",`<div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div>`)}
       ${dashTiles(g,{locked:true})}
     </div>`;
@@ -1839,7 +1837,7 @@ function dashScreen(){
           <div class="achinfo">${nextA?`<small>Próxima conquista</small><b>${nextA.emo} ${esc(nextA.name)}</b><span>${esc(nextA.desc)}</span><div class="ach-bar"><i style="width:${Math.max(4,Math.round(100*nextA.val/nextA.goal))}%"></i></div><small class="num">${nextA.val} de ${nextA.goal}</small>`:`<b>Todas desbloqueadas 👑</b>`}</div></div>
         <div class="achstrip">${strip.map(a=>`<span class="achdot ${a.done?"on":""}" title="${esc(a.name)}">${a.emo}</span>`).join("")}</div>
       </button>`; })();
-  const rankHtml=locked?`<button class="card lockcard" data-act="rank">${ic("lock")}${reveal
+  const rankHtml=locked?`<button class="card lockcard" data-act="tease">${ic("lock")}${reveal
         ?`<b>Rankings revelados domingo às 21h 🕘</b><span>É a primeira semana da época. Os rankings aparecem no domingo às 21h, quando a semana fechar.${myRankingThisWeek(g.id)?" O teu ranking já está feito ✔︎":" Até lá, faz o teu ranking da semana."}</span>`
         :`<b>Rankings bloqueados</b><span>Não completaste a votação da semana passada, por isso esta semana não vês os rankings.</span>`}</button>`
     :`<div class="dsub-l">Ranking atual${av.length>3?`<button data-act="allAvg">Ver todos</button>`:""}</div>
@@ -1855,7 +1853,7 @@ function dashScreen(){
     :awards.map(a=>awardBlock(g,a,true)).join(`<div style="height:12px"></div>`);
   S.dashParts={rankHtml,prizeHtml,achHtml};
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?"":bdayBanner(g)+nudgedBanner(g)}${past?pastSeasonBanner(g):seasonBanner(g)}
-    ${past?`<div class="section" style="margin-top:14px"><div class="stats">${ctaBtn}</div></div>`:""}
+    ${past?`<div class="section" style="margin-top:14px"><div class="stats">${ctaBtn}</div></div>`:nb?`<div class="section" style="margin-top:14px">${nb}</div>`:""}
     ${dsec("📈","Resumo da época",`<div class="stats">
         ${stat(st.created,"Eventos criados","nesta época")}
         ${stat(st.attended,"Presenças",`em ${st.invited} ${st.invited===1?"evento":"eventos"}`)}
@@ -1977,7 +1975,7 @@ function questionsArchive(g){ const me=ME(); const s=viewSeason(g.id); const cw=
 /* ───────────────────────── screens: GAP ───────────────────────── */
 function gapScreen(){
   const g=curGroup();
-  const head=`<div class="tabhead"><button class="roundbtn" data-act="tab" data-arg="hoje" aria-label="Voltar ao Hoje" style="align-self:center;margin-right:4px">${ic("back")}</button><div class="titles" style="flex:1"><h1>GAP</h1>${groupPill()}</div>${g?`<div style="display:flex;gap:8px;align-items:center">${g&&chatsOf(g.id).length?`<button class="linkbtn" data-act="gapEdit" style="font-weight:600;padding:8px 4px">${S.gapEdit?"OK":"Editar"}</button>`:""}<button class="roundbtn fill" data-act="newChat" aria-label="Nova conversa">${ic("compose")}</button></div>`:""}</div>`;
+  const head=`<div class="tabhead"><div class="titles" style="flex:1"><h1>GAP</h1>${groupPill()}</div>${g?`<div style="display:flex;gap:8px;align-items:center">${g&&chatsOf(g.id).length?`<button class="linkbtn" data-act="gapEdit" style="font-weight:600;padding:8px 4px">${S.gapEdit?"OK":"Editar"}</button>`:""}<button class="roundbtn fill" data-act="newChat" aria-label="Nova conversa">${ic("compose")}</button></div>`:""}</div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="gap">${head}${noGroup()}</div>`;
   const cs=chatsOf(g.id); const me=ME();
   return `<div class="scroll pad-tabs" data-key="gap">${head}${previewBanner()}<div class="section" style="margin-top:12px">
@@ -2012,7 +2010,7 @@ function chatShell(cid){
   const cant=c.type==="cantinho"; const tab=cant?cantTab(cid):null; const ended=cant&&cantEnded(c); const canWrite=!cant||(c.host===ME()&&tab!=="quiz"&&!ended);
   const sub=c.type==="direct"?"Conversa privada":cant?(ended?"Cantinho terminado":`Cantinho · só ${c.host===ME()?"tu escreves":`o ${first(nm(c.host))} escreve`}`):`${(c.members||[]).length} participantes`;
   const tabs=cant?`<div class="ctabs" role="tablist">${[["pens","💭 Pensamentos"],["q","❓ Perguntas"],["quiz","🎯 Adivinha"]].map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" class="${tab===k?"on":""}" data-act="cantTab" data-arg="${cid}|${k}">${l}</button>`).join("")}</div>${ended?`<button class="cantsumbar" data-act="cantSummary" data-arg="${cid}">📋 Ver o resumo deste cantinho ${ic("right")}</button>`:""}`:"";
-  return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes","",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+tabs+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
+  return navhead(chatTitle({id:cid,...c}),sub+" · ver participantes",cant&&pastCantinhos(c.groupId).filter(x=>x.id!==cid).length?`<button class="roundbtn" data-act="cantPast" data-arg="${c.groupId}" aria-label="Cantinhos anteriores" style="font-size:18px">📋</button>`:"",`data-act="chatInfo" data-arg="${cid}" aria-label="Ver participantes"`)+tabs+`<div class="scroll" data-key="chat:${cid}" id="msgScroll"><div class="msgs" id="msgs"><div class="center" style="padding:40px"><div class="spinner"></div></div></div></div>
     <div class="replybar" id="replyBar" hidden><div class="rbt"><b></b><span></span></div><button type="button" id="replyX" aria-label="Cancelar resposta">${ic("x")}</button></div>
     ${canWrite?`<form class="composer" id="composer">${S.isOwner&&!cant&&c.type!=="direct"?`<button type="button" class="asclaude" id="asClaude" aria-pressed="false" aria-label="Escrever como Cláudio" title="Escrever como Cláudio">${avatar(CLAUDE,28)}</button>`:""}<textarea id="msgInput" rows="1" placeholder="${cant?(tab==="pens"?"Escreve um pensamento…":"Responde à pergunta…"):"Mensagem"}" aria-label="Mensagem" maxlength="2000"></textarea><button class="send" type="submit" id="sendBtn" disabled aria-label="Enviar">${ic("send")}</button></form>`
       :`<div class="cantnote">${ended?"🛋️ Este cantinho já terminou.":c.host===ME()?"🎯 Responde em segredo nos cartões acima. O grupo vai tentar adivinhar.":tab==="quiz"?`🎯 Adivinha as respostas do ${esc(first(nm(c.host)))}. Os votos dos outros só aparecem na revelação.`:`🛋️ Este é o cantinho do ${esc(first(nm(c.host)))}. Só ele escreve aqui, mas podes reagir às mensagens.`}</div>`}`;
@@ -2179,9 +2177,7 @@ function settingsScreen(){
       ${photo(me)?`<button class="row" data-act="removePhoto"><span class="grow" style="color:var(--red)">Remover foto</span></button>`:""}
       <button class="row" data-act="editBday"><span style="font-size:20px">🎂</span><span class="grow">Aniversário</span><span class="muted">${bdayOf(me)?esc(bdayLabel(bdayOf(me))):"Adicionar"}</span>${ic("right",'style="width:16px;height:16px;color:var(--muted)"')}</button></div></div>
     ${(()=>{ const g=curGroup(); if(!g) return ""; return `<div class="section"><div class="label">Grupo</div><div class="card list">
-      <button class="row" data-act="openGroup" data-arg="${g.id}"><span style="font-size:20px">👥</span><div class="grow"><div class="rowtitle">${esc(g.name)}</div><div class="rowsub">Membros e código de convite${isAdmin(g)?" · gerir":""}</div></div>${ic("right")}</button>
-      <button class="row" data-act="awards"><span style="font-size:20px">🎖️</span><div class="grow"><div class="rowtitle">Prémios e Gala</div><div class="rowsub">${isAdmin(g)?"Criar e gerir os prémios da época":"Os prémios da época e a Gala"}</div></div>${ic("right")}</button>
-      <button class="row" data-act="tab" data-arg="gap"><span style="font-size:20px">💬</span><div class="grow"><div class="rowtitle">GAP</div><div class="rowsub">As conversas do grupo</div></div>${ic("right")}</button></div></div>`; })()}
+      <button class="row" data-act="openGroup" data-arg="${g.id}"><span style="font-size:20px">👥</span><div class="grow"><div class="rowtitle">${esc(g.name)}</div><div class="rowsub">Membros e código de convite${isAdmin(g)?" · gerir":""}</div></div>${ic("right")}</button></div></div>`; })()}
     <div class="section"><div class="label">Aparência</div><div class="card list">
       ${[["system","Igual ao dispositivo"],["light","Claro"],["dark","Escuro"]].map(([v,l])=>`<button class="row" data-act="theme" data-arg="${v}"><span class="grow">${l}</span>${th===v?`<span style="color:var(--accent)">${ic("check",'style="width:20px;height:20px"')}</span>`:""}</button>`).join("")}</div></div>
     ${notifSection()}
@@ -2435,13 +2431,17 @@ function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const day=
   if(!q){ toast("O Preferias Flash começa hoje às 21:30 ⚡"); return; }
   if(rankLocked(g.id)){ teaseSheet(); return; }
   let pick=pfAns(me,q)||null;
-  const L=openSheet({title:"⚡ Preferias Flash",left:"Fechar",body:()=>{
+  const prevRes=()=>{ const prev=addDays(day,-1); const pq=prev>=PF_DAY0?pfItem(g.id,prev):null; if(!pq) return "";
+    const older=[]; for(let d=addDays(prev,-1);d>=PF_DAY0&&older.length<7;d=addDays(d,-1)){ const x=pfItem(g.id,d); if(pfAns(me,x)) older.push(x); }
+    return `<div class="label" style="margin-top:26px">Resultados de ontem</div>`+(pfAns(me,pq)?pfResultHtml(g.id,pq):`<div class="card pad pflock"><b>🔒 Não jogaste o dilema de ontem</b><span>Por isso não vês o que a malta escolheu 😏</span></div>`)
+      +(older.length?`<div class="label" style="margin-top:18px">Anteriores em que jogaste</div><div class="card list">${older.map(x=>`<button class="row" data-act="pfRes" data-arg="${x.day}"><span class="grow"><span class="rowtitle" style="white-space:normal">${esc(x.a)} <span class="muted">ou</span> ${esc(x.b)}</span><span class="rowsub">${x.label} · ${pfDayName(x.day)}</span></span>${ic("right")}</button>`).join("")}</div>`:""); };
+  const L=openSheet({title:"⚡ Preferias Flash",left:"Fechar",live:true,body:()=>{
     if(pick) return `<div class="pf-end"><img class="pf-logo-big" src="${PF_LOGO}" alt="Preferias Flash"><b>Feito!</b><p>Escolheste: <b>${esc(pick==="A"?q.a:q.b)}</b></p>
-      <p>Às 21:30 saem os resultados, com o dilema seguinte. Só quem joga vê o que a malta escolheu 😏</p><p class="info">Faltam ${fmtLeft(pfMsLeft())}</p></div>`;
+      <p>Às 21:30 saem os resultados, com o dilema seguinte. Só quem joga vê o que a malta escolheu 😏</p><p class="info">Faltam ${fmtLeft(pfMsLeft())}</p></div>`+prevRes();
     return `<div class="pf-head"><img class="pf-logo-big" src="${PF_LOGO}" alt="Preferias Flash"></div>
       <div class="pf-cat">${q.label} · dilema de hoje</div><h2 class="pf-q">Preferias…</h2>
       <button class="pf-opt a" data-pf="A">${esc(q.a)}</button><div class="pf-or">ou</div><button class="pf-opt b" data-pf="B">${esc(q.b)}</button>
-      <p class="info" style="text-align:center">Fecha às 21:30 · faltam ${fmtLeft(pfMsLeft())}</p>`; },
+      <p class="info" style="text-align:center">Fecha às 21:30 · faltam ${fmtLeft(pfMsLeft())}</p>`+prevRes(); },
     onMount:L=>{ L.body.addEventListener("click",async e=>{ const b=e.target.closest("[data-pf]"); if(!b||pick) return; if(pfEd()!==day){ toast("Este dilema já fechou. Já saiu outro ⚡"); return; } if(rankLocked(g.id)){ toast("Esta semana não podes jogar 🔒"); return; }
       b.classList.add("pick"); const v=b.dataset.pf;
       const doc=S.votes[me]?JSON.parse(JSON.stringify(S.votes[me])):{weeks:{}}; doc.weeks=doc.weeks||{}; doc.weeks[q.w]={...(doc.weeks[q.w]||{}),[q.id]:v};
@@ -2609,7 +2609,7 @@ function teaseSheet(){ const g=curGroup(); let i; do{ i=Math.floor(Math.random()
   const done=g&&weekDone(g.id);
   openSheet({title:"",left:"Fechar",short:true,body:()=>`<div class="tease"><div class="tease-emo">🔒</div><b>${t}</b><p>${m}</p>
     <small>${g?`${insideCount(g.id)} de ${(g.members||[]).length} estão lá dentro esta semana. `:""}Quem não completa a votação de uma semana não vê nada na semana seguinte.</small>
-    ${done?`<span class="chip" style="margin-top:10px">Votação desta semana feita ✔︎ · voltas a ver domingo às 21h</span>`:`<button class="btn" style="margin-top:12px" data-act="teaseVote">${ic("edit")}Fazer a votação</button>`}</div>`}); }
+    ${done?`<span class="chip" style="margin-top:10px">Votação desta semana feita ✔︎ · voltas a ver domingo às 21h</span>`:`<span class="chip" style="margin-top:10px">Vota no botão <b>Votar</b>, ao centro da barra de baixo ⬇️</span>`}</div>`}); }
 /* ───────── Weekly fun questions: 2 per week, the answer is always a group member ───────── */
 const QUESTIONS=[
 "Quem é o mais provável de se esquecer do próprio aniversário?","Bateste com o carro: a quem ligas primeiro?","Tens um cão e vais de férias: a quem o deixas?",
@@ -2859,7 +2859,7 @@ const A = {
   bdayCelebrate:a=>{ const [gid,k]=a.split("|"); bdayCelebration(gid,k); },
   editBday:()=>bdaySheet(),
   achievements:()=>{ const g=curGroup(); if(g) achievementsSheet(g.id); },
-  dashPF:()=>dashSheet("pf"), awards:()=>go("awards"), cantHub:()=>cantHubSheet(), questArch:()=>questArchSheet(), dashRank:()=>dashSheet("rank"), dashPrizes:()=>dashSheet("prizes"),
+  dashPF:()=>pfSheet(), awards:()=>go("awards"), cantHub:()=>cantHubSheet(), questArch:()=>questArchSheet(), dashRank:()=>dashSheet("rank"), dashPrizes:()=>dashSheet("prizes"),
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
@@ -2919,7 +2919,7 @@ const A = {
     const lastAdmin=(g.admins||[]).length===1&&g.admins[0]===me&&rest.length>0;
     if(!await confirmD(`Sair de ${g.name}?`, rest.length? (lastAdmin?`És o único admin, por isso ${nm(rest[0])} passa a ser admin.`:"Podes voltar com o código de convite.") : "És o último membro, por isso o grupo é apagado.","Sair",true)) return;
     const ok=await write(()=> rest.length? D("groups/"+gid).update({members:rest,admins:lastAdmin?[rest[0]]:(g.admins||[]).filter(x=>x!==me)}) : D("groups/"+gid).delete(),"Saíste do grupo");
-    if(ok){ S.route=[]; S.tab="hoje"; render(); } },
+    if(ok){ S.route=[]; S.tab="rubricas"; render(); } },
   theme:v=>{ S.theme=v; lsSet("theme",v); applyTheme(); render(); },
   authMode:v=>{ S.authEmail=document.getElementById("aemail")?.value.trim()||S.authEmail; S.authMode=v; render(); },
   logout:async()=>{ if(await confirmD("Terminar sessão?","Voltas a precisar do email e da password para entrar.","Terminar sessão")) await S.auth.signOut(); },
@@ -2931,11 +2931,11 @@ const A = {
   claim:async k=>{ const p=S.people[k]; if(!p) return;
     if(!await confirmD(`És ${p.name}?`,"Este perfil fica associado à tua conta Claude.","Sou eu")) return;
     S.claimBusy=true; render();
-    try{ if(S.fb){ await fbClaim(k); S.route=[]; S.tab="hoje"; return; }
+    try{ if(S.fb){ await fbClaim(k); S.route=[]; S.tab="rubricas"; return; }
       const ref=D("people/"+k); const L=await ref.acquire({holder:S.uid||"me",ttlMs:5000});
       if(!L.acquired){ await alertD("Alguém está a escolher este nome","Espera uns segundos e tenta outra vez."); return; }
       const cur=await ref.get(); if(cur.exists&&cur.data().uid&&cur.data().uid!==S.uid){ await alertD("Perfil já escolhido","Outra conta já está associada a este perfil."); return; }
-      await ref.update({uid:S.uid}); S.route=[]; S.tab="hoje";
+      await ref.update({uid:S.uid}); S.route=[]; S.tab="rubricas";
     } catch(e){ await alertD("Não foi possível guardar","Verifica a ligação e tenta outra vez."); }
     finally{ S.claimBusy=false; render(); } },
   releaseClaim:async()=>{ const taken=Object.entries(S.people).filter(([,p])=>p.uid); if(!taken.length){ alertD("Nenhum perfil está ligado a uma conta",""); return; }
@@ -2943,11 +2943,11 @@ const A = {
     if(v&&await confirmD(`Desligar ${nm(v)}?`,"A conta associada volta a ver o ecrã inicial e pode escolher outro perfil. Os dados ficam.","Desligar",true)) await write(()=> S.fb? fbRelease(v) : D("people/"+v).update({uid:null}),"Perfil desligado"); },
   resetAll:async()=>{ if(!await confirmD("Apagar todos os dados?","Apaga pessoas, grupos, eventos, votos, rankings e conversas. Fica só o teu perfil. Não dá para desfazer.","Apagar tudo",true)) return;
     const me=myRealMember(); const keep=me?{[`people/${me}`]:{...S.people[me],demo:false}}:{}; if(S.fb&&me) keep["uids/"+S.uid]={key:me};
-    if(await bulk(keep,"A apagar")){ S.route=[]; S.tab="hoje"; S.actingAs=null; lsSet("actingAs",null); S.groupId=null; render(); toast("Dados apagados"); } },
+    if(await bulk(keep,"A apagar")){ S.route=[]; S.tab="rubricas"; S.actingAs=null; lsSet("actingAs",null); S.groupId=null; render(); toast("Dados apagados"); } },
   loadDemo:async()=>{ if(!await confirmD("Carregar dados de demonstração?","Substitui todos os dados atuais por 7 grupos de exemplo e 28 pessoas. O El Calderón fica com histórico desde janeiro de 2025. O teu perfil passa a ser o Gonçalo Xavier.","Carregar",true)) return;
     const docs=generateDemo(Date.now()); docs["people/goncalo-xavier"].uid=S.uid; if(S.fb) docs["uids/"+S.uid]={key:"goncalo-xavier"};
     const old=myRealMember(); if(old&&S.people[old]?.photo) docs["people/goncalo-xavier"].photo=S.people[old].photo;
-    if(await bulk(docs,"A carregar")){ S.route=[]; S.tab="hoje"; S.actingAs=null; lsSet("actingAs",null); S.groupId="g-elcalderon"; lsSet("group","g-elcalderon"); render(); toast("Dados de demonstração carregados"); } },
+    if(await bulk(docs,"A carregar")){ S.route=[]; S.tab="rubricas"; S.actingAs=null; lsSet("actingAs",null); S.groupId="g-elcalderon"; lsSet("group","g-elcalderon"); render(); toast("Dados de demonstração carregados"); } },
   suggestAwards:async gid=>{ const base=Math.max(0,...groupAwards(gid).map(a=>a.order||0));
     await write(async()=>{ for(const [i,a] of DEFAULT_AWARDS.entries()) await D(`awards/a-${gid}-${a.key}`).set({groupId:gid,label:a.label,emoji:a.emoji,desc:a.desc,order:base+i+1,createdAt:Date.now(),createdBy:ME()}); },"Prémios adicionados"); },
 };
