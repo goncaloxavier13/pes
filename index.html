@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795638992">
+<meta name="pes-version" content="1795639678">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1090,7 +1090,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
     html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">No próximo domingo, às 21h, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
     joke:null});
   const lockedEnd=()=>`<div class="s-lock"><div class="s-lemo">🔒</div><b>Voltas a ver tudo quando votares</b><p>Quem não completa a votação de uma semana não vê nada na semana seguinte.</p>
-    ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎ · na próxima segunda vês tudo</span>`:`<span class="chip" style="margin-top:10px">Vota no botão <b>Votar</b>, ao centro da barra de baixo ⬇️</span>`}</div>`;
+    ${weekDone(gid)?`<span class="chip" style="margin-top:8px">Votação desta semana feita ✔︎ · na próxima segunda vês tudo</span>`:`<span class="chip" style="margin-top:10px">Vota no botão <b>Pês</b>, ao centro da barra de baixo ⬇️</span>`}</div>`;
   const render=s=>`<div class="s-emo">${s.emo}</div><div class="s-title">${s.title}</div>${s.sub?`<div class="s-sub">${s.sub}</div>`:""}
     ${locked?(s.joke?`<div class="s-lock"><div class="s-lemo">🔒</div><b>${s.joke[0]}</b><p>${s.joke[1]}</p></div>`:lockedEnd()):s.html()}`;
   const COLORS=[["#5B2BE0","#1A0B4D"],["#E0A100","#5A2C00"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#FF375F","#4D0717"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#3A3A55","#0B0B16"]];
@@ -1632,7 +1632,7 @@ function tabbar(){
   const g=curGroup(); const n=g?groupNotifs(g.id):{msgs:0,evs:0}; const cur=normTab(S.tab);
   const voteDue=g&&!viewingPast(g.id)&&!votingClosed(g.id)&&!weekDone(g.id);
   const t=(id,label,icon,badge)=>`<button class="tab ${cur===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
-  const vote=`<button class="tab hometab ${voteDue?"due":""}" data-act="${g?"rank":"tab"}" data-arg="rubricas" aria-label="Votar${voteDue?", votação por fazer":""}"><span class="hbub">${ic(voteDue?"edit":"vote")}</span>${voteDue?`<span class="badge num">!</span>`:""}<span>Votar</span></button>`;
+  const vote=`<button class="tab hometab ${voteDue?"due":""}" data-act="${g?"rank":"tab"}" data-arg="rubricas" aria-label="Pês: votação da semana${voteDue?", por fazer":""}"><span class="hbub">${ic(voteDue?"edit":"vote")}</span>${voteDue?`<span class="badge num">!</span>`:""}<span>Pês</span></button>`;
   return `<nav class="tabbar">${t("epoca","Dashboard","chart")}${t("rubricas","Rubricas","grid")}${vote}${t("events","Eventos","cal",n.evs)}${t("gap","GAP","chat",n.msgs)}</nav>`;
 }
 function groupPill(withSeason){ const g=curGroup(); if(!g) return "";
@@ -1774,7 +1774,7 @@ function rubricasScreen(){
     t.push(dtile("trib","c3","Tribunal do Sr. Sid",tl?"":c.no?`Processo ${esc(c.no)}`:c.status==="trial"?"Em julgamento":c.status==="sub"?"Acusações abertas":"Esta semana",dtEmo("⚖️"),tl)); }
   { const ed=pfEd(); t.push(dtile("dashPF","c2","Preferias Flash",locked?"":ed?(pfDone(g.id)?"Feito hoje ✓":"Dilema de hoje"):"Às 21:30",`<img src="${PF_LOGO}" alt="">`,locked)); }
   t.push(dtile("questArch","c8","Perguntas da semana",locked?"":"Respostas da semana",dtEmo("🎲"),locked));
-  const lockHero=locked?`<div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Esta semana estás cá fora</b><p>Não completaste a votação da semana passada. Vês as rubricas, mas não consegues abrir nenhuma. Faz a votação desta semana (botão Votar) para voltares no domingo às 21h.</p><small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>`:"";
+  const lockHero=locked?`<div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Esta semana estás cá fora</b><p>Não completaste a votação da semana passada. Vês as rubricas, mas não consegues abrir nenhuma. Faz a votação desta semana (botão Pês, ao centro) para voltares no domingo às 21h.</p><small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>`:"";
   return `<div class="scroll pad-tabs" data-key="rubricas">${head}${previewBanner()}${bdayBanner(g)}${nudgedBanner(g)}${seasonBanner(g)}${lockHero}
     <div class="section" style="margin-top:14px"><div class="dtiles">${t.join("")}</div></div>
   </div>`; }
@@ -2609,7 +2609,7 @@ function teaseSheet(){ const g=curGroup(); let i; do{ i=Math.floor(Math.random()
   const done=g&&weekDone(g.id);
   openSheet({title:"",left:"Fechar",short:true,body:()=>`<div class="tease"><div class="tease-emo">🔒</div><b>${t}</b><p>${m}</p>
     <small>${g?`${insideCount(g.id)} de ${(g.members||[]).length} estão lá dentro esta semana. `:""}Quem não completa a votação de uma semana não vê nada na semana seguinte.</small>
-    ${done?`<span class="chip" style="margin-top:10px">Votação desta semana feita ✔︎ · voltas a ver domingo às 21h</span>`:`<span class="chip" style="margin-top:10px">Vota no botão <b>Votar</b>, ao centro da barra de baixo ⬇️</span>`}</div>`}); }
+    ${done?`<span class="chip" style="margin-top:10px">Votação desta semana feita ✔︎ · voltas a ver domingo às 21h</span>`:`<span class="chip" style="margin-top:10px">Vota no botão <b>Pês</b>, ao centro da barra de baixo ⬇️</span>`}</div>`}); }
 /* ───────── Weekly fun questions: 2 per week, the answer is always a group member ───────── */
 const QUESTIONS=[
 "Quem é o mais provável de se esquecer do próprio aniversário?","Bateste com o carro: a quem ligas primeiro?","Tens um cão e vais de férias: a quem o deixas?",
