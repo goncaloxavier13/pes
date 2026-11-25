@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795636214">
+<meta name="pes-version" content="1795636743">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -76,6 +76,14 @@ p{margin:0}
 
 /* Sections & cards */
 .section{padding:0 calc(var(--gut) + var(--sr)) 0 calc(var(--gut) + var(--sl));margin-top:22px}
+.dtiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dtile{position:relative;overflow:hidden;aspect-ratio:1.55/1;border:0;border-radius:14px;padding:14px;text-align:left;color:#fff;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:4px;-webkit-tap-highlight-color:transparent;transition:transform .12s}
+.dtile:active{transform:scale(.97)}
+.dt-t{font-size:18px;font-weight:800;line-height:1.15;letter-spacing:-.2px;max-width:85%;position:relative;z-index:1}.dt-s{font-size:13px;opacity:.9;position:relative;z-index:1;font-weight:600;max-width:72%}
+.dt-art{position:absolute;right:-10px;bottom:-10px;width:68px;height:68px;transform:rotate(22deg);border-radius:10px;display:grid;place-items:center;background:rgba(0,0,0,.25);box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.dt-art img{width:86%;height:86%;object-fit:contain}.dt-emo{font-size:40px;line-height:1}
+.dtile.c1{background:#4f7a91}.dtile.c2{background:linear-gradient(135deg,#8e3bd6,#2c6cf0)}.dtile.c3{background:#6b4423}.dtile.c4{background:#b0457f}.dtile.c5{background:#2e7d5b}.dtile.c6{background:#2a3566}
+.dtile.locked{filter:saturate(.35) brightness(.7)}.dt-lock{position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.35);display:grid;place-items:center}.dt-lock svg{width:15px;height:15px;color:#ffd60a}
 .dsec{margin-top:28px}.dhead{display:flex;align-items:center;gap:9px;margin:0 4px 12px}.dhead h3{font-size:20px;font-weight:700;margin:0;flex:1;letter-spacing:-.2px}.dh-emo{font-size:22px;line-height:1;width:28px;text-align:center;flex:none}.dh-pf{width:30px;height:30px;object-fit:contain;margin:-4px 0}
 .dhead button{font-size:15px;font-weight:500;color:var(--accent);background:none;border:0;padding:4px;cursor:pointer;font-family:inherit}
 .dsub-l{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin:16px 4px 8px;display:flex;justify-content:space-between;align-items:center}.dsub-l:first-child{margin-top:0}.dsub-l button{font-size:13px;font-weight:500;color:var(--accent);text-transform:none;letter-spacing:0;background:none;border:0;cursor:pointer;font-family:inherit}
@@ -1747,13 +1755,8 @@ function dashScreen(){
         return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar no domingo às 21h.`}</span></div>`; })()}
         <small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
       ${voteBtn}
-      ${ldsec("📊","Resumo da semana",lfake(`<div style="padding:16px">${frows(2)}</div>`))}
       ${ldsec("📈","Resumo da época",`<div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div>`)}
-      ${ldsec(`<img class="dh-pf" src="${PF_LOGO}" alt="">`,"Preferias Flash",lunwrap(pfCard(g).trim()))}
-      ${ldsec("⚖️","Tribunal do Sr. Sid",lunwrap(tribCard(g).trim()))}
-      ${ldsec("🏅","Conquistas",lfake(`<div style="padding:18px;display:flex;gap:10px">${[...Array(6)].map(()=>`<span style="width:40px;height:40px;border-radius:50%;background:var(--border);display:inline-block"></span>`).join("")}</div>`))}
-      ${ldsec("🏆","Ranking",`<div class="dsub-l">Ranking atual</div>${lfake(frows(3))}<div class="dsub-l">Rating médio da época</div>${lfake(frows(3))}<div class="dsub-l">Evolução do ranking</div>${lfake(`<div style="height:150px"></div>`)}`)}
-      ${ldsec("🎖️","Prémios",lfake(frows(2)))}
+      ${dashTiles(g,{locked:true})}
     </div>`;
   }
   const dh=(emo,t,link="")=>`<div class="dhead"><span class="dh-emo">${emo}</span><h3>${t}</h3>${link}</div>`;
@@ -1783,9 +1786,9 @@ function dashScreen(){
     :hid?`<div class="card"><div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Só vão ser revelados no jantar de Natal${hid.gala?`, na Gala ${esc(hid.year)} (${esc(fmtDate(hid.gala))})`:""}. Podes continuar a votar.</span></div></div>
         <div class="list">${awards.map(a=>`<div class="row"><span style="font-size:24px;flex:none;width:34px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle">${esc(a.label)}</div></div><span class="chip grey">🔒 Secreto</span></div>`).join("")}</div></div>`
     :awards.map(a=>awardBlock(g,a,true)).join(`<div style="height:12px"></div>`);
+  S.dashParts={rankHtml,prizeHtml,achHtml};
   return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${past?"":bdayBanner(g)+nudgedBanner(g)}${past?pastSeasonBanner(g):seasonBanner(g)}
     <div class="section" style="margin-top:14px"><div class="stats">${ctaBtn}</div>${nb?`<div style="margin-top:10px">${nb}</div>`:""}</div>
-    ${!past&&!firstWeekReveal(g.id)?dsec("📊","Resumo da semana",`<button class="wsbanner" data-act="weekSummary"><span class="wsb-ico">📊</span><span class="wsb-txt"><b>Como correu a semana</b><small>${esc(weekRange(lastClosedWeek()))} · rankings, prémios, perguntas e registos</small></span>${ic("right")}</button>`):""}
     ${dsec("📈","Resumo da época",`<div class="stats">
         ${stat(st.created,"Eventos criados","nesta época")}
         ${stat(st.attended,"Presenças",`em ${st.invited} ${st.invited===1?"evento":"eventos"}`)}
@@ -1795,13 +1798,30 @@ function dashScreen(){
         ${locked?"":stat(myIdx>=0?"#"+(myIdx+1):"—",past?"Posição final":"Posição atual",myIdx>=0?`média ${av[myIdx].avg.toFixed(1)} ${past?"no fim":"agora"}`:"sem rankings ainda")}
         ${stat(score,"Activity score","0 a 100","data-act=\"scoreInfo\"")}
       </div>`)}
-    ${past?"":dsec(`<img class="dh-pf" src="${PF_LOGO}" alt="">`,"Preferias Flash",unwrap(pfCard(g).trim()))}
-    ${past?"":dsec("⚖️","Tribunal do Sr. Sid",unwrap(tribCard(g).trim()))}
-    ${past?"":dsec("🏅","Conquistas",achHtml,`<button data-act="achievements">Ver todas</button>`)}
-    ${dsec("🏆","Ranking",rankHtml)}
-    ${dsec("🎖️","Prémios",prizeHtml)}
+    ${dashTiles(g,{past,locked:false})}
     </div>`;
 }
+/* Dashboard: caixas coloridas para abrir cada parte (estilo "Categorias") */
+function dashTiles(g,{past=false,locked=false}={}){ const me=ME(); const gid=g.id;
+  const tile=(act,cls,title,sub,art,lk)=>`<button class="dtile ${cls} ${lk?"locked":""}" data-act="${lk?"tease":act}"><span class="dt-t">${title}</span>${sub?`<span class="dt-s">${sub}</span>`:""}<span class="dt-art">${art}</span>${lk?`<span class="dt-lock">${ic("lock")}</span>`:""}</button>`;
+  const emo=e=>`<span class="dt-emo">${e}</span>`;
+  const t=[];
+  if(!past&&!firstWeekReveal(gid)) t.push(tile("weekSummary","c1","Resumo da semana",locked?"":esc(weekRange(lastClosedWeek())),emo("📊"),locked));
+  if(!past){ const ed=pfEd(); const pdone=pfDone(gid);
+    t.push(tile("dashPF","c2","Preferias Flash",locked?"":ed?(pdone?"Feito hoje ✓":"Dilema de hoje"):"Às 21:30",`<img src="${PF_LOGO}" alt="">`,locked)); }
+  if(!past&&sidKey(gid)&&(g.members||[]).length>=3){ const c=trCur(gid); const tl=trLocked(gid);
+    t.push(tile("trib","c3","Tribunal do Sr. Sid",tl?"":c.no?`Processo ${esc(c.no)}`:c.status==="trial"?"Em julgamento":c.status==="sub"?"Acusações abertas":"Esta semana",emo("⚖️"),tl)); }
+  if(!past){ const ach=achievements(gid); const got=ach.filter(a=>a.done).length; t.push(tile("achievements","c4","Conquistas",locked?"":`${got} de ${ach.length}`,emo("🏅"),locked)); }
+  const av=averages(gid); const myIdx=av.findIndex(a=>a.k===me);
+  t.push(tile("dashRank","c5","Ranking",locked?"":myIdx>=0?`Estás em #${myIdx+1}`:"Ranking e evolução",emo("🏆"),locked));
+  t.push(tile("dashPrizes","c6","Prémios",locked?"":resultsHidden(gid)?"Secretos até à Gala":`${groupAwards(gid).length} prémios`,emo("🎖️"),locked));
+  return `<section class="section dsec"><div class="dhead"><span class="dh-emo">🧭</span><h3>Explorar</h3></div><div class="dtiles">${t.join("")}</div></section>`; }
+function dashSheet(kind){ const g=curGroup(); if(!g) return; if(rankLocked(g.id)&&!firstWeekReveal(g.id)){ teaseSheet(); return; }
+  const T={rank:"🏆 Ranking",prizes:"🎖️ Prémios",pf:"⚡ Preferias Flash"}[kind];
+  openSheet({title:T,left:"Fechar",live:true,body:()=>{ const P=S.dashParts||{};
+    if(kind==="pf"){ const h=pfCard(g).trim(); return h?h.replace(/^<div class="section" style="margin-top:\d+px">/,'<div>'):`<div class="empty"><div class="ico">⚡</div><h3>Ainda não há dilema</h3><p>O Preferias Flash sai todos os dias às 21:30.</p></div>`; }
+    if(kind==="rank") return P.rankHtml||"";
+    return (P.prizeHtml||"")+`<p class="info" style="margin-top:12px">Vota nos prémios na votação da semana.</p>`; }}); }
 function stat(v,k,s,extra=""){ return `<${extra?"button":"div"} class="stat" ${extra}><span class="v num">${esc(v)}</span><span class="k">${esc(k)}</span><span class="s">${esc(s)}</span></${extra?"button":"div"}>`; }
 const expanded=new Set();
 function hiddenCard(s,dash,a){ return `<div class="card">${dash?`<div style="padding:14px 16px 6px" class="award"><span class="emo">${esc(a.emoji||"🏆")}</span><h3>${esc(a.label)}</h3></div>`:""}<div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Só vão ser revelados no jantar de Natal${s.gala?`, na Gala ${esc(s.year)} (${esc(fmtDate(s.gala))})`:""}. Podes continuar a votar.</span></div></div></div>`; }
@@ -2773,6 +2793,7 @@ const A = {
   bdayCelebrate:a=>{ const [gid,k]=a.split("|"); bdayCelebration(gid,k); },
   editBday:()=>bdaySheet(),
   achievements:()=>{ const g=curGroup(); if(g) achievementsSheet(g.id); },
+  dashPF:()=>dashSheet("pf"), dashRank:()=>dashSheet("rank"), dashPrizes:()=>dashSheet("prizes"),
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
