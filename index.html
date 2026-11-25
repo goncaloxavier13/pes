@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795638821">
+<meta name="pes-version" content="1795638992">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -949,7 +949,7 @@ const S = {
   db:null, preview:false, uid:null, isOwner:false, canWrite:true,
   people:{}, groups:{}, awards:{}, events:{}, votes:{}, rankings:{}, chats:{}, reads:{},
   loaded:new Set(), stale:false,
-  actingAs:(lsSet("actingAs",null),null), groupId:lsGet("group",null), tab:"home", theme:lsGet("theme","system"),
+  actingAs:(lsSet("actingAs",null),null), groupId:lsGet("group",null), tab:"epoca", theme:lsGet("theme","system"),
   route:[], // stack of {name, arg}
   localVotes:{}, claimBusy:false,
 };
@@ -1150,7 +1150,7 @@ function newsStories(){ const g=curGroup(); lsSet(NEWS_ID,true);
     {emo:"📋",title:"O resumo do cantinho",html:()=>li([["🎯","% de acertos","quanto o grupo conhece a pessoa"],["🏆","Quem conhece melhor","e quem não faz ideia"],["😱","A maior surpresa","a resposta que ninguém esperava"],["💬","O pensamento da semana","o que teve mais reações"],["📖","Todas as respostas","perguntas e adivinhas"]])+p("Só vê quem esteve no cantinho.")},
     {emo:"🧠",title:"Quem percebe mais de…?",html:()=>p("Na votação de cada semana há um tema sorteado: vinhos, carros, futebol, cozinha…")+p("Escolhes quem do grupo percebe mais disso. O vencedor aparece no resumo de domingo.")},
     {emo:"🗳️",title:"A votação fecha ao domingo às 21h",html:()=>p("Avisos às 17h e às 20h. Às 21h fecha e sai logo o resumo da semana.")+p("Votação completa = ranking + prémios + perguntas + registos.")},
-    {emo:"📈",title:"Activity score",html:()=>p("Agora conta toda a tua participação nas últimas 8 semanas:")+li([["🗳️","Votação completa",""],["📅","Presença em eventos",""],["🛋️","Cantinho",""],["💬","Conversa, reações e eventos criados",""],["⚡","Preferias Flash",""]])+p("Toca no teu score na Época para veres as contas.")},
+    {emo:"📈",title:"Activity score",html:()=>p("Agora conta toda a tua participação nas últimas 8 semanas:")+li([["🗳️","Votação completa",""],["📅","Presença em eventos",""],["🛋️","Cantinho",""],["💬","Conversa, reações e eventos criados",""],["⚡","Preferias Flash",""]])+p("Toca no teu score no Dashboard para veres as contas.")},
     {emo:"🔒",title:"A regra de ouro",html:()=>p("Quem não completa a votação da semana continua a receber as notificações e a ver os botões todos…")+p("<b>…mas não consegue ver nada.</b> Nem rankings, nem cantinho, nem Preferias Flash, nem resultados 😈")+`<button class="btn block" data-sx style="margin-top:14px">Bora 🔥</button>`},
   ];
   storyPlayer(S_,`${g?esc(g.name)+" · ":""}<span>Novidades</span>`,"Novidades",[["#5B2BE0","#1A0B4D"],["#7A1FD6","#0A2A6B"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#FF375F","#4D0717"],["#FF9F0A","#4D2400"],["#AF52DE","#2E0C47"],["#E0A100","#5A2C00"],["#0A84FF","#1A0B4D"],["#3A3A55","#0B0B16"]],()=>{ if(!layers.length) maybeTribNews(); }); }
@@ -1587,7 +1587,7 @@ S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceS
 navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
 function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
   if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
-  S.tab=normTab(l.t||"rubricas"); S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); if(l.tsum&&!trLocked(l.g)) setTimeout(()=>tribSummary(l.g),400); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
+  S.tab=normTab(l.t||"epoca"); S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); if(l.tsum&&!trLocked(l.g)) setTimeout(()=>tribSummary(l.g),400); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -1625,15 +1625,15 @@ function screenHtml(r){
   return html;
 }
 
-// Barra: Rubricas · Época · [Votar] · Eventos · GAP. Cada coisa tem um só caminho.
-const TAB_MAP={home:"rubricas",dash:"rubricas",hoje:"rubricas",journey:"epoca"};
-function normTab(t){ t=TAB_MAP[t]||t; return ["rubricas","epoca","events","gap"].includes(t)?t:"rubricas"; }
+// Barra: Dashboard · Rubricas · [Votar] · Eventos · GAP. Cada coisa tem um só caminho.
+const TAB_MAP={home:"epoca",dash:"epoca",hoje:"epoca",journey:"epoca"};
+function normTab(t){ t=TAB_MAP[t]||t; return ["rubricas","epoca","events","gap"].includes(t)?t:"epoca"; }
 function tabbar(){
   const g=curGroup(); const n=g?groupNotifs(g.id):{msgs:0,evs:0}; const cur=normTab(S.tab);
   const voteDue=g&&!viewingPast(g.id)&&!votingClosed(g.id)&&!weekDone(g.id);
   const t=(id,label,icon,badge)=>`<button class="tab ${cur===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
   const vote=`<button class="tab hometab ${voteDue?"due":""}" data-act="${g?"rank":"tab"}" data-arg="rubricas" aria-label="Votar${voteDue?", votação por fazer":""}"><span class="hbub">${ic(voteDue?"edit":"vote")}</span>${voteDue?`<span class="badge num">!</span>`:""}<span>Votar</span></button>`;
-  return `<nav class="tabbar">${t("rubricas","Rubricas","grid")}${t("epoca","Época","chart")}${vote}${t("events","Eventos","cal",n.evs)}${t("gap","GAP","chat",n.msgs)}</nav>`;
+  return `<nav class="tabbar">${t("epoca","Dashboard","chart")}${t("rubricas","Rubricas","grid")}${vote}${t("events","Eventos","cal",n.evs)}${t("gap","GAP","chat",n.msgs)}</nav>`;
 }
 function groupPill(withSeason){ const g=curGroup(); if(!g) return "";
   const ch=withSeason?seasonChoices(g.id):[]; const v=viewSeason(g.id);
@@ -1676,7 +1676,7 @@ document.addEventListener("submit",async e=>{
   S.claimBusy=true; render();
   const key=slug(name)+"-"+Math.random().toString(36).slice(2,6);
   await write(()=> S.fb? fbCreateProfile(name) : D("people/"+key).set({name,uid:S.uid,photo:null,createdAt:Date.now()}),`Olá, ${first(name)}!`);
-  S.claimBusy=false; S.route=[]; S.tab="rubricas"; render();
+  S.claimBusy=false; S.route=[]; S.tab="epoca"; render();
 });
 
 /* ───────────────────────── screens: home ───────────────────────── */
@@ -1788,7 +1788,7 @@ function awardsScreen(){ const html=journeyScreen(true); return html; }
 /* ───────────────────────── screens: dashboard ───────────────────────── */
 function dashScreen(){
   const g=curGroup(); const me=ME();
-  const head=`<div class="tabhead hojehead"><div class="titles" style="flex:1"><h1>Época</h1>${groupPill(true)}</div><button class="hojeme" data-act="settings" aria-label="Perfil e definições">${avatar(me,40)}</button></div>`;
+  const head=`<div class="tabhead hojehead"><div class="titles" style="flex:1"><h1>Dashboard</h1>${groupPill(true)}</div><button class="hojeme" data-act="settings" aria-label="Perfil e definições">${avatar(me,40)}</button></div>`;
   if(!g) return `<div class="scroll pad-tabs" data-key="dash">${head}${noGroup()}</div>`;
   const st=eventStats(g.id,me); const av=averages(g.id); const myIdx=av.findIndex(a=>a.k===me);
   const sav=seasonAverages(g.id); const mySIdx=sav.findIndex(a=>a.k===me); const reveal=firstWeekReveal(g.id); const locked=reveal||rankLocked(g.id);
@@ -1817,7 +1817,7 @@ function dashScreen(){
     const frows=n=>[...Array(n)].map((_,i)=>`<div class="row"><span class="rank">${i+1}</span><span style="width:34px;height:34px;border-radius:50%;background:var(--border);display:inline-block"></span><div class="grow"><div class="rowtitle">████████ ████</div></div><span class="num">█.█</span></div>`).join("");
     const voteBtn=votingClosed(g.id)?"":`<div class="section" style="margin-top:14px"><div class="stats"><button class="stat cta ${done?"done":""} ${!done&&voteUrgent()?"urgent":""}" data-act="rank">${ic(done?"check":"edit")}<span style="flex:1"><span class="k" style="display:block">${done?"Votação feita":half?"Falta acabar a votação":"Votação da semana"}</span><span class="s" style="display:block">${done?"Voltas a ver tudo domingo às 21h":voteCtaSub(g)}</span></span></button></div></div>`;
     return `<div class="scroll pad-tabs" data-key="dash">${head}${previewBanner()}${bdayBanner(g)}${seasonBanner(g)}
-      <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Época trancada</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p>${(()=>{ const n=(g.members||[]).length, nIn=insideCount(g.id), ct=g.cant&&g.cant.week===curWeek()?g.cant:null;
+      <div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Dashboard trancado</b><p>Não completaste a votação da semana passada, por isso esta semana não vês nada. Nem números, nem rankings, nem conquistas, nem quem votou.</p>${(()=>{ const n=(g.members||[]).length, nIn=insideCount(g.id), ct=g.cant&&g.cant.week===curWeek()?g.cant:null;
         return `<div class="fomo"><span>🔥 <b>${nIn} de ${n}</b> estão lá dentro esta semana. Tu estás cá fora.</span>${ct&&ct.answers?`<span>🛋️ O Cantinho já tem <b>${ct.answers} ${ct.answers===1?"resposta":"respostas"}</b> que não podes ler.</span>`:curWeek()>=CANT_START?`<span>🛋️ O Cantinho desta semana está a acontecer sem ti.</span>`:""}<span>${done?`🔓 Voltas a ver tudo daqui a <b>${fmtLeft(voteMsLeft())}</b>.`:`⏳ Tens <b>${fmtLeft(voteMsLeft())}</b> para votar e voltar no domingo às 21h.`}</span></div>`; })()}
         <small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>
       ${ldsec("📈","Resumo da época",`<div class="stats">${fk("Eventos criados")}${fk("Presenças")}${fk("Taxa de presença")}${fk("Posição média")}${fk("Posição atual")}${fk("Activity score")}</div>`)}
@@ -1847,7 +1847,7 @@ function dashScreen(){
       <div class="card list">${sa.length?sa.slice(0,3).map((a,i)=>`<div class="row"><span class="rank ${i===0?"gold":""}">${["🥇","🥈","🥉"][i]}</span>${avatar(a.k,34)}<div class="grow"><div class="rowtitle">${esc(nm(a.k))}${a.k===me?" (tu)":""}</div></div><span class="num" style="font-weight:700;color:var(--accent)">${a.avg.toFixed(1)}</span></div>`).join(""):`<div class="empty"><p>${seasonPending(g.id)?"Época nova: o rating recomeça na próxima semana.":"Ainda não há rankings nesta época."}</p></div>`}</div>`; })()}
       <div class="dsub-l">Evolução do ranking</div>${chart}`;
   const hid=resultsHidden(g.id);
-  const prizeHtml=!awards.length?`<div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>Os admins do grupo criam prémios em Época › Prémios e Gala.</p></div></div>`
+  const prizeHtml=!awards.length?`<div class="card"><div class="empty"><div class="ico">${ic("trophy")}</div><h3>Ainda não há prémios</h3><p>Os admins do grupo criam prémios em Dashboard › Prémios e Gala.</p></div></div>`
     :hid?`<div class="card"><div class="hiddenres">${ic("lock")}<div><b>Resultados secretos até à Gala 🤫</b><span>Só vão ser revelados no jantar de Natal${hid.gala?`, na Gala ${esc(hid.year)} (${esc(fmtDate(hid.gala))})`:""}. Podes continuar a votar.</span></div></div>
         <div class="list">${awards.map(a=>`<div class="row"><span style="font-size:24px;flex:none;width:34px;text-align:center">${esc(a.emoji||"🏆")}</span><div class="grow"><div class="rowtitle">${esc(a.label)}</div></div><span class="chip grey">🔒 Secreto</span></div>`).join("")}</div></div>`
     :awards.map(a=>awardBlock(g,a,true)).join(`<div style="height:12px"></div>`);
@@ -2919,7 +2919,7 @@ const A = {
     const lastAdmin=(g.admins||[]).length===1&&g.admins[0]===me&&rest.length>0;
     if(!await confirmD(`Sair de ${g.name}?`, rest.length? (lastAdmin?`És o único admin, por isso ${nm(rest[0])} passa a ser admin.`:"Podes voltar com o código de convite.") : "És o último membro, por isso o grupo é apagado.","Sair",true)) return;
     const ok=await write(()=> rest.length? D("groups/"+gid).update({members:rest,admins:lastAdmin?[rest[0]]:(g.admins||[]).filter(x=>x!==me)}) : D("groups/"+gid).delete(),"Saíste do grupo");
-    if(ok){ S.route=[]; S.tab="rubricas"; render(); } },
+    if(ok){ S.route=[]; S.tab="epoca"; render(); } },
   theme:v=>{ S.theme=v; lsSet("theme",v); applyTheme(); render(); },
   authMode:v=>{ S.authEmail=document.getElementById("aemail")?.value.trim()||S.authEmail; S.authMode=v; render(); },
   logout:async()=>{ if(await confirmD("Terminar sessão?","Voltas a precisar do email e da password para entrar.","Terminar sessão")) await S.auth.signOut(); },
@@ -2931,11 +2931,11 @@ const A = {
   claim:async k=>{ const p=S.people[k]; if(!p) return;
     if(!await confirmD(`És ${p.name}?`,"Este perfil fica associado à tua conta Claude.","Sou eu")) return;
     S.claimBusy=true; render();
-    try{ if(S.fb){ await fbClaim(k); S.route=[]; S.tab="rubricas"; return; }
+    try{ if(S.fb){ await fbClaim(k); S.route=[]; S.tab="epoca"; return; }
       const ref=D("people/"+k); const L=await ref.acquire({holder:S.uid||"me",ttlMs:5000});
       if(!L.acquired){ await alertD("Alguém está a escolher este nome","Espera uns segundos e tenta outra vez."); return; }
       const cur=await ref.get(); if(cur.exists&&cur.data().uid&&cur.data().uid!==S.uid){ await alertD("Perfil já escolhido","Outra conta já está associada a este perfil."); return; }
-      await ref.update({uid:S.uid}); S.route=[]; S.tab="rubricas";
+      await ref.update({uid:S.uid}); S.route=[]; S.tab="epoca";
     } catch(e){ await alertD("Não foi possível guardar","Verifica a ligação e tenta outra vez."); }
     finally{ S.claimBusy=false; render(); } },
   releaseClaim:async()=>{ const taken=Object.entries(S.people).filter(([,p])=>p.uid); if(!taken.length){ alertD("Nenhum perfil está ligado a uma conta",""); return; }
@@ -2943,11 +2943,11 @@ const A = {
     if(v&&await confirmD(`Desligar ${nm(v)}?`,"A conta associada volta a ver o ecrã inicial e pode escolher outro perfil. Os dados ficam.","Desligar",true)) await write(()=> S.fb? fbRelease(v) : D("people/"+v).update({uid:null}),"Perfil desligado"); },
   resetAll:async()=>{ if(!await confirmD("Apagar todos os dados?","Apaga pessoas, grupos, eventos, votos, rankings e conversas. Fica só o teu perfil. Não dá para desfazer.","Apagar tudo",true)) return;
     const me=myRealMember(); const keep=me?{[`people/${me}`]:{...S.people[me],demo:false}}:{}; if(S.fb&&me) keep["uids/"+S.uid]={key:me};
-    if(await bulk(keep,"A apagar")){ S.route=[]; S.tab="rubricas"; S.actingAs=null; lsSet("actingAs",null); S.groupId=null; render(); toast("Dados apagados"); } },
+    if(await bulk(keep,"A apagar")){ S.route=[]; S.tab="epoca"; S.actingAs=null; lsSet("actingAs",null); S.groupId=null; render(); toast("Dados apagados"); } },
   loadDemo:async()=>{ if(!await confirmD("Carregar dados de demonstração?","Substitui todos os dados atuais por 7 grupos de exemplo e 28 pessoas. O El Calderón fica com histórico desde janeiro de 2025. O teu perfil passa a ser o Gonçalo Xavier.","Carregar",true)) return;
     const docs=generateDemo(Date.now()); docs["people/goncalo-xavier"].uid=S.uid; if(S.fb) docs["uids/"+S.uid]={key:"goncalo-xavier"};
     const old=myRealMember(); if(old&&S.people[old]?.photo) docs["people/goncalo-xavier"].photo=S.people[old].photo;
-    if(await bulk(docs,"A carregar")){ S.route=[]; S.tab="rubricas"; S.actingAs=null; lsSet("actingAs",null); S.groupId="g-elcalderon"; lsSet("group","g-elcalderon"); render(); toast("Dados de demonstração carregados"); } },
+    if(await bulk(docs,"A carregar")){ S.route=[]; S.tab="epoca"; S.actingAs=null; lsSet("actingAs",null); S.groupId="g-elcalderon"; lsSet("group","g-elcalderon"); render(); toast("Dados de demonstração carregados"); } },
   suggestAwards:async gid=>{ const base=Math.max(0,...groupAwards(gid).map(a=>a.order||0));
     await write(async()=>{ for(const [i,a] of DEFAULT_AWARDS.entries()) await D(`awards/a-${gid}-${a.key}`).set({groupId:gid,label:a.label,emoji:a.emoji,desc:a.desc,order:base+i+1,createdAt:Date.now(),createdBy:ME()}); },"Prémios adicionados"); },
 };
