@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795640836">
+<meta name="pes-version" content="1795716174">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -84,6 +84,8 @@ p{margin:0}
 .nc-ico{font-size:30px;line-height:1;flex:none;width:40px;text-align:center}.nowcard.ngala{background:linear-gradient(135deg,#1f4d3a,#5a1f1f);color:#fff}.nowcard.ngala small{color:rgba(255,255,255,.8)}
 .dtile.c7{background:linear-gradient(135deg,#ff9f0a,#ff375f)}.dtile.c8{background:#3d5a99}
 .tab.hometab.due .hbub{animation:votepulse 2s ease-in-out infinite}@keyframes votepulse{0%,100%{box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 25%,transparent)}}
+.ctabs button{position:relative}.cbadge{position:absolute;top:-6px;right:-4px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;line-height:1}
+.dt-new{display:inline-block;vertical-align:middle;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;background:#fff;color:#ff375f;border-radius:8px;padding:2px 7px;margin-left:4px}
 .dtiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .dtile{position:relative;overflow:hidden;aspect-ratio:1.55/1;border:0;border-radius:14px;padding:14px;text-align:left;color:#fff;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:4px;-webkit-tap-highlight-color:transparent;transition:transform .12s}
 .dtile:active{transform:scale(.97)}
@@ -1236,7 +1238,7 @@ async function wishBirthday(k){ const g=curGroup(); const me=ME(); if(!g||!me||k
   let cid=Object.entries(S.chats).find(([,c])=>c.groupId===g.id&&c.type==="direct"&&c.members.length===2&&c.members.includes(me)&&c.members.includes(k))?.[0];
   if(!cid){ cid="c-"+uidGen(); const ok=await write(()=>D("chats/"+cid).set({groupId:g.id,type:"direct",name:"",members:[me,k],createdBy:me,createdAt:Date.now(),lastAt:null,lastText:"",lastFrom:null})); if(!ok) return; }
   if(!lsGet("draft:"+cid,"")) lsSet("draft:"+cid,`Parabéns, ${first(nm(k))}! 🎉🎂`);
-  const sel={...(S.seasonSel||{})}; S.tab="gap"; S.route=[]; render(); go("chat",cid); }
+  const sel={...(S.seasonSel||{})}; S.tab=S.chats[cid]?.type==="cantinho"?"rubricas":"gap"; S.route=[]; render(); S.cantBase={...(S.cantBase||{}),[cid]:S.reads[ME()]?.chats?.[cid]||0}; go("chat",cid); }
 /* Once per day per birthday, the first time the app opens */
 function maybeBirthday(){ const g=curGroup(); if(!g||!ME()||layers.length) return false; const t=lisbonYMD();
   for(const k of bdaysToday(g.id)){ const key=`bday:${g.id}:${k}:${t}`; if(lsGet(key,false)) continue; lsSet(key,true); bdayCelebration(g.id,k); return true; } return false; }
@@ -1451,8 +1453,8 @@ function voteClosing(gid){ const dow=ymdToUTC(lisbonYMD()).getUTCDay(); if(dow!=
   const g=S.groups[gid]; const me=ME(); const wk=curWeek(); const v=S.votes[me]?.weeks?.[wk]||{};
   const missVote=weekItems(gid).some(a=>!v[a.id]); const missRank=(g?.members||[]).length>1&&!myRankingThisWeek(gid);
   return missVote||missRank; }
-function groupNotifs(gid){ const me=ME(); const ct=cantinhoOf(gid); const msgs=chatsOf(gid).filter(isUnread).length+(ct&&isUnread(ct)?1:0); const evs=pendingFor(me).filter(e=>e.groupId===gid).length; const vote=voteClosing(gid);
-  return {msgs,evs,vote,total:msgs+evs+(vote?1:0)}; }
+function groupNotifs(gid){ const me=ME(); const ct=cantinhoOf(gid); const msgs=chatsOf(gid).filter(isUnread).length; const cant=ct&&isUnread(ct)?1:0; const evs=pendingFor(me).filter(e=>e.groupId===gid).length; const vote=voteClosing(gid);
+  return {msgs,cant,evs,vote,total:msgs+cant+evs+(vote?1:0)}; }
 function chatTitle(c){ const me=ME(); if(c.type==="direct"){ const o=(c.members||[]).find(k=>k!==me); return nm(o)||"Conversa"; } return c.name || (c.members||[]).filter(k=>k!==me).map(k=>first(nm(k))).join(", ") || "Grupo"; }
 
 /* ───────────────────────── db helpers ───────────────────────── */
@@ -1639,11 +1641,11 @@ function screenHtml(r){
 const TAB_MAP={home:"epoca",dash:"epoca",hoje:"epoca",journey:"epoca"};
 function normTab(t){ t=TAB_MAP[t]||t; return ["rubricas","epoca","events","gap"].includes(t)?t:"epoca"; }
 function tabbar(){
-  const g=curGroup(); const n=g?groupNotifs(g.id):{msgs:0,evs:0}; const cur=normTab(S.tab);
+  const g=curGroup(); const n=g?groupNotifs(g.id):{msgs:0,cant:0,evs:0}; const cur=normTab(S.tab);
   const voteDue=g&&!viewingPast(g.id)&&!votingClosed(g.id)&&!weekDone(g.id);
   const t=(id,label,icon,badge)=>`<button class="tab ${cur===id?"on":""}" data-act="tab" data-arg="${id}" aria-label="${label}${badge?`, ${badge} por ver`:""}">${ic(icon)}${badge?`<span class="badge num">${badge}</span>`:""}<span>${label}</span></button>`;
   const vote=`<button class="tab hometab ${voteDue?"due":""}" data-act="${g?"rank":"tab"}" data-arg="rubricas" aria-label="Pês: votação da semana${voteDue?", por fazer":""}"><span class="hbub">${ic(voteDue?"edit":"vote")}</span>${voteDue?`<span class="badge num">!</span>`:""}<span>Pês</span></button>`;
-  return `<nav class="tabbar">${t("epoca","Dashboard","chart")}${t("rubricas","Rubricas","grid")}${vote}${t("events","Eventos","cal",n.evs)}${t("gap","GAP","chat",n.msgs)}</nav>`;
+  return `<nav class="tabbar">${t("epoca","Dashboard","chart")}${t("rubricas","Rubricas","grid",n.cant)}${vote}${t("events","Eventos","cal",n.evs)}${t("gap","GAP","chat",n.msgs)}</nav>`;
 }
 function groupPill(withSeason){ const g=curGroup(); if(!g) return "";
   const ch=withSeason?seasonChoices(g.id):[]; const v=viewSeason(g.id);
@@ -1779,7 +1781,7 @@ function rubricasScreen(){
   if(!g) return `<div class="scroll pad-tabs" data-key="rubricas">${head}${previewBanner()}<div class="section"><div class="card"><div class="empty"><div class="ico">${ic("users")}</div><h3>Ainda não estás no grupo</h3><p>Entra com o código de convite que te enviaram.</p><button class="btn" style="margin-top:8px" data-act="joinGroup">${ic("link")}Entrar com código</button></div></div></div></div>`;
   const locked=rankLocked(g.id)&&!firstWeekReveal(g.id); const t=[];
   { const c=cantinhoOf(g.id); const past=pastCantinhos(g.id).length; const lk=locked&&!c;
-    t.push(dtile("cantHub","c7","Cantinho",lk?"":c?(c.host===me?"É a tua vez!":`É a vez do ${esc(first(nm(c.host)))}`):past?`${past} ${past===1?"anterior":"anteriores"}`:"A sortear…",dtEmo("🛋️"),lk)); }
+    t.push(dtile("cantHub","c7",`Cantinho${!lk&&c&&isUnread({id:c.id,...c})?` <span class="dt-new">novo</span>`:""}`,lk?"":c?(c.host===me?"É a tua vez!":`É a vez do ${esc(first(nm(c.host)))}`):past?`${past} ${past===1?"anterior":"anteriores"}`:"A sortear…",dtEmo("🛋️"),lk)); }
   if(sidKey(g.id)&&(g.members||[]).length>=3){ const c=trCur(g.id); const tl=trLocked(g.id);
     t.push(dtile("trib","c3","Tribunal do Sr. Sid",tl?"":c.no?`Processo ${esc(c.no)}`:c.status==="trial"?"Em julgamento":c.status==="sub"?"Acusações abertas":"Esta semana",dtEmo("⚖️"),tl)); }
   { const ed=pfEd(); t.push(dtile("dashPF","c2","Preferias Flash",locked?"":ed?(pfDone(g.id)?"Feito hoje ✓":"Dilema de hoje"):"Às 21:30",`<img src="${PF_LOGO}" alt="">`,locked)); }
@@ -2057,6 +2059,20 @@ function mountChat(cid,scr){
 S.cantTabs=S.cantTabs||{};
 const cantEnded=c=>!!c.closed||(c.endsAt?Date.now()>=c.endsAt:false);
 function cantTab(cid){ return S.cantTabs[cid]||"q"; }
+/* Cantinho: o que há por ver em cada secção (💭 ❓ 🎯) */
+function cantSeen(cid,sec){ const me=ME(); const r=S.reads[me]||{}; return r.cantSeen?.[cid]?.[sec] ?? (S.cantBase?.[cid] ?? (r.chats?.[cid]||0)); }
+function cantSecCounts(cid){ const me=ME(); const c=S.chats[cid]||{}; const all=chatMsgsAll(); const out={pens:0,q:0,quiz:0};
+  for(const m of all){ const sec=m.sec||"q"; if(sec==="quiz"||m.from===me||(m.at||0)<=cantSeen(cid,sec)) continue; out[sec]=(out[sec]||0)+1; }
+  const z=all.filter(m=>m.sec==="quiz");
+  if(c.host===me) out.quiz=z.filter(m=>m.kind==="ask"&&!z.some(x=>x.kind==="answered"&&x.qi===m.qi)).length; // perguntas por responder
+  else if(!cantEnded(c)) out.quiz=z.filter(m=>m.kind==="vote"&&!z.some(x=>x.kind==="guess"&&x.qi===m.qi&&x.from===me)).length; // votações por fazer
+  else out.quiz=z.some(m=>m.kind==="reveal"&&(m.at||0)>cantSeen(cid,"quiz"))?1:0;
+  return out; }
+async function cantMarkSeen(cid,sec){ const me=ME(); if(!me) return; const v=Math.max(0,...chatMsgsAll().filter(m=>(m.sec||"q")===sec).map(m=>m.at||0)); if(!v||cantSeen(cid,sec)>=v) return;
+  const r=S.reads[me]||{}; S.reads={...S.reads,[me]:{...r,cantSeen:{...(r.cantSeen||{}),[cid]:{...(r.cantSeen?.[cid]||{}),[sec]:v}}}};
+  try{ await D("reads/"+me).update({cantSeen:{[cid]:{[sec]:v}}}); }catch{} }
+function cantBadges(cid){ const n=cantSecCounts(cid); document.querySelectorAll(`.ctabs [data-arg^="${cid}|"]`).forEach(b=>{ const k=b.dataset.arg.split("|")[1]; let el=b.querySelector(".cbadge"); const v=n[k]||0;
+    if(v&&!b.classList.contains("on")||(k==="quiz"&&v)){ if(!el){ el=document.createElement("span"); el.className="cbadge num"; b.appendChild(el); } el.textContent=v>9?"9+":v; } else if(el) el.remove(); }); }
 function quizHtml(cid,c,all){ const me=ME(); const host=c.host; const hn=esc(first(nm(host))); const z=all.filter(m=>m.sec==="quiz"); const asks=z.filter(m=>m.kind==="ask");
   if(!asks.length) return `<div class="empty" style="margin-top:40px"><div class="ico">🎯</div><h3>Quanto conheces o ${hn}?</h3><p>A primeira pergunta aparece daqui a pouco.</p></div>`;
   const others=(c.members||[]).filter(k=>k!==host); const ended=cantEnded(c);
@@ -2143,7 +2159,7 @@ function updateChat(cid){
   const atBottom=sc.scrollHeight-sc.scrollTop-sc.clientHeight<80;
   if(!chatLoaded){ return; }
   const me=ME(); const c=S.chats[cid]||{}; const hid=hiddenAt(cid); let chatMsgs=hid?chatMsgsAll().filter(m=>(m.at||0)>hid):chatMsgsAll();
-  if(c.type==="cantinho"){ const t=cantTab(cid); if(t==="quiz"){ box.innerHTML=quizHtml(cid,c,chatMsgsAll()); if(!box.dataset.qinit){ sc.scrollTop=sc.scrollHeight; box.dataset.qinit="1"; } return; }
+  if(c.type==="cantinho"){ const t=cantTab(cid); if(document.visibilityState!=="hidden") cantMarkSeen(cid,t); setTimeout(()=>cantBadges(cid),0); if(t==="quiz"){ box.innerHTML=quizHtml(cid,c,chatMsgsAll()); if(!box.dataset.qinit){ sc.scrollTop=sc.scrollHeight; box.dataset.qinit="1"; } return; }
     chatMsgs=chatMsgs.filter(m=>(m.sec||"q")===t);
     if(!chatMsgs.length){ box.innerHTML=`<div class="empty" style="margin-top:40px"><div class="ico">${t==="pens"?"💭":"❓"}</div><h3>${t==="pens"?"Ainda sem pensamentos":"Sem perguntas"}</h3><p>${t==="pens"?(c.host===me?"Escreve o que te vai na cabeça. O grupo está a ler 👀":`Quando o ${esc(first(nm(c.host)))} escrever, aparece aqui.`):"O Anfitrião vai fazer a primeira pergunta daqui a pouco."}</p></div>`; return; } }
   if(!chatMsgs.length){ box.innerHTML=c.type==="cantinho"?`<div class="empty" style="margin-top:40px"><div class="ico">🛋️</div><h3>O cantinho está a abrir</h3><p>O Anfitrião vai fazer a primeira pergunta daqui a pouco.</p></div>`:`<div class="empty" style="margin-top:40px"><div class="ico">${ic("chat")}</div><h3>Sem mensagens</h3><p>Diz olá 👋</p></div>`; return; }
@@ -2840,7 +2856,7 @@ const A = {
   setSeason:a=>{ const [gid,i]=a.split("|"); const sel={...(S.seasonSel||{})}; if(i===""||+i===currentSeason(gid).i) delete sel[gid]; else sel[gid]=+i; S.seasonSel=sel; S.localVotes={}; if(layers.length) popLayer(); scheduleRender(); },
   rank:()=>{ if(votingClosed(curGroup()?.id)){ toast("Época fechada. Volta segunda-feira."); return; } rankSheet(); },
   vote:id=>{ const g=curGroup(); if(!g) return; if(votingClosed(g.id)){ toast("Época fechada. Volta segunda-feira."); return; } rankSheet(myRankingThisWeek(g.id)?2:1, id); }, evolution:id=>evolutionSheet(id),
-  openChat:id=>go("chat",id),
+  openChat:id=>{ const me=ME(); S.cantBase={...(S.cantBase||{}),[id]:S.reads[me]?.chats?.[id]||0}; go("chat",id); },
   eventPhotos:id=>eventPhotosSheet(id), gala:gid=>galaInfoSheet(gid||curGroup()?.id), galaInfo:gid=>galaInfoSheet(gid), galaDate:gid=>galaDateSheet(gid),
   openGala:a=>{ const [gid,si,mode]=a.split("|"); const s=seasonsOf(gid)[+si];
     if(!s) return; if(!galaOpen(gid,s)&&!(mode==="preview"&&S.preview)){ galaLockedSheet(gid,s); return; } openGala(gid,+si); },
