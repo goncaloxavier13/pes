@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795810980">
+<meta name="pes-version" content="1795811779">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1074,11 +1074,11 @@ function cantWeekHtml(gid,w){ const list=cantsOfWeek(gid,w); const me=ME();
 /* Resumo da semana: o processo do tribunal dessa semana (nunca diz quem acusou) */
 function tribWeekHtml(gid,w){ const T=S.groups[gid]?.trib||{}; const c=T.cur?.w===w?T.cur:null; const h=(T.hist||[]).find(x=>x.w===w);
   const x=c&&c.no?c:h; if(!x||!x.no) return `<p class="s-txt">Esta semana não houve julgamento. Paz no reino 🕊️</p>`;
-  const res=x.final||x.result; const done=!!x.final||!c; const rf=c?.rxFinal;
+  const res=x.final||x.result; const done=!!x.final||!c; const rf=c?.rxFinal||(h&&"jf" in h?{jf:h.jf,rec:h.rec}:null); const pen=c?c.penalty:h?.penalty;
   const row=(e,l,v)=>`<div class="row"><span style="font-size:20px">${e}</span><div class="grow"><div class="rowsub">${l}</div><div style="white-space:normal">${v}</div></div></div>`;
   return `<div class="card list">${row("📜",`Processo n.º ${esc(x.no)}`,`<b>“${esc(x.title)}”</b>`)}${row("👤","Acusado",`<span style="display:inline-flex;align-items:center;gap:8px">${avatar(x.accused,24)}<b>${esc(nm(x.accused))}</b></span>`)}
     ${row(res==="cond"?"🔨":"🕊️",done?"Resultado final":"Veredicto",`<b>${res==="cond"?"CONDENADO":res==="abs"?"ABSOLVIDO":"—"}</b>${c?.appeal&&c.appeal.decision&&c.appeal.decision!=="none"?" <small>(depois de recurso)</small>":""}`)}
-    ${res==="cond"&&c?.penalty?row("🍺","Pena",esc(c.penalty)):""}
+    ${res==="cond"&&pen?row("🍺","Pena",esc(pen)):""}
     ${rf?row("🗳️","O povo",`👏 ${rf.jf||0} justiça feita · 🔁 ${rf.rec||0} recurso`):""}</div>
     ${c?.sum&&c.no?`<button class="btn block" data-act="tribSum" style="margin-top:12px">Ver o resumo completo do tribunal</button>`:""}
     <p class="s-txt">Quem acusou fica em segredo 🤫</p>`; }
