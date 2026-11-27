@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795796463">
+<meta name="pes-version" content="1795803375">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2146,16 +2146,15 @@ async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const
       <div class="row"><span style="font-size:22px">🤯</span><div class="grow"><div class="rowsub">A maior surpresa</div><div style="white-space:normal">${surprise?`${esc(surprise.r.text)} <b>${esc(surprise.r.answer)}</b> · só ${Math.round(surprise.p*100)}% acertaram`:"—"}</div></div></div>
       <div class="row"><span style="font-size:22px">💭</span><div class="grow"><div class="rowsub">Pensamento em destaque</div><div style="white-space:normal;font-style:italic">${hl?`“${esc(hl.text)}”`:"—"}</div></div></div></div>
     <div class="label" style="margin-top:20px">Tudo o que aconteceu · toca para abrir</div>
-    ${(()=>{ // o resto, agrupado por tema (perguntas ❓ e adivinhas 🎯 juntas)
-      const items=[...pairs.map(p=>({t:"q",text:p.q,p})),...reveals.map(r=>({t:"z",text:r.text,r}))]; const groups={};
-      items.forEach(it=>{ const th=cantTheme(it.text); (groups[th.k]=groups[th.k]||{th,list:[]}).list.push(it); });
-      const qCard=p=>`<div class="card pad csitem"><div class="cs-tag">❓ Pergunta</div><div class="rowsub" style="white-space:normal;margin-top:2px">${esc(p.q)}</div>${p.a.length?p.a.map(a=>`<div style="white-space:normal;margin-top:6px">${esc(a)}</div>`).join(""):`<div class="muted" style="margin-top:6px">Sem resposta</div>`}</div>`;
+    ${(()=>{ // o resto, agrupado pelas 3 secções do cantinho
+      const qCard=p=>`<div class="card pad csitem"><div class="rowsub" style="white-space:normal">${esc(p.q)}</div>${p.a.length?p.a.map(a=>`<div style="white-space:normal;margin-top:6px">${esc(a)}</div>`).join(""):`<div class="muted" style="margin-top:6px">Sem resposta</div>`}</div>`;
       const zCard=r=>{ const g=r.guesses||{}; const n=Object.keys(g).length; const ok=Object.values(g).filter(o=>o===r.correct).length;
-        return `<div class="card pad csitem"><div class="cs-tag">🎯 Adivinha</div><div class="rowsub" style="white-space:normal;margin-top:2px">${esc(r.text)}</div><div style="margin:4px 0 8px"><b>✅ ${esc(r.answer)}</b> <small class="muted">· ${n?Math.round(100*ok/n):0}% acertaram</small></div>
+        return `<div class="card pad csitem"><div class="rowsub" style="white-space:normal">${esc(r.text)}</div><div style="margin:4px 0 8px"><b>✅ ${esc(r.answer)}</b> <small class="muted">· ${n?Math.round(100*ok/n):0}% acertaram</small></div>
           <div class="qzwho">${Object.entries(g).map(([k,o])=>`<span>${avatar(k,20)}${esc(first(nm(k)))}: ${o===r.correct?"✅":"❌ "+esc(r.opts[o]||"")}</span>`).join("")}</div></div>`; };
-      const order=CANT_THEMES.map(t=>t.k).concat("outros");
-      return Object.values(groups).sort((x,y)=>order.indexOf(x.th.k)-order.indexOf(y.th.k)).map(gp=>`<div class="csgrp"><button type="button" class="csg-h" aria-expanded="false"><span class="csg-e">${gp.th.e}</span><span class="csg-l">${gp.th.l}</span><span class="csg-n">${gp.list.length}</span>${ic("right")}</button><div class="csg-body">${gp.list.map(it=>it.t==="q"?qCard(it.p):zCard(it.r)).join("")}</div></div>`).join(""); })()}
-    ${pens.length?`<div class="csgrp"><button type="button" class="csg-h" aria-expanded="false"><span class="csg-e">💭</span><span class="csg-l">Pensamentos</span><span class="csg-n">${pens.length}</span>${ic("right")}</button><div class="csg-body"><div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div></div></div>`:""}`}); }
+      const grp=(e,l,n,body)=>`<div class="csgrp"><button type="button" class="csg-h" aria-expanded="false"><span class="csg-e">${e}</span><span class="csg-l">${l}</span><span class="csg-n">${n}</span>${ic("right")}</button><div class="csg-body">${n?body:`<div class="muted" style="padding:6px 4px 10px">Nada nesta secção.</div>`}</div></div>`;
+      return grp("💭","Pensamentos",pens.length,`<div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div>`)
+        +grp("❓","Perguntas",pairs.length,pairs.map(qCard).join(""))
+        +grp("🎯","Adivinha",reveals.length,reveals.map(zCard).join("")); })()}`}); }
 /* Reactions (one per person) and replies */
 const RX=["😂","❤️","👍","😮","😢","🔥"];
 const rxOf=(cid,m)=>S.chats[cid]?.rx?.[m.id]||{};
