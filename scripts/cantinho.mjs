@@ -121,6 +121,13 @@ async function send(key, payload) {
 }
 
 
+// ── 💡 Portal da Criatividade: as ideias de rubrica (reads/{k}.ideas) vão para a caixa do criador da app ──
+if (!DRY) { const ownerKey = (await db.doc("config/app").get()).data()?.ownerKey; if (ownerKey) { const box = reads[ownerKey]?.ideasInbox || {}; let nNew = 0, last = null;
+  for (const [k, r] of Object.entries(reads)) for (const [id, x] of Object.entries(r?.ideas || {})) { if (!x || !x.name || box[k + "_" + id]) continue;
+    const it = { from: k, name: String(x.name).slice(0, 80), desc: String(x.desc || "").slice(0, 2000), gid: x.gid || null, at: x.at || Date.now() };
+    await db.doc("reads/" + ownerKey).set({ ideasInbox: { [k + "_" + id]: it } }, { merge: true }); box[k + "_" + id] = it; nNew++; last = it; }
+  if (nNew) await send(ownerKey, { title: nNew === 1 ? `💡 Nova ideia de rubrica: ${last.name}` : `💡 ${nNew} ideias novas de rubrica`, body: nNew === 1 ? `Sugerida por ${first(last.from)}. Vê no Portal da Criatividade.` : "Vê no Portal da Criatividade.", tag: "portal", url: `./?g=${last.gid || ""}&t=rubricas&portal=1` }); } }
+
 // ── perguntas do Anfitrião (❓): rodam entre 4 tipos e não se repetem por grupo até se esgotarem ──
 const rnd = n => Math.floor(Math.random() * n);
 const pick = (n, used) => { const free = [...Array(n).keys()].filter(i => !used.includes(i)); const pool = free.length ? free : [...Array(n).keys()]; return pool[rnd(pool.length)]; };
