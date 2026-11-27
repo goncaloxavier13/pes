@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795796250">
+<meta name="pes-version" content="1795796463">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -84,8 +84,8 @@ p{margin:0}
 .nc-ico{font-size:30px;line-height:1;flex:none;width:40px;text-align:center}.nowcard.ngala{background:linear-gradient(135deg,#1f4d3a,#5a1f1f);color:#fff}.nowcard.ngala small{color:rgba(255,255,255,.8)}
 .dtile.c7{background:linear-gradient(135deg,#ff9f0a,#ff375f)}.dtile.c8{background:#3d5a99}
 .tab.hometab.due .hbub{animation:votepulse 2s ease-in-out infinite}@keyframes votepulse{0%,100%{box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 25%,transparent)}}
-.csgrp{background:var(--card);border-radius:14px;margin-bottom:10px;overflow:hidden}.csgrp summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent}.csgrp summary::-webkit-details-marker{display:none}
-.csg-e{font-size:22px;width:28px;text-align:center}.csg-l{flex:1;font-weight:600;font-size:16px}.csg-n{font-size:13px;font-weight:700;color:var(--muted);background:var(--card2);border-radius:10px;padding:2px 9px}.csgrp summary>svg{width:16px;height:16px;color:var(--muted);transition:transform .2s}.csgrp[open] summary>svg{transform:rotate(90deg)}
+.csgrp{background:var(--card);border-radius:14px;margin-bottom:10px;overflow:hidden}.csg-h{width:100%;border:0;background:none;color:var(--text);font:inherit;text-align:left;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.csg-e{font-size:22px;width:28px;text-align:center}.csg-l{flex:1;font-weight:600;font-size:16px}.csg-n{font-size:13px;font-weight:700;color:var(--muted);background:var(--card2);border-radius:10px;padding:2px 9px}.csg-h>svg{width:16px;height:16px;color:var(--muted);transition:transform .2s;flex:none}.csgrp.open .csg-h>svg{transform:rotate(90deg)}.csgrp .csg-body{display:none}.csgrp.open .csg-body{display:block}
 .csg-body{padding:0 10px 10px}.csg-body .csitem{background:var(--card2)}.csg-body .card.list{background:var(--card2)}
 .csitem{margin-bottom:10px}.cs-tag{font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
 .ctabs button{position:relative}.cbadge{position:absolute;top:-6px;right:-4px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;line-height:1}
@@ -2136,7 +2136,7 @@ async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const
   const rxCount=m=>Object.keys(c.rx?.[m.id]||{}).length; const hl=pens.slice().sort((a,b)=>rxCount(b)-rxCount(a)||b.at-a.at)[0];
   const pairs=[]; let curQ=null; qMsgs.forEach(m=>{ if(m.from===BOT){ curQ={q:m.text.replace(/^Bem-vindo ao cantinho[^:]*: /,""),a:[]}; pairs.push(curQ); } else if(m.from===host&&curQ) curQ.a.push(m.text); });
   const who=list=>list.map(x=>`<span class="cw">${avatar(x.k,24)}<b>${esc(first(nm(x.k)))}${x.k===me?" (tu)":""}</b> <small class="muted">${x.ok}/${x.n}</small></span>`).join(" ");
-  openSheet({title:`📋 ${c.name||"Cantinho"}`,left:"Fechar",body:()=>`
+  openSheet({title:`📋 ${c.name||"Cantinho"}`,left:"Fechar",onMount:L=>L.body.addEventListener("click",e=>{ const h=e.target.closest(".csg-h"); if(!h) return; const g=h.parentElement; const o=g.classList.toggle("open"); h.setAttribute("aria-expanded",o); }),body:()=>`
     <div class="csum-hero">${avatar(host,64)}<b>${esc(nm(host))}</b><small>${c.endsAt?`Cantinho de ${esc(shortDate(lisbonYMD(new Date(c.endsAt-2*864e5+3600e3))))} a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))}`:""}</small></div>
     <div class="stats"><div class="stat"><span class="v num">${pens.length}</span><span class="k">Pensamentos</span><span class="s">frases escritas</span></div><div class="stat"><span class="v num">${answers.length}</span><span class="k">Perguntas</span><span class="s">respondidas</span></div>
       <div class="stat"><span class="v num">${pct===null?"—":pct+"%"}</span><span class="k">🎯 Quanto o grupo o conhece</span><span class="s">${tot?`${right} acertos em ${tot} palpites`:"sem palpites"}</span></div><div class="stat"><span class="v num">${reveals.length}</span><span class="k">Perguntas do 🎯</span><span class="s">reveladas</span></div></div>
@@ -2154,8 +2154,8 @@ async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const
         return `<div class="card pad csitem"><div class="cs-tag">🎯 Adivinha</div><div class="rowsub" style="white-space:normal;margin-top:2px">${esc(r.text)}</div><div style="margin:4px 0 8px"><b>✅ ${esc(r.answer)}</b> <small class="muted">· ${n?Math.round(100*ok/n):0}% acertaram</small></div>
           <div class="qzwho">${Object.entries(g).map(([k,o])=>`<span>${avatar(k,20)}${esc(first(nm(k)))}: ${o===r.correct?"✅":"❌ "+esc(r.opts[o]||"")}</span>`).join("")}</div></div>`; };
       const order=CANT_THEMES.map(t=>t.k).concat("outros");
-      return Object.values(groups).sort((x,y)=>order.indexOf(x.th.k)-order.indexOf(y.th.k)).map(gp=>`<details class="csgrp"><summary><span class="csg-e">${gp.th.e}</span><span class="csg-l">${gp.th.l}</span><span class="csg-n">${gp.list.length}</span>${ic("right")}</summary><div class="csg-body">${gp.list.map(it=>it.t==="q"?qCard(it.p):zCard(it.r)).join("")}</div></details>`).join(""); })()}
-    ${pens.length?`<details class="csgrp"><summary><span class="csg-e">💭</span><span class="csg-l">Pensamentos</span><span class="csg-n">${pens.length}</span>${ic("right")}</summary><div class="csg-body"><div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div></div></details>`:""}`}); }
+      return Object.values(groups).sort((x,y)=>order.indexOf(x.th.k)-order.indexOf(y.th.k)).map(gp=>`<div class="csgrp"><button type="button" class="csg-h" aria-expanded="false"><span class="csg-e">${gp.th.e}</span><span class="csg-l">${gp.th.l}</span><span class="csg-n">${gp.list.length}</span>${ic("right")}</button><div class="csg-body">${gp.list.map(it=>it.t==="q"?qCard(it.p):zCard(it.r)).join("")}</div></div>`).join(""); })()}
+    ${pens.length?`<div class="csgrp"><button type="button" class="csg-h" aria-expanded="false"><span class="csg-e">💭</span><span class="csg-l">Pensamentos</span><span class="csg-n">${pens.length}</span>${ic("right")}</button><div class="csg-body"><div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div></div></div>`:""}`}); }
 /* Reactions (one per person) and replies */
 const RX=["😂","❤️","👍","😮","😢","🔥"];
 const rxOf=(cid,m)=>S.chats[cid]?.rx?.[m.id]||{};
