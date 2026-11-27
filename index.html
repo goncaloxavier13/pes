@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795815262">
+<meta name="pes-version" content="1795818096">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -417,6 +417,9 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ws-soon{display:grid;grid-template-columns:1fr 1fr;gap:12px}.wsc{position:relative;overflow:hidden;aspect-ratio:3/4;border-radius:20px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:14px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .wsc.time{background:radial-gradient(circle at 70% 25%,#FFD27A 0,#C9822B 30%,#4A2508 75%)}.wsc.duel{background:radial-gradient(circle at 30% 25%,#FF6B6B 0,#B3122E 35%,#2A0510 80%)}
 .wsc-e{position:absolute;top:10%;left:50%;transform:translateX(-50%) rotate(-8deg);font-size:84px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}.wsc.duel .wsc-e{transform:translateX(-50%) rotate(10deg)}
+.wsc.tuna{background:radial-gradient(circle at 60% 25%,#7CF0B4 0,#1E9E6A 35%,#052A1C 80%)}.wsc s{opacity:.7;text-decoration-thickness:2px;text-decoration-color:#FF453A;margin-right:4px}
+.soonrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;padding:0;background:none;text-align:left}.soonrow .wsc{aspect-ratio:3/4;border-radius:16px;padding:10px}.soonrow .wsc-e{font-size:46px;top:12%}.soonrow .wsc b{font-size:14px;line-height:1.15}.soonrow .wsc small{font-size:9px}
+.ws-soon.three{grid-template-columns:repeat(3,1fr);gap:8px}.ws-soon.three .wsc{border-radius:16px;padding:10px}.ws-soon.three .wsc-e{font-size:50px}.ws-soon.three .wsc b{font-size:15px;line-height:1.15}.ws-soon.three .wsc small{font-size:9px}
 .wsc b{font-size:20px;color:#fff;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.4)}.wsc small{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;opacity:.8;margin-top:2px}
 .ws-fe{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);display:grid;place-items:center;font-size:17px;flex:none}
 .wsbanner{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:18px;text-align:left;color:#fff;
@@ -1141,7 +1144,7 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
     html:()=>tribWeekHtml(gid,w),
     joke:["O tribunal funcionou sem ti ⚖️","Houve julgamento, sentença e talvez pena. Os pormenores são para quem votou."]});
   S_.push({emo:"🔜",title:"Em breve na Pês",
-    html:()=>`<div class="ws-soon">${[["time","⏳","Time Capsule"],["duel","🥊","Duels"]].map(([k,e,t])=>`<div class="wsc ${k}"><span class="wsc-e" aria-hidden="true">${e}</span><b>${t}</b><small>Em breve</small></div>`).join("")}</div>`,
+    html:()=>`<div class="ws-soon three">${soonCards()}</div>`,
     joke:["Vêm aí novidades 🛠️","Quais? Isso é informação para quem vota. Tu ficas com a curiosidade."]});
   S_.push({emo:"🤫",title:locked?"Fim… do que não viste":"E por esta semana é tudo",
     html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">No próximo domingo, às 21h, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
@@ -1844,7 +1847,12 @@ function rubricasScreen(){
   const lockHero=locked?`<div class="section" style="margin-top:14px"><button class="lockhero" data-act="tease"><div class="tease-emo">🔒</div><b>Esta semana estás cá fora</b><p>Não completaste a votação da semana passada. Vês as rubricas, mas não consegues abrir nenhuma. Faz a votação desta semana (botão Pês, ao centro) para voltares no domingo às 21h.</p><small>Toca onde quiseres. Não vai adiantar 😇</small></button></div>`:"";
   return `<div class="scroll pad-tabs" data-key="rubricas">${head}${previewBanner()}${bdayBanner(g)}${nudgedBanner(g)}${seasonBanner(g)}${lockHero}
     <div class="section" style="margin-top:14px"><div class="dtiles">${t.join("")}</div></div>
+    ${soonSection()}
   </div>`; }
+/* 🚧 Soon: o que vem aí (só capas, sem explicação) */
+const SOON=[["time","⏳","Time Capsule"],["duel","🥊","Duels"],["tuna","🫵",`<s>Simon</s> Tuna says`]];
+function soonCards(){ return SOON.map(([k,e,t])=>`<div class="wsc ${k}" role="img" aria-label="${t.replace(/<[^>]+>/g,"")}, em breve"><span class="wsc-e" aria-hidden="true">${e}</span><b>${t}</b><small>Em breve</small></div>`).join(""); }
+function soonSection(){ return `<div class="section" style="margin-top:22px"><div class="label">🚧 Soon</div><button class="soonrow" data-act="soonTap" aria-label="Novidades em construção">${soonCards()}</button></div>`; }
 function cantHubSheet(){ const g=curGroup(); if(!g) return; const c=cantinhoOf(g.id); if(c){ A.openChat(c.id); return; } if(pastCantinhos(g.id).length){ A.cantPast(g.id); return; }
   openSheet({title:"🛋️ Cantinho",left:"Fechar",live:true,body:()=>{ const h=cantinhoCard(g).trim().replace(/^<div class="section" style="margin-top:\d+px">([\s\S]*)<\/div>$/,"$1"); return (h||`<div class="empty"><p>O cantinho ainda não começou.</p></div>`)+`<p class="info">De 2 em 2 dias, às 20:00, é sorteada uma pessoa para o cantinho. Ninguém repete até passarem todos.</p>`; }}); }
 function questArchSheet(){ const g=curGroup(); if(!g) return; if(rankLocked(g.id)&&!firstWeekReveal(g.id)){ teaseSheet(); return; }
@@ -2989,7 +2997,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); list.slice(0,3).forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} }); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), pfArch:arg=>pfArchSheet(curGroup().id,arg), pfArch:arg=>pfArchSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); list.slice(0,3).forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} }); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), soonTap:()=>toast("Em construção 🚧 Em breve na Pês"), pfArch:arg=>pfArchSheet(curGroup().id,arg), pfArch:arg=>pfArchSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
