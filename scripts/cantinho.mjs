@@ -363,12 +363,14 @@ if (!DRY) { const TR = newSt.trib = newSt.trib || {};
         caseAcc: byAcc[cur.accused] || 1, elig: elig.length, reacted: (tw.jf || 0) + (tw.rec || []).length, jf: tw.jf || 0, rec: (tw.rec || []).length,
         trialH: cur.trialAt ? Math.max(0, Math.round((loc(cur.trialAt) - subEnd) / 36e5)) : null, verdLeftH: cur.at ? Math.max(0, Math.round((verdEnd - loc(cur.at)) / 36e5)) : null,
         words: (cur.text || "").split(/\s+/).filter(Boolean).length, appealWords: (cur.appeal?.text || "").split(/\s+/).filter(Boolean).length, fines, at: Date.now() };
-      pub.hist = [...pub.hist.filter(h => h.no !== cur.no), { no: cur.no, w: wk, title: cur.title, accused: cur.accused, result: cur.final }];
+      pub.hist = [...pub.hist.filter(h => h.no !== cur.no), { no: cur.no, w: wk, title: cur.title, accused: cur.accused, result: cur.final, penalty: cur.final === "cond" ? cur.penalty || null : null, jf: tw.jf || 0, rec: (tw.rec || []).length }];
       await allSend({ title: `📜 O resumo do Processo n.º ${cur.no} já saiu`, body: "Acusações, veredicto, reações e recurso: a semana do tribunal toda, com números 🍿", tag: "trib-sum-" + wk, url: url + "&tsum=1" },
         { title: `📜 Saiu o resumo do Processo n.º ${cur.no}`, body: "Toda a gente já está a rir-se… menos tu, que não votaste 🔒", tag: "trib-sum-" + wk, url }); }
     // 6) penas cumpridas (só o Meritíssimo marca)
     for (const [pid, on] of Object.entries(sidRd.done || {})) { const p = pub.pens.find(x => x.id === pid); if (p && !!on !== !!p.done) { p.done = !!on; p.doneAt = on ? Date.now() : null; changed = true;
       if (on) await send(p.k, { title: "⚖️ Dívida saldada", body: `O ${MER} deu como cumprid${p.kind === "fino" ? "o o teu fino" : "a a tua pena"} do Processo n.º ${p.no}.`, tag: "trib-pen-" + pid, url }); } }
+    // histórico com pena e reações (para o resumo da semana, mesmo depois de o processo sair de "cur")
+    for (const h of pub.hist) { if (pub.cur && h.no === pub.cur.no && !("jf" in h) && pub.cur.sum) { h.penalty = h.result === "cond" ? pub.cur.penalty || null : null; h.jf = pub.cur.sum.jf || 0; h.rec = pub.cur.sum.rec || 0; changed = true; } }
     if (changed) await db.doc("groups/" + gid).update({ trib: pub });
   }
 }
