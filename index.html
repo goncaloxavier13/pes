@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795803375">
+<meta name="pes-version" content="1795809824">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -573,6 +573,7 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;text-align:center}
 .spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--card2);border-top-color:var(--accent);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+.spin{width:28px;height:28px;margin:0 auto 12px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--accent);animation:spin .8s linear infinite}
 .namegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .namebtn{background:var(--card);border-radius:14px;padding:12px;display:flex;align-items:center;gap:10px;text-align:left;min-width:0}
 .namebtn span{font-size:15px;font-weight:500;line-height:1.2;overflow-wrap:anywhere;min-width:0}
@@ -2125,8 +2126,20 @@ const CANT_THEMES=[
   {k:"filo",e:"🔮",l:"Vida e futuro",re:/sentido|\bvida\b|futuro|universo|morte|felicidade|liberdade|acreditas|mudavas|arrepend|sonho|poder|invis[ií]vel|[eé]poca|sucesso|import[aâ]ncia|valor|mudar|mundo|tempo/i},
 ];
 function cantTheme(text){ const t=String(text||""); return CANT_THEMES.find(x=>x.re.test(t))||{k:"outros",e:"🎲",l:"Outros"}; }
-async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const me=ME(); const host=c.host; const hn=first(nm(host));
-  let all=[]; try{ const sn=await S.db.collection(`chats/${cid}/msgs`).orderBy("at","asc").get(); all=sn.docs.map(d=>({id:d.id,...d.data()})); }catch{ toast("Não foi possível abrir o resumo"); return; }
+/* Resumo de um cantinho: abre logo, mostra a cópia guardada no telemóvel e atualiza em fundo */
+const CSUM={}, CSUM_P={};
+function cantSumFetch(cid,src){ return S.db.collection(`chats/${cid}/msgs`).orderBy("at","asc").get(src?{source:src}:undefined).then(sn=>sn.docs.map(d=>({id:d.id,...d.data()}))); }
+function cantSumPrefetch(cid){ if(CSUM[cid]||CSUM_P[cid]) return CSUM_P[cid]; return CSUM_P[cid]=cantSumFetch(cid).then(a=>{ CSUM[cid]=a; return a; }).finally(()=>{ delete CSUM_P[cid]; }); }
+async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return;
+  let all=CSUM[cid]||null, failed=false;
+  const L=openSheet({title:`📋 ${c.name||"Cantinho"}`,left:"Fechar",onMount:L=>L.body.addEventListener("click",e=>{ const r=e.target.closest("[data-csretry]"); if(r){ failed=false; L.render(); load(); return; } const h=e.target.closest(".csg-h"); if(!h) return; const g=h.parentElement; const o=g.classList.toggle("open"); h.setAttribute("aria-expanded",o); }),
+    body:()=>all&&all.length?cantSumHtml(cid,all):failed?`<div class="empty" style="margin-top:40px"><div class="ico">📶</div><h3>Sem ligação</h3><p>Não foi possível carregar o resumo.</p><button class="btn" data-csretry style="margin-top:12px">Tentar outra vez</button></div>`:`<div class="empty" style="margin-top:60px"><div class="spin" aria-hidden="true"></div><p>A carregar o resumo…</p></div>`});
+  const show=a=>{ if(!a||!a.length||!L.el.isConnected) return; const open=[...L.body.querySelectorAll(".csgrp")].map(g=>g.classList.contains("open")); all=a; L.render(); L.body.querySelectorAll(".csgrp").forEach((g,i)=>{ if(open[i]){ g.classList.add("open"); g.querySelector(".csg-h")?.setAttribute("aria-expanded",true); } }); };
+  const load=()=>{ if(!all) cantSumFetch(cid,"cache").then(a=>{ if(!all) show(a); }).catch(()=>{});
+    const t=setTimeout(()=>{ if(!all&&L.el.isConnected){ failed=true; L.render(); } },12000);
+    cantSumPrefetch(cid).then(a=>{ clearTimeout(t); failed=false; show(a); }).catch(()=>{ clearTimeout(t); if(!all&&L.el.isConnected){ failed=true; L.render(); } }); };
+  load(); }
+function cantSumHtml(cid,all){ const c=S.chats[cid]||{}; const me=ME(); const host=c.host; const hn=first(nm(host));
   const sec=m=>m.sec||"q"; const pens=all.filter(m=>m.from===host&&sec(m)==="pens"&&m.text); const qMsgs=all.filter(m=>sec(m)==="q"); const answers=qMsgs.filter(m=>m.from===host);
   const reveals=all.filter(m=>m.sec==="quiz"&&m.kind==="reveal"); const per={}; let right=0, tot=0;
   reveals.forEach(r=>Object.entries(r.guesses||{}).forEach(([k,o])=>{ per[k]=per[k]||{ok:0,n:0}; per[k].n++; tot++; if(o===r.correct){ per[k].ok++; right++; } }));
@@ -2136,7 +2149,7 @@ async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const
   const rxCount=m=>Object.keys(c.rx?.[m.id]||{}).length; const hl=pens.slice().sort((a,b)=>rxCount(b)-rxCount(a)||b.at-a.at)[0];
   const pairs=[]; let curQ=null; qMsgs.forEach(m=>{ if(m.from===BOT){ curQ={q:m.text.replace(/^Bem-vindo ao cantinho[^:]*: /,""),a:[]}; pairs.push(curQ); } else if(m.from===host&&curQ) curQ.a.push(m.text); });
   const who=list=>list.map(x=>`<span class="cw">${avatar(x.k,24)}<b>${esc(first(nm(x.k)))}${x.k===me?" (tu)":""}</b> <small class="muted">${x.ok}/${x.n}</small></span>`).join(" ");
-  openSheet({title:`📋 ${c.name||"Cantinho"}`,left:"Fechar",onMount:L=>L.body.addEventListener("click",e=>{ const h=e.target.closest(".csg-h"); if(!h) return; const g=h.parentElement; const o=g.classList.toggle("open"); h.setAttribute("aria-expanded",o); }),body:()=>`
+  return `
     <div class="csum-hero">${avatar(host,64)}<b>${esc(nm(host))}</b><small>${c.endsAt?`Cantinho de ${esc(shortDate(lisbonYMD(new Date(c.endsAt-2*864e5+3600e3))))} a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))}`:""}</small></div>
     <div class="stats"><div class="stat"><span class="v num">${pens.length}</span><span class="k">Pensamentos</span><span class="s">frases escritas</span></div><div class="stat"><span class="v num">${answers.length}</span><span class="k">Perguntas</span><span class="s">respondidas</span></div>
       <div class="stat"><span class="v num">${pct===null?"—":pct+"%"}</span><span class="k">🎯 Quanto o grupo o conhece</span><span class="s">${tot?`${right} acertos em ${tot} palpites`:"sem palpites"}</span></div><div class="stat"><span class="v num">${reveals.length}</span><span class="k">Perguntas do 🎯</span><span class="s">reveladas</span></div></div>
@@ -2154,7 +2167,7 @@ async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const
       const grp=(e,l,n,body)=>`<div class="csgrp"><button type="button" class="csg-h" aria-expanded="false"><span class="csg-e">${e}</span><span class="csg-l">${l}</span><span class="csg-n">${n}</span>${ic("right")}</button><div class="csg-body">${n?body:`<div class="muted" style="padding:6px 4px 10px">Nada nesta secção.</div>`}</div></div>`;
       return grp("💭","Pensamentos",pens.length,`<div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div>`)
         +grp("❓","Perguntas",pairs.length,pairs.map(qCard).join(""))
-        +grp("🎯","Adivinha",reveals.length,reveals.map(zCard).join("")); })()}`}); }
+        +grp("🎯","Adivinha",reveals.length,reveals.map(zCard).join("")); })()}`; }
 /* Reactions (one per person) and replies */
 const RX=["😂","❤️","👍","😮","😢","🔥"];
 const rxOf=(cid,m)=>S.chats[cid]?.rx?.[m.id]||{};
@@ -2913,7 +2926,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); list.slice(0,3).forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} }); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
@@ -3321,7 +3334,7 @@ function loadScript(src){ return new Promise((res,rej)=>{ const s=document.creat
 function fbAdapter(fdb){
   const wrapDoc=r=>({id:r.id,path:r.path,get:()=>r.get(),set:d=>r.set(d),update:d=>r.set(d,{merge:true}),delete:()=>r.delete(),
     onSnapshot:(n,e)=>r.onSnapshot(n,e),collection:p=>wrapCol(r.collection(p))});
-  const wrapQ=q=>({where:(...a)=>wrapQ(q.where(...a)),orderBy:(...a)=>wrapQ(q.orderBy(...a)),limit:n=>wrapQ(q.limit(n)),get:()=>q.get(),onSnapshot:(n,e)=>q.onSnapshot(n,e)});
+  const wrapQ=q=>({where:(...a)=>wrapQ(q.where(...a)),orderBy:(...a)=>wrapQ(q.orderBy(...a)),limit:n=>wrapQ(q.limit(n)),get:o=>q.get(o),onSnapshot:(n,e)=>q.onSnapshot(n,e)});
   const wrapCol=c=>({...wrapQ(c),path:c.path,doc:id=>wrapDoc(id?c.doc(id):c.doc()),add:async d=>wrapDoc(await c.add(d))});
   return {doc:p=>wrapDoc(fdb.doc(p)),collection:p=>wrapCol(fdb.collection(p))};
 }
