@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795809824">
+<meta name="pes-version" content="1795810980">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -405,6 +405,12 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .ws-move b{font-size:15px}
 .ws-move small{color:var(--muted);font-size:12px}
 .ws-future .row{opacity:.85}
+.cwk{display:flex;flex-direction:column;gap:10px}.cwk-i{display:flex;gap:12px;align-items:flex-start;text-align:left;background:rgba(255,255,255,.12);border-radius:16px;padding:12px 14px}.cwk-i b{color:#fff}.cwk-i>.grow>small{display:block;opacity:.75;font-size:12.5px}
+.cwk-s{display:flex;gap:14px;margin-top:6px;font-size:15px}.cwk-b{display:block;margin-top:6px;font-size:13px;opacity:.9}
+.ws-soon{display:grid;grid-template-columns:1fr 1fr;gap:12px}.wsc{position:relative;overflow:hidden;aspect-ratio:3/4;border-radius:20px;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:14px;text-align:left;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.wsc.time{background:radial-gradient(circle at 70% 25%,#FFD27A 0,#C9822B 30%,#4A2508 75%)}.wsc.duel{background:radial-gradient(circle at 30% 25%,#FF6B6B 0,#B3122E 35%,#2A0510 80%)}
+.wsc-e{position:absolute;top:10%;left:50%;transform:translateX(-50%) rotate(-8deg);font-size:84px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}.wsc.duel .wsc-e{transform:translateX(-50%) rotate(10deg)}
+.wsc b{font-size:20px;color:#fff;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.4)}.wsc small{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;opacity:.8;margin-top:2px}
 .ws-fe{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);display:grid;place-items:center;font-size:17px;flex:none}
 .wsbanner{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:18px;text-align:left;color:#fff;
   background:linear-gradient(135deg,#5b5bf0 0%,#007AFF 55%,#14b8d4 100%);box-shadow:0 6px 18px color-mix(in srgb,#007AFF 30%,transparent)}
@@ -1045,6 +1051,37 @@ function weeklySummaryData(gid,w=lastClosedWeek()){
     up:moves.find(x=>x.d>0)||null, down:[...moves].reverse().find(x=>x.d<0)||null,
     submitted, iSubmitted:submitted.includes(me), streak:rankStreak(gid,me,w), evs, myEvs:evs.filter(e=>statusOf(e,me)==="yes").length, label:weekRange(w)};
 }
+/* Resumo da semana: cantinhos que terminaram nessa semana (de domingo às 21:00 a domingo às 21:00) */
+function cantsOfWeek(gid,w){ const e=weekEndMs(w), b=weekEndMs(prevWeekKey(w));
+  return Object.entries(S.chats).filter(([,c])=>c.type==="cantinho"&&c.groupId===gid&&c.endsAt&&c.endsAt>b&&c.endsAt<=e).map(([id,c])=>({id,...c})).sort((a,b)=>a.endsAt-b.endsAt); }
+function cantStats(c,all){ const host=c.host; const sec=m=>m.sec||"q";
+  const pens=all.filter(m=>m.from===host&&sec(m)==="pens"&&m.text).length, ans=all.filter(m=>m.from===host&&sec(m)==="q").length;
+  const reveals=all.filter(m=>m.sec==="quiz"&&m.kind==="reveal"); const per={}; let ok=0, tot=0;
+  reveals.forEach(r=>Object.entries(r.guesses||{}).forEach(([k,o])=>{ per[k]=per[k]||{ok:0,n:0}; per[k].n++; tot++; if(o===r.correct){ per[k].ok++; ok++; } }));
+  const rank=Object.entries(per).map(([k,v])=>({k,...v,p:v.ok/v.n})).sort((a,b)=>b.p-a.p||b.ok-a.ok); const best=rank.length&&rank[0].ok?rank.filter(x=>x.p===rank[0].p&&x.ok===rank[0].ok):[];
+  return {pens,ans,pct:tot?Math.round(100*ok/tot):null,best}; }
+function cantWeekHtml(gid,w){ const list=cantsOfWeek(gid,w); const me=ME();
+  if(!list.length) return `<p class="s-txt">Não houve cantinhos esta semana.</p>`;
+  let pending=false;
+  const html=`<div class="cwk">${list.map(c=>{ const all=CSUM[c.id]; if(!all) pending=true; const st=all?cantStats(c,all):null;
+    const d0=c.endsAt?shortDate(lisbonYMD(new Date(c.endsAt-2*864e5+3600e3))):"", d1=c.endsAt?shortDate(lisbonYMD(new Date(c.endsAt-3600e3))):"";
+    return `<div class="cwk-i">${avatar(c.host,44)}<div class="grow"><b>${esc(nm(c.host))}${c.host===me?" (tu)":""}</b><small>${esc(d0)} a ${esc(d1)}</small>
+      <div class="cwk-s">${st?`<span>💭 <b>${st.pens}</b></span><span>❓ <b>${st.ans}</b></span><span>🎯 <b>${st.pct==null?"—":st.pct+"%"}</b></span>`:`<span class="muted">a carregar…</span>`}</div>
+      ${st&&st.best.length?`<small class="cwk-b">🏆 Quem o conhece melhor: <b>${st.best.map(x=>esc(first(nm(x.k)))+(x.k===me?" (tu)":"")).join(", ")}</b></small>`:""}</div></div>`; }).join("")}</div>
+    <p class="s-txt" style="font-size:12.5px;margin-top:14px">💭 pensamentos · ❓ perguntas respondidas · 🎯 quanto o grupo acertou no Adivinha</p>`;
+  if(pending) Promise.all(list.map(c=>CSUM[c.id]?null:cantSumPrefetch(c.id))).then(()=>{ const el=document.querySelector(".sstep [data-cwk]"); if(el) el.innerHTML=cantWeekHtml(gid,w); }).catch(()=>{});
+  return `<div data-cwk>${html}</div>`; }
+/* Resumo da semana: o processo do tribunal dessa semana (nunca diz quem acusou) */
+function tribWeekHtml(gid,w){ const T=S.groups[gid]?.trib||{}; const c=T.cur?.w===w?T.cur:null; const h=(T.hist||[]).find(x=>x.w===w);
+  const x=c&&c.no?c:h; if(!x||!x.no) return `<p class="s-txt">Esta semana não houve julgamento. Paz no reino 🕊️</p>`;
+  const res=x.final||x.result; const done=!!x.final||!c; const rf=c?.rxFinal;
+  const row=(e,l,v)=>`<div class="row"><span style="font-size:20px">${e}</span><div class="grow"><div class="rowsub">${l}</div><div style="white-space:normal">${v}</div></div></div>`;
+  return `<div class="card list">${row("📜",`Processo n.º ${esc(x.no)}`,`<b>“${esc(x.title)}”</b>`)}${row("👤","Acusado",`<span style="display:inline-flex;align-items:center;gap:8px">${avatar(x.accused,24)}<b>${esc(nm(x.accused))}</b></span>`)}
+    ${row(res==="cond"?"🔨":"🕊️",done?"Resultado final":"Veredicto",`<b>${res==="cond"?"CONDENADO":res==="abs"?"ABSOLVIDO":"—"}</b>${c?.appeal&&c.appeal.decision&&c.appeal.decision!=="none"?" <small>(depois de recurso)</small>":""}`)}
+    ${res==="cond"&&c?.penalty?row("🍺","Pena",esc(c.penalty)):""}
+    ${rf?row("🗳️","O povo",`👏 ${rf.jf||0} justiça feita · 🔁 ${rf.rec||0} recurso`):""}</div>
+    ${c?.sum&&c.no?`<button class="btn block" data-act="tribSum" style="margin-top:12px">Ver o resumo completo do tribunal</button>`:""}
+    <p class="s-txt">Quem acusou fica em segredo 🤫</p>`; }
 function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   const d=weeklySummaryData(gid,w); if(forceLocked) d.iSubmitted=false; const g=d.g; const me=d.me; const n=(g.members||[]).length;
   const locked=!d.iSubmitted;
@@ -1086,12 +1123,15 @@ function weeklySummarySheet(gid,w=lastClosedWeek(),forceLocked=false){
   if(nextW===PF_START) S_.push({emo:"⚡",title:nextW===PF_START?"Novidade: Preferias Flash":"Preferias Flash",
     html:()=>pfSummary(gid,w)||`<p class="s-txt">Não houve Preferias Flash esta semana.</p>`,
     joke:["Preferias votar ou ficar de fora? 😏","Já escolheste. E, por isso, esta semana também não jogas o Preferias Flash."]});
-  S_.push({emo:"🛋️",title:nextW===CANT_START?"Novidade: o Cantinho":"Cantinho desta semana",
-    html:()=>cantinhoSummary(gid,w)||`<p class="s-txt">O Cantinho começa em breve.</p>`,
-    joke:["O Cantinho vai acontecer sem ti 🔒","Podes imaginar as respostas. Isso, pelo menos, ninguém te tira."]});
+  const cws=cantsOfWeek(gid,w); if(!locked) cws.forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} });
+  S_.push({emo:"🛋️",title:"Os cantinhos da semana",sub:cws.length?`${cws.length} ${cws.length===1?"cantinho":"cantinhos"}`:"",
+    html:()=>cantWeekHtml(gid,w),
+    joke:["Houve cantinhos esta semana 🛋️","Quem lá esteve e o que disse fica para quem votou."]});
+  S_.push({emo:"⚖️",title:"O tribunal da semana",sub:"Tribunal do Meritíssimo Sr. Sid",
+    html:()=>tribWeekHtml(gid,w),
+    joke:["O tribunal funcionou sem ti ⚖️","Houve julgamento, sentença e talvez pena. Os pormenores são para quem votou."]});
   S_.push({emo:"🔜",title:"Em breve na Pês",
-    html:()=>`<div class="card list ws-future">${[["⚔️","Desafios entre dois","Desafias um amigo para um duelo (quem chega primeiro, quem acerta mais…) e o resultado fica registado na app."],["⏳","Cápsula do tempo","Em janeiro, cada um escreve previsões para o ano. As mensagens ficam fechadas e só abrem na Gala."]].map(([e,t,sub])=>`<div class="row" style="align-items:flex-start"><span class="ws-fe">${e}</span><div class="grow"><div class="rowtitle">${t}</div><div class="rowsub" style="white-space:normal">${sub}</div></div></div>`).join("")}</div>
-      <p class="s-txt">Em desenvolvimento 🛠️</p>`,
+    html:()=>`<div class="ws-soon">${[["time","⏳","Time Capsule"],["duel","🥊","Duels"]].map(([k,e,t])=>`<div class="wsc ${k}"><span class="wsc-e" aria-hidden="true">${e}</span><b>${t}</b><small>Em breve</small></div>`).join("")}</div>`,
     joke:["Vêm aí novidades 🛠️","Quais? Isso é informação para quem vota. Tu ficas com a curiosidade."]});
   S_.push({emo:"🤫",title:locked?"Fim… do que não viste":"E por esta semana é tudo",
     html:()=>`<p class="s-txt">Os prémios continuam secretos até à Gala 🤫</p><p class="s-txt">No próximo domingo, às 21h, chega um resumo novo.</p><button class="btn block" data-sx style="margin-top:8px">Fechar</button>`,
