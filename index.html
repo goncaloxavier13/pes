@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795818096">
+<meta name="pes-version" content="1795818540">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -418,6 +418,8 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:vertical}
 .wsc.time{background:radial-gradient(circle at 70% 25%,#FFD27A 0,#C9822B 30%,#4A2508 75%)}.wsc.duel{background:radial-gradient(circle at 30% 25%,#FF6B6B 0,#B3122E 35%,#2A0510 80%)}
 .wsc-e{position:absolute;top:10%;left:50%;transform:translateX(-50%) rotate(-8deg);font-size:84px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.45))}.wsc.duel .wsc-e{transform:translateX(-50%) rotate(10deg)}
 .wsc.tuna{background:radial-gradient(circle at 60% 25%,#7CF0B4 0,#1E9E6A 35%,#052A1C 80%)}.wsc s{opacity:.7;text-decoration-thickness:2px;text-decoration-color:#FF453A;margin-right:4px}
+.portal{display:flex;align-items:center;gap:14px;width:100%;padding:16px;border-radius:18px;text-align:left;color:#fff;background:linear-gradient(135deg,#FF9F0A 0%,#FF375F 55%,#AF52DE 100%);box-shadow:0 8px 24px rgba(255,55,95,.25)}.portal-e{font-size:34px;filter:drop-shadow(0 4px 10px rgba(0,0,0,.3))}.portal b{display:block;font-size:17px}.portal small{display:block;font-size:13px;opacity:.9;margin-top:2px}
+.portal-q{display:block;font-size:20px;font-weight:600;opacity:.85;margin-bottom:10px}.portal-n{display:block;font-size:34px;line-height:1.1}
 .soonrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;padding:0;background:none;text-align:left}.soonrow .wsc{aspect-ratio:3/4;border-radius:16px;padding:10px}.soonrow .wsc-e{font-size:46px;top:12%}.soonrow .wsc b{font-size:14px;line-height:1.15}.soonrow .wsc small{font-size:9px}
 .ws-soon.three{grid-template-columns:repeat(3,1fr);gap:8px}.ws-soon.three .wsc{border-radius:16px;padding:10px}.ws-soon.three .wsc-e{font-size:50px}.ws-soon.three .wsc b{font-size:15px;line-height:1.15}.ws-soon.three .wsc small{font-size:9px}
 .wsc b{font-size:20px;color:#fff;letter-spacing:-.3px;text-shadow:0 2px 8px rgba(0,0,0,.4)}.wsc small{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fff;opacity:.8;margin-top:2px}
@@ -1652,12 +1654,12 @@ function back(){ S.route.pop(); render(); }
 function setTab(t){ S.tab=t; S.route=[]; render(); }
 function enterGroup(gid,tab="dash"){ if(S.groupId!==gid) S.localVotes={}; S.groupId=gid; lsSet("group",gid); setTab(tab); }
 /* Deep links from push notifications: ?g=<group>&t=<tab>&c=<chat> */
-function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1",news:q.get("news")==="1",trib:q.get("trib")==="1",tstory:q.get("tstory")==="1",tsum:q.get("tsum")==="1"}; }catch{ return null; } }
+function parseLink(u){ try{ const q=new URL(u,location.href).searchParams; const g=q.get("g"); if(!g) return null; return {g,t:q.get("t")||"dash",c:q.get("c"),sum:q.get("sum")==="1",news:q.get("news")==="1",portal:q.get("portal")==="1",trib:q.get("trib")==="1",tstory:q.get("tstory")==="1",tsum:q.get("tsum")==="1"}; }catch{ return null; } }
 S.pendingLink=parseLink(location.href); if(S.pendingLink){ try{ history.replaceState(null,"",location.pathname); }catch{} }
 navigator.serviceWorker?.addEventListener?.("message",e=>{ if(e.data?.type==="open"){ const l=parseLink(e.data.url); if(l){ S.pendingLink=l; render(); } } });
 function applyLink(){ const l=S.pendingLink; if(!l||!S.loaded.has("ready")||!ME()) return; S.pendingLink=null;
   if(!myGroups().some(g=>g.id===l.g)) return; if(S.groupId!==l.g) S.localVotes={}; S.groupId=l.g; lsSet("group",l.g);
-  S.tab=normTab(l.t||"epoca"); S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); if(l.tsum&&!trLocked(l.g)) setTimeout(()=>tribSummary(l.g),400); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
+  S.tab=normTab(l.t||"epoca"); S.route=[]; if(l.c&&S.chats[l.c]) S.route=[{name:"chat",arg:l.c}]; if(l.sum&&l.c&&S.chats[l.c]) setTimeout(()=>cantSummarySheet(l.c),400); if(l.tstory){ S.wsChecked=true; lsSet(NEWS_ID,true); setTimeout(()=>{ while(layers.length) popLayer(); tribStories(); },500); } if(l.trib){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); tribSheet(); if(l.tsum&&!trLocked(l.g)) setTimeout(()=>tribSummary(l.g),400); },500); } if(l.portal){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); portalSheet(); },500); } if(l.news){ S.wsChecked=true; setTimeout(()=>{ while(layers.length) popLayer(); newsStories(); },500); } }
 let scrollMem={}; let lastKey=""; let renderQueued=false;
 function scheduleRender(){ if(renderQueued) return; renderQueued=true; requestAnimationFrame(()=>{ renderQueued=false; if(S.fb&&S.uid&&fbSubs.length) fbScope(); render(); layers.forEach(L=>L.live&&L.render()); }); }
 
@@ -1848,11 +1850,39 @@ function rubricasScreen(){
   return `<div class="scroll pad-tabs" data-key="rubricas">${head}${previewBanner()}${bdayBanner(g)}${nudgedBanner(g)}${seasonBanner(g)}${lockHero}
     <div class="section" style="margin-top:14px"><div class="dtiles">${t.join("")}</div></div>
     ${soonSection()}
+    ${portalSection()}
   </div>`; }
 /* 🚧 Soon: o que vem aí (só capas, sem explicação) */
 const SOON=[["time","⏳","Time Capsule"],["duel","🥊","Duels"],["tuna","🫵",`<s>Simon</s> Tuna says`]];
 function soonCards(){ return SOON.map(([k,e,t])=>`<div class="wsc ${k}" role="img" aria-label="${t.replace(/<[^>]+>/g,"")}, em breve"><span class="wsc-e" aria-hidden="true">${e}</span><b>${t}</b><small>Em breve</small></div>`).join(""); }
 function soonSection(){ return `<div class="section" style="margin-top:22px"><div class="label">🚧 Soon</div><button class="soonrow" data-act="soonTap" aria-label="Novidades em construção">${soonCards()}</button></div>`; }
+/* 💡 Portal da Criatividade: qualquer membro sugere uma rubrica nova (vai para o criador da app) */
+const PORTAL_INTRO="portal:intro1";
+const RUB_IDEAS=["Gonçalo no Embalo","Tomás, Achas que És Capaz?","Guerra, Quem Erra?","Manel no Painel","O Desporto do Porto","Sid Cupid","O Jornal do Cabral","Café com Zé","A Fortuna do Tuna","Frederico Fica Rico","João Sabichão"];
+function portalSection(){ return `<div class="section" style="margin-top:18px"><button class="portal" data-act="portal"><span class="portal-e" aria-hidden="true">💡</span><span class="grow"><b>Portal da Criatividade</b><small>Sugere uma rubrica nova para os Pês</small></span>${ic("right",'style="width:18px;height:18px;flex:none;opacity:.8"')}</button></div>`; }
+function portalStories(){ const g=curGroup(); lsSet(PORTAL_INTRO,true); let go=false;
+  const p=t=>`<p class="s-txt" style="font-size:17px;color:#fff;opacity:.95">${t}</p>`;
+  const S_=[{emo:"✨",title:"Também tu podes ter o teu espaço nos Pês!!!",sub:"Toca para avançar",html:()=>p("O grupo cresce, a app cresce… e falta a <b>tua</b> rubrica.")},
+    ...RUB_IDEAS.map(n=>({emo:"🤔",title:`<span class="portal-q">Não gostavas de ter um…</span><span class="portal-n">${esc(n)}</span>`,html:()=>""})),
+    {emo:"🔥",title:"Atreve-te!!",html:()=>p("Depois do sucesso do <b>Tribunal do Sid</b>, também podes ser tu!")+`<button class="btn block" data-portalgo style="margin-top:16px">💡 Sugerir a minha rubrica</button>`}];
+  const L=storyPlayer(S_,`${g?esc(g.name)+" · ":""}<span>Portal da Criatividade</span>`,"Portal da Criatividade",[["#FF9F0A","#4D2400"],["#5B2BE0","#1A0B4D"],["#FF375F","#4D0717"],["#0A84FF","#06224D"],["#30B07A","#073B2A"],["#AF52DE","#2E0C47"],["#E0A100","#5A2C00"]],()=>{ if(go) portalSheet(); });
+  L.el.addEventListener("click",e=>{ if(e.target.closest("[data-portalgo]")){ go=true; popLayer(L); } }); }
+function portalSheet(){ const me=ME(); const st={name:"",desc:""};
+  const mine=()=>Object.entries(S.reads[me]?.ideas||{}).filter(([,x])=>x).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+  const inbox=()=>Object.entries(S.reads[me]?.ideasInbox||{}).filter(([,x])=>x).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+  const L=openSheet({title:"💡 Portal",left:"Fechar",body:()=>`<div class="ws-head"><div class="ws-emo">💡</div><h2>Portal da Criatividade</h2><p>Dá-lhe um nome (se rimar, melhor!) e explica como funcionaria. A ideia vai direta para o criador da app.</p></div>
+    <div class="card pad"><label class="flabel" for="pnm">Nome da rubrica</label><input id="pnm" class="input" maxlength="80" placeholder="Ex.: Café com Zé" value="${esc(st.name)}">
+      <label class="flabel" for="pds" style="margin-top:12px">Como funciona?</label><textarea id="pds" class="input" rows="5" maxlength="2000" placeholder="Quem participa, quando acontece, o que se vota ou escreve…">${esc(st.desc)}</textarea>
+      <button class="btn block" data-psend style="margin-top:14px">Enviar ideia 🚀</button></div>
+    <button class="linkbtn" data-pintro style="margin:12px auto 0;display:block">Ver outra vez a apresentação</button>
+    ${mine().length?`<div class="label" style="margin-top:20px">As tuas ideias</div><div class="card list">${mine().map(([,x])=>`<div class="row" style="align-items:flex-start"><span style="font-size:20px">💡</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.name)}</div>${x.desc?`<div class="rowsub" style="white-space:normal">${esc(x.desc)}</div>`:""}<div class="rowsub">${esc(shortDate(lisbonYMD(new Date(x.at))))} · enviada ✓</div></div></div>`).join("")}</div>`:""}
+    ${S.isOwner&&inbox().length?`<div class="label" style="margin-top:20px">Ideias do grupo · só tu vês</div><div class="card list">${inbox().map(([,x])=>`<div class="row" style="align-items:flex-start">${avatar(x.from,32)}<div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.name)}</div>${x.desc?`<div class="rowsub" style="white-space:normal">${esc(x.desc)}</div>`:""}<div class="rowsub">${esc(first(nm(x.from)))} · ${esc(shortDate(lisbonYMD(new Date(x.at))))}</div></div></div>`).join("")}</div>`:""}`,
+    onMount:L=>{ L.body.addEventListener("input",e=>{ if(e.target.id==="pnm") st.name=e.target.value; if(e.target.id==="pds") st.desc=e.target.value; });
+      L.body.addEventListener("click",async e=>{ if(e.target.closest("[data-pintro]")){ popLayer(L); portalStories(); return; }
+        if(!e.target.closest("[data-psend]")) return; const n=st.name.trim(), d=st.desc.trim(); if(n.length<3){ toast("Dá um nome à rubrica"); return; }
+        const id="i"+Date.now().toString(36); const ok=await write(()=>readsMerge({ideas:{[id]:{name:n.slice(0,80),desc:d.slice(0,2000),gid:curGroup()?.id||null,at:Date.now()}}}),"Ideia enviada 🚀 Obrigado!");
+        if(ok){ st.name=""; st.desc=""; L.render(); } }); }}); }
+
 function cantHubSheet(){ const g=curGroup(); if(!g) return; const c=cantinhoOf(g.id); if(c){ A.openChat(c.id); return; } if(pastCantinhos(g.id).length){ A.cantPast(g.id); return; }
   openSheet({title:"🛋️ Cantinho",left:"Fechar",live:true,body:()=>{ const h=cantinhoCard(g).trim().replace(/^<div class="section" style="margin-top:\d+px">([\s\S]*)<\/div>$/,"$1"); return (h||`<div class="empty"><p>O cantinho ainda não começou.</p></div>`)+`<p class="info">De 2 em 2 dias, às 20:00, é sorteada uma pessoa para o cantinho. Ninguém repete até passarem todos.</p>`; }}); }
 function questArchSheet(){ const g=curGroup(); if(!g) return; if(rankLocked(g.id)&&!firstWeekReveal(g.id)){ teaseSheet(); return; }
@@ -2997,7 +3027,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); list.slice(0,3).forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} }); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), soonTap:()=>toast("Em construção 🚧 Em breve na Pês"), pfArch:arg=>pfArchSheet(curGroup().id,arg), pfArch:arg=>pfArchSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); list.slice(0,3).forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} }); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), soonTap:()=>toast("Em construção 🚧 Em breve na Pês"), portal:()=>{ if(!lsGet(PORTAL_INTRO,false)) portalStories(); else portalSheet(); }, pfArch:arg=>pfArchSheet(curGroup().id,arg), pfArch:arg=>pfArchSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
