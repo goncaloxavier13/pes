@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795811779">
+<meta name="pes-version" content="1795812106">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -211,6 +211,13 @@ p{margin:0}
 .viewer .bar2{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--st) + 10px) 16px 10px;color:#fff;font-size:14px}
 .viewer .bar2 button{color:#fff;font-size:16px}
 .presence{border-top:.5px solid var(--border);padding:10px 16px 12px;display:flex;flex-direction:column;gap:8px}
+.evc .ev{padding:14px 16px 10px}.evc .datebox{align-self:flex-start}.evb{flex:1;min-width:0}.evt{display:flex;gap:6px;align-items:flex-start}.evt h3{flex:1;min-width:0}.evt .iconbtn{margin:-8px -10px 0 0;flex:none}
+.evm{font-size:13px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}.evc .place{margin-top:6px}.evc .place span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.evchips .chip{max-width:100%}
+.evfoot{display:flex;align-items:center;gap:10px;padding:0 16px 12px;min-width:0}.evfoot .stack{flex:none}.evn{flex:1;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.evn b{color:var(--text);font-weight:700}.evfoot .minibtn{flex:none}
+.evrevh{display:flex;align-items:center;gap:8px;justify-content:space-between}.evrow{display:flex;align-items:center;gap:10px}.evrow b{flex:1;min-width:0;font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evok,.evno{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;border:1px solid var(--border);background:var(--card2)}.evok{color:var(--green)}.evno{color:var(--red)}.evok svg,.evno svg{width:16px;height:16px}
+.evundo{font-size:12px;font-weight:600;color:var(--accent);background:none;padding:2px 0}.evme .q{display:flex;align-items:center;gap:6px}
 .presence .q{font-size:12px;font-weight:500;color:var(--muted)}
 .seg2{display:flex;gap:10px}
 .seg2 button{flex:1;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--card2);font-size:14px;font-weight:500;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px}
@@ -992,7 +999,10 @@ function stack(keys,size=32,max=8){
 const groupEvents = gid => Object.entries(S.events).filter(([,e])=>e.groupId===gid).map(([id,e])=>({id,...e}))
   .sort((a,b)=>(b.date||"").localeCompare(a.date||"") || (b.createdAt||0)-(a.createdAt||0));
 const groupAwards = gid => Object.entries(S.awards).filter(([,a])=>a.groupId===gid).map(([id,a])=>({id,...a})).sort((a,b)=>(a.order||0)-(b.order||0)||(a.createdAt||0)-(b.createdAt||0));
-const statusOf = (e,k) => e.createdBy===k ? "yes" : (e.att||{})[k];
+const statusOf = (e,k) => e.createdBy===k ? "yes" : e.rej?.[k] && (e.att||{})[k]==="yes" ? "no" : (e.att||{})[k];
+/* Presença declarada pelo próprio (o organizador não o marcou): conta, mas o organizador pode confirmar ou recusar */
+const evClaims = e => Array.isArray(e.org) ? Object.keys(e.att||{}).filter(k=>k!==e.createdBy&&e.att[k]==="yes"&&!e.org.includes(k)&&!e.okd?.[k]&&!e.rej?.[k]) : [];
+const evRejected = e => Object.keys(e.rej||{}).filter(k=>e.rej[k]&&(e.att||{})[k]==="yes");
 const presentKeys = e => Object.keys(e.att||{}).filter(k=>statusOf(e,k)==="yes");
 const isFuture = e => (e.date||"") > lisbonYMD();
 // Only "group events" (4 or more people present) count for event statistics (created, attendance, score, achievements, summary, Gala)
@@ -1979,18 +1989,26 @@ function eventsScreen(){
 function eventCard(e,me){
   const d=ymdToUTC(e.date||lisbonYMD()); const pres=presentKeys(e); const invited=Object.keys(e.att||{}).length;
   const mine=statusOf(e,me); const future=isFuture(e); const creator=e.createdBy===me; const part=!!S.groups[e.groupId]?.members?.includes(me);
-  return `<div class="card"><div class="ev"><div class="datebox"><b class="num">${d.getUTCDate()}</b><span>${MONTHS[d.getUTCMonth()]}</span></div>
-    <div style="flex:1;min-width:0"><div style="display:flex;gap:8px;align-items:flex-start"><h3 style="flex:1">${esc(e.title)}</h3>
-      ${creator||S.isOwner||isAdmin(S.groups[e.groupId])?`<button class="iconbtn" data-act="eventMenu" data-arg="${e.id}" aria-label="Opções do evento" style="margin:-6px -8px 0 0">${ic("more")}</button>`:""}</div>
-      ${e.desc?`<p class="desc">${esc(e.desc)}</p>`:""}
+  const claims=creator&&!future?evClaims(e):[], rejected=creator?evRejected(e):[];
+  const iRej=!!(e.rej?.[me]&&(e.att||{})[me]==="yes"), iClaim=!creator&&evClaims(e).includes(me);
+  const chips=[pres.length>=MIN_GROUP_EVENT?`<span class="chip">${ic("users")}Evento de grupo</span>`:future?"":`<span class="chip grey">Não conta para as estatísticas</span>`,future?`<span class="chip grey">Em breve</span>`:""].join("");
+  return `<div class="card evc"><div class="ev"><div class="datebox"><b class="num">${d.getUTCDate()}</b><span>${MONTHS[d.getUTCMonth()]}</span></div>
+    <div class="evb"><div class="evt"><h3>${esc(e.title)}</h3>
+      ${creator||S.isOwner||isAdmin(S.groups[e.groupId])?`<button class="iconbtn" data-act="eventMenu" data-arg="${e.id}" aria-label="Opções do evento">${ic("more")}</button>`:""}</div>
+      <div class="evm">${esc(fmtDate(e.date))}${e.time?` · ${esc(e.time)}`:""} · por ${esc(creator?"ti":first(nm(e.createdBy)))}</div>
       ${e.place?`<a class="place" href="${esc(mapsUrl(e.place))}" target="_blank" rel="noopener">${ic("pin")}<span>${esc(e.place)}</span></a>`:""}
-      <div class="meta">${pres.length>=MIN_GROUP_EVENT?`<span class="chip">${ic("users")}Evento de grupo</span>`:future?"":`<span class="chip grey">Não conta para as estatísticas</span>`}${future?`<span class="chip grey">Em breve</span>`:""}<span>${esc(fmtDate(e.date))}${e.time?` · ${esc(e.time)}`:""}</span><span>por ${esc(creator?"ti":first(nm(e.createdBy)))}</span></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:10px">${pres.length?stack(pres,26,7):""}<span class="small muted num" style="flex:1">${pres.length} de ${invited} ${future?"confirmados":"presentes"}</span>${!future||e.photos?`<button class="minibtn" data-act="eventPhotos" data-arg="${e.id}">${ic("camera")}Fotos</button>`:""}</div>
+      ${e.desc?`<p class="desc">${esc(e.desc)}</p>`:""}
+      ${chips?`<div class="evchips">${chips}</div>`:""}
     </div></div>
-    ${part&&!creator?`<div class="presence"><span class="q">${mine==="pending"?(future?"Ainda não respondeste. Vais?":"Ainda não respondeste. Estiveste lá?"):mine?(future?"A tua resposta":"Estiveste lá?"):(future?"Vais?":"Estiveste lá?")}</span>
-      <div class="seg2"><button class="${mine==="yes"?"yes":""}" data-act="presence" data-arg="${e.id}|yes" aria-pressed="${mine==="yes"}">${ic("check")}${future?"Vou":"Estive lá"}</button>
-      <button class="${mine==="no"?"no":""}" data-act="presence" data-arg="${e.id}|no" aria-pressed="${mine==="no"}">${ic("x")}${future?"Não vou":"Não estive"}</button></div></div>`:""}
-    ${creator?`<div class="presence" style="flex-direction:row;align-items:center;gap:6px"><span class="q" style="display:flex;align-items:center;gap:6px">${ic("star",'style="width:13px;height:13px;color:var(--accent)"')}Criaste este evento · estás marcado como presente</span></div>`:""}
+    <div class="evfoot">${pres.length?stack(pres,28,5):""}<span class="evn"><b class="num">${pres.length}</b>/${invited} ${future?"confirmados":"presentes"}</span>${!future||e.photos?`<button class="minibtn" data-act="eventPhotos" data-arg="${e.id}" aria-label="Fotos do evento">${ic("camera")}Fotos</button>`:""}</div>
+    ${part&&!creator?`<div class="presence"><span class="q">${iRej?`${ic("info",'style="width:13px;height:13px;vertical-align:-2px"')} O organizador não confirmou a tua presença`:mine==="pending"?(future?"Ainda não respondeste. Vais?":"Ainda não respondeste. Estiveste lá?"):future?"Vais?":"Estiveste lá?"}</span>
+      ${iRej?"":`<div class="seg2"><button class="${mine==="yes"?"yes":""}" data-act="presence" data-arg="${e.id}|yes" aria-pressed="${mine==="yes"}">${ic("check")}${future?"Vou":"Estive lá"}</button>
+      <button class="${mine==="no"?"no":""}" data-act="presence" data-arg="${e.id}|no" aria-pressed="${mine==="no"}">${ic("x")}${future?"Não vou":"Não estive"}</button></div>`}
+      ${iClaim?`<span class="q">⏳ Marcaste-te como presente. ${esc(first(nm(e.createdBy)))} vai confirmar.</span>`:""}</div>`:""}
+    ${claims.length?`<div class="presence evrev"><div class="evrevh"><span class="q">🕵️ ${claims.length===1?"Diz que esteve lá":"Dizem que estiveram lá"}. Confirma:</span>${claims.length>1?`<button class="evundo" data-act="evConfirm" data-arg="${e.id}|*|ok">Confirmar todos</button>`:""}</div>
+      ${claims.map(k=>`<div class="evrow">${avatar(k,28)}<b>${esc(nm(k))}</b><button class="evok" data-act="evConfirm" data-arg="${e.id}|${k}|ok" aria-label="Confirmar ${esc(first(nm(k)))}">${ic("check")}</button><button class="evno" data-act="evConfirm" data-arg="${e.id}|${k}|rej" aria-label="${esc(first(nm(k)))} não esteve">${ic("x")}</button></div>`).join("")}</div>`:""}
+    ${rejected.length?`<div class="presence"><span class="q">Não confirmaste: ${rejected.map(k=>`<button class="evundo" data-act="evConfirm" data-arg="${e.id}|${k}|undo">${esc(first(nm(k)))} · desfazer</button>`).join(" ")}</span></div>`:""}
+    ${creator&&!claims.length?`<div class="presence evme"><span class="q">${ic("star",'style="width:13px;height:13px;color:var(--accent)"')}Criaste este evento · estás marcado como presente</span></div>`:""}
   </div>`;
 }
 
@@ -2367,7 +2385,8 @@ function eventSheet(eid){
       if(!ev&&fut) st.sel.clear();
       if(!ev) g.members.filter(k=>k!==me&&!st.sel.has(k)).forEach(k=>{ att[k]="pending"; }); // every member is invited
       const body={groupId:ev?.groupId||g.id,title:st.title.trim(),desc:st.desc.trim(),date:st.date,time:st.time||"",place:st.place.trim(),createdBy:ev?.createdBy||me,createdAt:ev?.createdAt||Date.now(),att,
-        reminded: !!(ev && ev.reminded && ev.date===st.date)};
+        reminded: !!(ev && ev.reminded && ev.date===st.date),
+        org: fut?(Array.isArray(ev?.org)?ev.org:[]):[...st.sel], okd:ev?.okd||{}, rej:Object.fromEntries(Object.entries(ev?.rej||{}).filter(([k])=>!st.sel.has(k)))};
       const ok=await write(()=>D("events/"+(eid||"e-"+uidGen())).set(body), eid?"Evento atualizado":"Evento criado");
       if(ok) popLayer(L); else setRight(L,true); }});
 }
@@ -2992,6 +3011,10 @@ const A = {
     { const p=activityParts(g.id,me); const W=p.reduce((a,x)=>a+x.w,0)||1; alertD(`Activity score: ${activityScore(g.id,me)}`,`Conta tudo o que fazes na app nas últimas 8 semanas desta época:\n\n${p.map(x=>`${x.label} · ${Math.round(100*x.w/W)}%\n${x.d}`).join("\n\n")}\n\nConversa e eventos: o máximo atinge-se com cerca de 4 participações por semana (cada evento criado vale 3). Se uma parte ainda não tiver nada para medir, o peso passa para as outras.`); } },
   presence:async arg=>{ const [id,v]=arg.split("|"); const me=ME(); const e=S.events[id]; if(!e) return; if((e.att||{})[me]===v) return;
     await write(()=>D("events/"+id).update({att:{[me]:v}}), v==="yes"?"Marcado como presente":"Marcado como ausente"); },
+  evConfirm:async arg=>{ const [id,k,v]=arg.split("|"); const e=S.events[id]; const me=ME(); if(!e||e.createdBy!==me) return;
+    if(v==="rej"&&!await confirmD(`${first(nm(k))} não esteve?`,"A presença deixa de contar. Só tu, como organizador, podes desfazer.","Não esteve",true)) return;
+    const okd={...(e.okd||{})}, rej={...(e.rej||{})}; (k==="*"?evClaims(e):[k]).forEach(k=>{ delete okd[k]; delete rej[k]; if(v==="ok") okd[k]=true; if(v==="rej") rej[k]=true; });
+    await write(()=>S.fb?S.raw.doc("events/"+id).update({okd,rej}):D("events/"+id).update({okd,rej}), v==="ok"?"Presença confirmada":v==="rej"?"Presença recusada":"Feito"); },
   eventMenu:async id=>{ const e=S.events[id]; if(!e) return; const me=ME(); const mine=e.createdBy===me; const admin=isAdmin(S.groups[e.groupId]);
     if(!mine&&!admin&&!S.isOwner) return;
     const v=await actionSheet(e.title,[...(mine||S.isOwner?[{t:"Editar evento",v:"edit"}]:[]),{t:mine?"Apagar evento":"Apagar evento (admin)",v:"del",danger:true}]);
