@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795780866">
+<meta name="pes-version" content="1795796108">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -84,6 +84,7 @@ p{margin:0}
 .nc-ico{font-size:30px;line-height:1;flex:none;width:40px;text-align:center}.nowcard.ngala{background:linear-gradient(135deg,#1f4d3a,#5a1f1f);color:#fff}.nowcard.ngala small{color:rgba(255,255,255,.8)}
 .dtile.c7{background:linear-gradient(135deg,#ff9f0a,#ff375f)}.dtile.c8{background:#3d5a99}
 .tab.hometab.due .hbub{animation:votepulse 2s ease-in-out infinite}@keyframes votepulse{0%,100%{box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 25%,transparent)}}
+.csitem{margin-bottom:10px}.cs-tag{font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted)}
 .ctabs button{position:relative}.cbadge{position:absolute;top:-6px;right:-4px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;line-height:1}
 .dt-new{display:inline-block;vertical-align:middle;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;background:#fff;color:#ff375f;border-radius:8px;padding:2px 7px;margin-left:4px}
 .dtiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -2106,6 +2107,21 @@ async function quizClick(cid,e){ const b=e.target.closest("[data-qz]"); if(!b) r
   const reads={...(S.reads[me]||{})}; reads.quizAns={...(reads.quizAns||{}),[cid]:{...(reads.quizAns?.[cid]||{}),[qi]:v}}; S.reads={...S.reads,[me]:reads};
   await write(async()=>{ if(S.fb) await S.raw.doc("reads/"+me).update({[`quizAns.${cid}.${qi}`]:v}); else await D("reads/"+me).update({quizAns:reads.quizAns});
     await S.db.collection(`chats/${cid}/msgs`).add({from:me,at,sec:"quiz",kind:"answered",qi}); await touch("🎯 Respondeu em segredo"); },"Resposta guardada em segredo 🤫"); }
+/* Temas para arrumar o resumo do cantinho */
+const CANT_THEMES=[
+  {k:"dilema",e:"🤔",l:"Dilemas",re:/^preferias\b|\bou\b.*\?$/i},
+  {k:"comida",e:"🍽️",l:"Comida e bebida",re:/comid|prato|caf[eé]\b|cerveja|vinho|petisco|jantar|almo[cç]|pizza|sobremesa|beb[ei]|doce|restaurante|cozinh|sopa|marisco|chocolate|p[aã]o\b|ovo|bife|batata|snack|shot|fast food|molho|pequeno-almo|fruta|legume|gelado|bolo|queijo|carne|peixe|sushi|francesinha|bebe/i},
+  {k:"viagem",e:"✈️",l:"Viagens e lugares",re:/viag|pa[ií]s|cidade|praia|ilha|f[eé]rias|avi[aã]o|mala\b|continente|alojamento|viver um|envelhecer|lua de mel|despedida/i},
+  {k:"desporto",e:"⚽",l:"Desporto e jogos",re:/futebol|desport|gin[aá]sio|jogo|clube|corrida|jogador|consola|cartas|competi|exerc[ií]cio|radical|padel|surf/i},
+  {k:"cultura",e:"🎬",l:"Música, filmes e séries",re:/m[uú]sica|banda|cantor|artista|filme|s[eé]rie|livro|festival|karaoke|podcast|streaming|personagem|celebridade|saga|desenho animado|reality/i},
+  {k:"amor",e:"❤️",l:"Amor e amizade",re:/amor|amig|namor|encontro|casamento|rom[aâ]ntic|ci[uú]me|red flag|elogio|amo-te|grupo/i},
+  {k:"passado",e:"👶",l:"Infância e memórias",re:/crian[cç]|inf[aâ]ncia|escola|primeir[oa]|antigamente|passado|lembr|mem[oó]ria|disciplina/i},
+  {k:"trabalho",e:"💼",l:"Trabalho e dinheiro",re:/trabalh|profiss|chefe|ordenado|dinheiro|neg[oó]cio|milh[aã]o|poup|gast|reform|empreg|pagar|compra/i},
+  {k:"eu",e:"🧠",l:"Personalidade",re:/medo|fobia|defeito|qualidade|personalidade|descreve|v[ií]cio|chora|perdoa|humor|stress|segredo|competitiv|perdedor|introvert|extrovert|talento|organizado|rir\b/i},
+  {k:"rotina",e:"🏠",l:"Rotina e dia a dia",re:/manh[aã]|noite|dorm|acord|casa\b|banho|telem[oó]vel|domingo|rotina|cama|despertador|roupa|carro|conduz|mensage|fotos|bateria|plantas|chega a horas/i},
+  {k:"filo",e:"🔮",l:"Vida e futuro",re:/sentido|\bvida\b|futuro|universo|morte|felicidade|liberdade|acreditas|mudavas|arrepend|sonho|poder|invis[ií]vel|[eé]poca|sucesso|import[aâ]ncia|valor|mudar|mundo|tempo/i},
+];
+function cantTheme(text){ const t=String(text||""); return CANT_THEMES.find(x=>x.re.test(t))||{k:"outros",e:"🎲",l:"Outros"}; }
 async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const me=ME(); const host=c.host; const hn=first(nm(host));
   let all=[]; try{ const sn=await S.db.collection(`chats/${cid}/msgs`).orderBy("at","asc").get(); all=sn.docs.map(d=>({id:d.id,...d.data()})); }catch{ toast("Não foi possível abrir o resumo"); return; }
   const sec=m=>m.sec||"q"; const pens=all.filter(m=>m.from===host&&sec(m)==="pens"&&m.text); const qMsgs=all.filter(m=>sec(m)==="q"); const answers=qMsgs.filter(m=>m.from===host);
@@ -2126,11 +2142,16 @@ async function cantSummarySheet(cid){ const c=S.chats[cid]; if(!c) return; const
       <div class="row"><span style="font-size:22px">🙈</span><div class="grow"><div class="rowsub">Quem menos o conhece</div><div class="cwl">${worst.length?who(worst):"—"}</div></div></div>
       <div class="row"><span style="font-size:22px">🤯</span><div class="grow"><div class="rowsub">A maior surpresa</div><div style="white-space:normal">${surprise?`${esc(surprise.r.text)} <b>${esc(surprise.r.answer)}</b> · só ${Math.round(surprise.p*100)}% acertaram`:"—"}</div></div></div>
       <div class="row"><span style="font-size:22px">💭</span><div class="grow"><div class="rowsub">Pensamento em destaque</div><div style="white-space:normal;font-style:italic">${hl?`“${esc(hl.text)}”`:"—"}</div></div></div></div>
-    ${reveals.length?`<div class="label" style="margin-top:18px">🎯 Quanto conheces o ${esc(hn)}?</div>${reveals.map(r=>{ const g=r.guesses||{}; const n=Object.keys(g).length; const ok=Object.values(g).filter(o=>o===r.correct).length;
-      return `<div class="card pad" style="margin-bottom:10px"><div class="rowsub">${esc(r.text)}</div><div style="margin:4px 0 8px"><b>✅ ${esc(r.answer)}</b> <small class="muted">· ${n?Math.round(100*ok/n):0}% acertaram</small></div>
-        <div class="qzwho">${Object.entries(g).map(([k,o])=>`<span>${avatar(k,20)}${esc(first(nm(k)))}: ${o===r.correct?"✅":"❌ "+esc(r.opts[o]||"")}</span>`).join("")}</div></div>`; }).join("")}`:""}
-    ${pairs.length?`<div class="label" style="margin-top:18px">❓ Perguntas e respostas</div><div class="card list">${pairs.map(p=>`<div class="row" style="align-items:flex-start"><div class="grow"><div class="rowsub" style="white-space:normal">${esc(p.q)}</div><div style="white-space:normal;margin-top:4px">${p.a.length?p.a.map(t=>esc(t)).join("<br>"):'<span class="muted">Sem resposta</span>'}</div></div></div>`).join("")}</div>`:""}
-    ${pens.length?`<div class="label" style="margin-top:18px">💭 Pensamentos</div><div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div>`:""}`}); }
+    ${(()=>{ // o resto, agrupado por tema (perguntas ❓ e adivinhas 🎯 juntas)
+      const items=[...pairs.map(p=>({t:"q",text:p.q,p})),...reveals.map(r=>({t:"z",text:r.text,r}))]; const groups={};
+      items.forEach(it=>{ const th=cantTheme(it.text); (groups[th.k]=groups[th.k]||{th,list:[]}).list.push(it); });
+      const qCard=p=>`<div class="card pad csitem"><div class="cs-tag">❓ Pergunta</div><div class="rowsub" style="white-space:normal;margin-top:2px">${esc(p.q)}</div>${p.a.length?p.a.map(a=>`<div style="white-space:normal;margin-top:6px">${esc(a)}</div>`).join(""):`<div class="muted" style="margin-top:6px">Sem resposta</div>`}</div>`;
+      const zCard=r=>{ const g=r.guesses||{}; const n=Object.keys(g).length; const ok=Object.values(g).filter(o=>o===r.correct).length;
+        return `<div class="card pad csitem"><div class="cs-tag">🎯 Adivinha</div><div class="rowsub" style="white-space:normal;margin-top:2px">${esc(r.text)}</div><div style="margin:4px 0 8px"><b>✅ ${esc(r.answer)}</b> <small class="muted">· ${n?Math.round(100*ok/n):0}% acertaram</small></div>
+          <div class="qzwho">${Object.entries(g).map(([k,o])=>`<span>${avatar(k,20)}${esc(first(nm(k)))}: ${o===r.correct?"✅":"❌ "+esc(r.opts[o]||"")}</span>`).join("")}</div></div>`; };
+      const order=CANT_THEMES.map(t=>t.k).concat("outros");
+      return Object.values(groups).sort((x,y)=>order.indexOf(x.th.k)-order.indexOf(y.th.k)).map(gp=>`<div class="label" style="margin-top:20px">${gp.th.e} ${gp.th.l} <span class="muted" style="text-transform:none;letter-spacing:0">· ${gp.list.length}</span></div>${gp.list.map(it=>it.t==="q"?qCard(it.p):zCard(it.r)).join("")}`).join(""); })()}
+    ${pens.length?`<div class="label" style="margin-top:20px">💭 Pensamentos <span class="muted" style="text-transform:none;letter-spacing:0">· ${pens.length}</span></div><div class="card list">${pens.map(m=>`<div class="row"><div class="grow" style="white-space:normal">“${esc(m.text)}”</div></div>`).join("")}</div>`:""}`}); }
 /* Reactions (one per person) and replies */
 const RX=["😂","❤️","👍","😮","😢","🔥"];
 const rxOf=(cid,m)=>S.chats[cid]?.rx?.[m.id]||{};
