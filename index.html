@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795812106">
+<meta name="pes-version" content="1795815262">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2543,20 +2543,24 @@ function pfResultHtml(gid,q){ const g=S.groups[gid]; const me=ME(); const who={A
   const tot=who.A.length+who.B.length; const pa=tot?Math.round(100*who.A.length/tot):0;
   const side=(t,list,p,cls)=>`<div class="pfr ${cls}"><div class="pfr-top"><span>${esc(t)}</span><b class="num">${p}%</b></div><div class="pfr-who">${list.length?list.map(k=>{ const f=first(nm(k)); const dup=(g?.members||[]).filter(o=>first(nm(o))===f).length>1; return `<span>${avatar(k,22)}${esc(dup?nm(k):f)}${k===me?" (tu)":""}</span>`; }).join(""):'<small class="muted">Ninguém</small>'}</div></div>`;
   return `<div class="card pad" style="margin-bottom:10px"><div class="rowsub" style="margin-bottom:8px">${q.label} · lançado ${pfDayName(q.day)} às 21:30</div><h3 style="margin:0 0 10px">Preferias…</h3>${side(q.a,who.A,pa,"a")}${side(q.b,who.B,tot?100-pa:0,"b")}</div>`; }
+/* Preferias Flash anteriores em que jogaste: tudo num só separador */
+function pfPlayed(gid,before){ const me=ME(); const out=[]; for(let d=addDays(before,-1);d>=PF_DAY0&&out.length<120;d=addDays(d,-1)){ const x=pfItem(gid,d); if(x&&pfAns(me,x)) out.push(x); } return out; }
+function pfArchRow(gid,before){ const n=pfPlayed(gid,before).length; if(!n) return "";
+  return `<div class="card list" style="margin-top:18px"><button class="row" data-act="pfArch" data-arg="${before}"><span style="font-size:22px">📚</span><span class="grow"><span class="rowtitle" style="display:block">Preferias anteriores</span><span class="rowsub" style="display:block;margin-top:2px">${n} em que jogaste · ver resultados</span></span>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button></div>`; }
+function pfArchSheet(gid,before){ const list=pfPlayed(gid,before);
+  openSheet({title:"📚 Preferias anteriores",left:"Fechar",body:()=>list.length?`<div class="card list">${list.map(x=>`<button class="row" data-act="pfRes" data-arg="${x.day}"><span class="grow"><span class="rowtitle" style="display:block;white-space:normal">${esc(x.a)} <span class="muted">ou</span> ${esc(x.b)}</span><span class="rowsub" style="display:block;margin-top:2px">${x.label} · ${pfDayName(x.day)}</span></span>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")}</div>`:`<div class="empty"><p>Ainda não há Preferias anteriores em que tenhas jogado.</p></div>`}); }
 function pfResSheet(gid,day){ const me=ME(); const ed=pfEd(); const all=[]; for(let d=addDays(ed,-1);d>=PF_DAY0&&all.length<14;d=addDays(d,-1)) all.push(pfItem(gid,d));
   openSheet({title:"⚡ Resultados",left:"Fechar",body:()=>{ const q=pfItem(gid,day); const mine=pfAns(me,q);
-    const past=all.filter(x=>x.day!==day&&pfAns(me,x)).slice(0,7);
     return `<div class="pf-head"><img class="pf-logo-big" src="${PF_LOGO}" alt="Preferias Flash"></div>`+(mine?pfResultHtml(gid,q)
       :`<div class="card pad pflock"><b>🔒 Não jogaste este Preferias Flash</b><span>Por isso não vês o que a malta escolheu 😏 Há um dilema novo todos os dias às 21:30.</span></div>`)
-      +(past.length?`<div class="label" style="margin:16px 4px 8px">Anteriores em que jogaste</div><div class="card list">${past.map(x=>`<button class="row" data-act="pfRes" data-arg="${x.day}"><span class="grow"><span class="rowtitle" style="white-space:normal">${esc(x.a)} <span class="muted">ou</span> ${esc(x.b)}</span><span class="rowsub">${x.label} · ${pfDayName(x.day)}</span></span>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")}</div>`:""); }}); }
+; }}); }
 function pfSheet(){ const g=curGroup(); if(!g) return; const me=ME(); const day=pfEd(); const q=day&&pfItem(g.id,day);
   if(!q){ toast("O Preferias Flash começa hoje às 21:30 ⚡"); return; }
   if(rankLocked(g.id)){ teaseSheet(); return; }
   let pick=pfAns(me,q)||null;
   const prevRes=()=>{ const prev=addDays(day,-1); const pq=prev>=PF_DAY0?pfItem(g.id,prev):null; if(!pq) return "";
-    const older=[]; for(let d=addDays(prev,-1);d>=PF_DAY0&&older.length<7;d=addDays(d,-1)){ const x=pfItem(g.id,d); if(pfAns(me,x)) older.push(x); }
     return `<div class="label" style="margin-top:26px">Resultados de ontem</div>`+(pfAns(me,pq)?pfResultHtml(g.id,pq):`<div class="card pad pflock"><b>🔒 Não jogaste o dilema de ontem</b><span>Por isso não vês o que a malta escolheu 😏</span></div>`)
-      +(older.length?`<div class="label" style="margin-top:18px">Anteriores em que jogaste</div><div class="card list">${older.map(x=>`<button class="row" data-act="pfRes" data-arg="${x.day}"><span class="grow"><span class="rowtitle" style="white-space:normal">${esc(x.a)} <span class="muted">ou</span> ${esc(x.b)}</span><span class="rowsub">${x.label} · ${pfDayName(x.day)}</span></span>${ic("right")}</button>`).join("")}</div>`:""); };
+      +pfArchRow(g.id,prev); };
   const L=openSheet({title:"⚡ Preferias Flash",left:"Fechar",live:true,body:()=>{
     if(pick) return `<div class="pf-end"><img class="pf-logo-big" src="${PF_LOGO}" alt="Preferias Flash"><b>Feito!</b><p>Escolheste: <b>${esc(pick==="A"?q.a:q.b)}</b></p>
       <p>Às 21:30 saem os resultados, com o dilema seguinte. Só quem joga vê o que a malta escolheu 😏</p><p class="info">Faltam ${fmtLeft(pfMsLeft())}</p></div>`+prevRes();
@@ -2985,7 +2989,7 @@ const A = {
   tease:()=>teaseSheet(),
   cantTab:arg=>{ const [cid,t]=arg.split("|"); if(S.cantTabs[cid]===t) return; S.cantTabs[cid]=t; document.querySelector(`.screen[data-chat="${CSS.escape(cid)}"]`)?.removeAttribute("data-chat"); render(); },
   cantSummary:cid=>cantSummarySheet(cid),
-  cantPast:gid=>{ const list=pastCantinhos(gid); list.slice(0,3).forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} }); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
+  cantPast:gid=>{ const list=pastCantinhos(gid); list.slice(0,3).forEach(c=>{ try{ cantSumPrefetch(c.id)?.catch(()=>{}); }catch{} }); openSheet({title:"📋 Cantinhos anteriores",left:"Fechar",body:()=>`<div class="card list">${list.map(c=>`<button class="row" data-act="cantSummary" data-arg="${c.id}">${avatar(c.host,40)}<div class="grow"><div class="rowtitle">${esc(c.name||"Cantinho")}</div><div class="rowsub">${c.endsAt?`Terminou a ${esc(shortDate(lisbonYMD(new Date(c.endsAt-3600e3))))} · `:""}ver resumo 📋</div></div>${ic("right",'style="width:18px;height:18px;color:var(--muted);flex:none"')}</button>`).join("")||`<div class="empty"><p>Ainda não há cantinhos anteriores.</p></div>`}</div>`}); }, pfPlay:()=>pfSheet(), pfRes:arg=>pfResSheet(curGroup().id,arg), pfArch:arg=>pfArchSheet(curGroup().id,arg), pfArch:arg=>pfArchSheet(curGroup().id,arg), trib:()=>tribSheet(), tribSum:()=>{ const g=curGroup(); if(g) tribSummary(g.id); }, teaseVote:()=>{ while(layers.length) popLayer(); A.rank(); },
   weekSummary:()=>{ const g=curGroup(); if(g) weeklySummarySheet(g.id); },
   gapEdit:()=>{ S.gapEdit=!S.gapEdit; render(); },
   deleteChat:async cid=>{ const c=S.chats[cid]; if(!c) return;
