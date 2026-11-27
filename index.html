@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795716174">
+<meta name="pes-version" content="1795780866">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -2762,7 +2762,7 @@ function rankSheet(startStep=1, focusAward=null){
         <div class="chips" style="margin-top:10px">${others.slice().sort((x,y)=>nm(x).localeCompare(nm(y))).map(k=>{ const f=first(nm(k)); const dup=others.filter(o=>first(nm(o))===f).length>1; return `<button type="button" class="namechip ${v===k?"sel":""}" data-regpick="${a.id}|${k}" aria-pressed="${v===k}">${avatar(k,26)}${esc(dup?nm(k):f)}</button>`; }).join("")}</div>
         ${a.noNone?"":`<button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button>`}</div>`;
       return `<div class="reg"><div class="rowtitle" style="white-space:normal;line-height:1.3">${a.emoji} ${esc(a.label)}</div>
-        <textarea data-reg="${a.id}" rows="2" maxlength="400" placeholder="${none?"Sem nada a registar":"Escreve aqui… ninguém vai saber que foste tu"}" ${none?"disabled":""}>${none?"":esc(v||"")}</textarea>
+        <textarea data-reg="${a.id}" rows="2" maxlength="400" placeholder="${none?"Marcaste “Sem nada a registar”. Se quiseres, escreve aqui":"Escreve aqui… ninguém vai saber que foste tu"}">${none?"":esc(v||"")}</textarea>
         <button type="button" class="regnone ${none?"on":""}" data-regnone="${a.id}" aria-pressed="${none}">${none?ic("check"):""}Sem nada a registar</button></div>`; };
     return `${stepper()}<div class="label"><span>Responde a tudo</span><span class="num" style="text-transform:none">${n}/${aw.length}</span></div>
       <div class="bar" style="margin:0 4px 10px"><i style="width:${pct(n,aw.length)}%"></i></div>
@@ -2789,7 +2789,7 @@ function rankSheet(startStep=1, focusAward=null){
       else return;
       const keep=L.body.scrollTop; L.render(); L.right.textContent=step===1&&total>1?"Seguinte":"Submeter"; setRight(L,okNow()); L.body.scrollTop=t.dataset.back?0:keep; });
       // free text: update without re-rendering (keeps the keyboard open)
-      L.body.addEventListener("input",e=>{ const ta=e.target.closest("textarea[data-reg]"); if(!ta) return; const v=ta.value.trim(); if(v) votes[ta.dataset.reg]=v.slice(0,400); else delete votes[ta.dataset.reg];
+      L.body.addEventListener("input",e=>{ const ta=e.target.closest("textarea[data-reg]"); if(!ta) return; const v=ta.value.trim(); if(v){ votes[ta.dataset.reg]=v.slice(0,400); const nb=L.body.querySelector(`[data-regnone="${ta.dataset.reg}"]`); if(nb){ nb.classList.remove("on"); nb.setAttribute("aria-pressed","false"); nb.innerHTML="Sem nada a registar"; } } else delete votes[ta.dataset.reg];
         const n=aw.filter(a=>votes[a.id]).length; const sb=L.body.querySelector("[data-submit]"); if(sb){ sb.disabled=!okNow(); sb.textContent=n<aw.length?`Faltam ${aw.length-n} ${aw.length-n===1?"resposta":"respostas"}`:"Submeter tudo"; }
         const cnt=L.body.querySelector(".label .num"); if(cnt) cnt.textContent=`${n}/${aw.length}`; const bar=L.body.querySelector(".bar i"); if(bar) bar.style.width=pct(n,aw.length)+"%"; setRight(L,okNow()); }); },
     onRight:async L=>{ if(!okNow()) return;
