@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
 <meta charset="utf-8">
-<meta name="pes-version" content="1795818540">
+<meta name="pes-version" content="1795821076">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pês">
@@ -1876,7 +1876,7 @@ function portalSheet(){ const me=ME(); const st={name:"",desc:""};
       <button class="btn block" data-psend style="margin-top:14px">Enviar ideia 🚀</button></div>
     <button class="linkbtn" data-pintro style="margin:12px auto 0;display:block">Ver outra vez a apresentação</button>
     ${mine().length?`<div class="label" style="margin-top:20px">As tuas ideias</div><div class="card list">${mine().map(([,x])=>`<div class="row" style="align-items:flex-start"><span style="font-size:20px">💡</span><div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.name)}</div>${x.desc?`<div class="rowsub" style="white-space:normal">${esc(x.desc)}</div>`:""}<div class="rowsub">${esc(shortDate(lisbonYMD(new Date(x.at))))} · enviada ✓</div></div></div>`).join("")}</div>`:""}
-    ${S.isOwner&&inbox().length?`<div class="label" style="margin-top:20px">Ideias do grupo · só tu vês</div><div class="card list">${inbox().map(([,x])=>`<div class="row" style="align-items:flex-start">${avatar(x.from,32)}<div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.name)}</div>${x.desc?`<div class="rowsub" style="white-space:normal">${esc(x.desc)}</div>`:""}<div class="rowsub">${esc(first(nm(x.from)))} · ${esc(shortDate(lisbonYMD(new Date(x.at))))}</div></div></div>`).join("")}</div>`:""}`,
+    ${S.isOwner?`<div class="label" style="margin-top:20px">Ideias do grupo · só tu vês</div>`+(inbox().length?"":`<div class="card pad" style="text-align:center"><span class="muted">Ainda ninguém enviou ideias. Quando chegar uma, recebes uma notificação e ela aparece aqui 💡</span></div>`):""}${S.isOwner&&inbox().length?`<div class="card list">${inbox().map(([,x])=>`<div class="row" style="align-items:flex-start">${avatar(x.from,32)}<div class="grow"><div class="rowtitle" style="white-space:normal">${esc(x.name)}</div>${x.desc?`<div class="rowsub" style="white-space:normal">${esc(x.desc)}</div>`:""}<div class="rowsub">${esc(first(nm(x.from)))} · ${esc(shortDate(lisbonYMD(new Date(x.at))))}</div></div></div>`).join("")}</div>`:""}`,
     onMount:L=>{ L.body.addEventListener("input",e=>{ if(e.target.id==="pnm") st.name=e.target.value; if(e.target.id==="pds") st.desc=e.target.value; });
       L.body.addEventListener("click",async e=>{ if(e.target.closest("[data-pintro]")){ popLayer(L); portalStories(); return; }
         if(!e.target.closest("[data-psend]")) return; const n=st.name.trim(), d=st.desc.trim(); if(n.length<3){ toast("Dá um nome à rubrica"); return; }
