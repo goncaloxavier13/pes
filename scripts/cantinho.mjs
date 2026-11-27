@@ -97,6 +97,9 @@ const periodEndMs = p => { const local = P0 + (p + 1) * PLEN; return local - lxO
 
 const all = async c => Object.fromEntries((await db.collection(c).get()).docs.map(d => [d.id, d.data()]));
 const [people, groups, rankings, votes, awards, events, reads] = await Promise.all(["people", "groups", "rankings", "votes", "awards", "events", "reads"].map(all));
+// eventos antigos: as presenças que já existem contam como marcadas pelo organizador (a partir de agora, quem se marca sozinho fica para o organizador confirmar)
+if (!DRY) for (const [id, e] of Object.entries(events)) { if (Array.isArray(e.org)) continue;
+  const org = Object.keys(e.att || {}).filter(k => k !== e.createdBy && e.att[k] === "yes"); try { await db.doc("events/" + id).update({ org }); e.org = org; } catch (err) { console.log("org", id, err.message); } }
 const name = k => k === BOT ? "Anfitrião" : people[k]?.name || "Alguém"; const first = k => name(k).split(" ")[0];
 const stRef = db.doc("system/cantinho"); const st = (await stRef.get()).data() || {};
 
